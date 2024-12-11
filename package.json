@@ -1,0 +1,24 @@
+{
+  "name": "keep-watching-server",
+  "version": "1.0.0",
+  "description": "API server for the KeepWatching application",
+  "main": "dist/index.js",
+  "author": "Andy Gifford",
+  "private": true,
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.2",
+    "concurrently": "^9.1.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "scripts": {
+    "build": "npx tsc",
+    "start": "node dist",
+    "dev": "tsx watch src"
+  }
+}
