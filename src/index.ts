@@ -1,7 +1,8 @@
 import dotenv from 'dotenv';
 import express, { Express, Request, Response } from 'express';
-import { sampleEpisodes, sampleSeasons, sampleShow, sampleShows } from './mock_data/mock_shows';
+import { sampleEpisodes, sampleSeasons, sampleShow, sampleShows, sampleShows_2, sampleShows_3 } from './mock_data/mock_shows';
 import { sampleMovies } from './mock_data/mock_movies';
+import { sampleFamily } from './mock_data/mock_family';
 
 dotenv.config();
 
@@ -19,6 +20,18 @@ app.get('/api/shows', (req, res) => {
 app.get('/api/shows/:showId', async (req: Request, res: Response) => {
   const { showId } = req.params;
   res.json(sampleShow);
+});
+
+app.get('/api/shows/profile/:profileId', async (req: Request, res: Response) => {
+  const { profileId } = req.params;
+  if(profileId == "1"){
+    res.json(sampleShows);
+  } 
+  else if (profileId == "2") {
+    res.json(sampleShows_2)
+  }
+  else {
+  res.json(sampleShows_3);}
 });
 
 app.get("/api/seasons/:showId", async (req: Request, res: Response) => {
@@ -80,20 +93,22 @@ app.get('/api/movies', (req, res) => {
   res.json(sampleMovies);
 });
 
-app.get('/api/users', (req: Request, res: Response) => {
-  res.send('KeepWatching Users');
+app.get('/api/family/:id', (req: Request, res: Response) => {
+  res.json(sampleFamily);
 });
 
-app.put('/api/user', (req, res) => {
-  res.send('Got a PUT request at /api/user');
+app.put('/api/family', (req, res) => {
+  res.send('Got a PUT request at /api/family');
 });
 
-app.delete('/api/user', (req, res) => {
-  res.send('Got a DELETE request at /api/user');
+app.delete('/api/family/:id', (req, res) => {
+  const { id } = req.params;
+  res.send(`Got a DELETE request at /api/family/${id}`);
 });
 
-app.patch('/api/user', (req, res) => {
-  res.send('Got a PATCH request at /api/user');
+app.patch('/api/family/:id', (req, res) => {
+  const { id } = req.params;
+  res.send(`Got a PATCH request at /api/family/${id}`);
 });
 
 app.listen(port, () => {

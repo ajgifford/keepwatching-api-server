@@ -25,6 +25,60 @@ export const sampleShows = JSON.stringify( [
     },
   ]);
 
+  export const sampleShows_2 = JSON.stringify( [
+    {
+      id: "3",
+      title: "Real Housewifes of Beverly Hills",
+      description: "A group of kids uncover mysteries in their small town.",
+      release_date: "2016-07-15",
+      genre: "Science Fiction",
+      image: "https://via.placeholder.com/150",
+      user_rating: 9,
+      tv_parental_guidelines: "TV-14",
+      number_of_seasons: 4,
+      total_episodes: 34,
+    },
+    {
+      id: "4",
+      title: "First 48",
+      description: "A chemistry teacher turned meth producer.",
+      release_date: "2008-01-20",
+      genre: "Drama",
+      image: "https://via.placeholder.com/150",
+      user_rating: 10,
+      tv_parental_guidelines: "TV-MA",
+      number_of_seasons: 5,
+      total_episodes: 62,
+    },
+  ]);
+
+  export const sampleShows_3 = JSON.stringify( [
+    {
+      id: "6",
+      title: "Bluey",
+      description: "A group of kids uncover mysteries in their small town.",
+      release_date: "2016-07-15",
+      genre: "Science Fiction",
+      image: "https://via.placeholder.com/150",
+      user_rating: 9,
+      tv_parental_guidelines: "TV-14",
+      number_of_seasons: 4,
+      total_episodes: 34,
+    },
+    {
+      id: "7",
+      title: "Paw Patrol",
+      description: "A chemistry teacher turned meth producer.",
+      release_date: "2008-01-20",
+      genre: "Drama",
+      image: "https://via.placeholder.com/150",
+      user_rating: 10,
+      tv_parental_guidelines: "TV-MA",
+      number_of_seasons: 5,
+      total_episodes: 62,
+    },
+  ]);
+
 export const sampleShow = JSON.stringify({
   id: "1",
       title: "Stranger Things",
@@ -47,8 +101,9 @@ export const sampleShow = JSON.stringify({
           episodes: [
             {
               id: 101,
-              title: "Episode 1",
+              title: "The Vanishing of Will Byers",
               episode_number: "101",
+              summary: "When Will Byers goes missing his friends investigate",
               release_date: "2022-01-01",
               duration: "42m",
               image: "https://via.placeholder.com/100",
@@ -56,8 +111,9 @@ export const sampleShow = JSON.stringify({
             },
             {
               id: 102,
-              title: "Episode 2",
+              title: "The Weirdo on Maple Street",
               episode_number: "102",
+              summary: "A new kid moves into the house on Maple Street",
               release_date: "2022-01-08",
               duration: "45m",
               image: "https://via.placeholder.com/100",
