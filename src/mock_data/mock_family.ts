@@ -35,5 +35,20 @@ export const sampleFamily = JSON.stringify({
             id: "8",
             name: "Kids"
         },
-    ]
+    ],
+    settings: {
+        streaming_services: [
+            {id: "1", name:"Netflix", available:true},
+            {id: "2", name:"Amazon Prime", available:true},
+            {id: "3", name:"Hulu", available:true},
+            {id: "4", name:"Disney+", available:true},
+            {id: "5", name:"ESPN+", available:true},
+            {id: "6", name:"Paramount+", available:true},
+            {id: "7", name:"Peacock", available:true},
+            {id: "8", name:"Apple TV", available:true},
+            {id: "9", name:"Netflix", available:true},
+            {id: "10", name:"Freevee", available:false},
+            {id: "11", name:"YouTube TV", available:true},
+        ]
+    }
 });
