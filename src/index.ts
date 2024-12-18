@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import express, { Express, Request, Response } from 'express';
-import { sampleEpisodes, sampleSeasons, sampleShow, sampleShows, sampleShows_2, sampleShows_3 } from './mock_data/mock_shows';
+import { sampleEpisodes, sampleSeasons, sampleShow, sampleShows, sampleShows_2, sampleShows_3, sampleShowsWithProfiles } from './mock_data/mock_shows';
 import { sampleMovies } from './mock_data/mock_movies';
 import { sampleAccount } from './mock_data/mock_account';
 
@@ -20,6 +20,11 @@ app.get('/api/shows', (req, res) => {
 app.get('/api/shows/:showId', async (req: Request, res: Response) => {
   const { showId } = req.params;
   res.json(sampleShow);
+});
+
+app.get('/api/account/:accountId/shows', async (req: Request, res: Response) => {
+  const { accountId } = req.params;
+  res.json(sampleShowsWithProfiles);
 });
 
 app.get('/api/shows/profile/:profileId', async (req: Request, res: Response) => {

@@ -1,3 +1,66 @@
+export const sampleShowsWithProfiles = JSON.stringify( [
+  {
+    id: "1",
+    title: "Stranger Things",
+    description: "A group of kids uncover mysteries in their small town.",
+    release_date: "2016-07-15",
+    genres: ["Sci-Fi", "Drama"],
+    streaming_service: "Netflix",
+    image: "https://via.placeholder.com/150",
+    user_rating: 9,
+    tv_parental_guidelines: "TV-14",
+    number_of_seasons: 4,
+    total_episodes: 34,
+    watched: "Watched",
+    profiles: ["1"]
+  },
+  {
+    id: "2",
+    title: "Breaking Bad",
+    description: "A chemistry teacher turned meth producer.",
+    release_date: "2008-01-20",
+    genres: ["Drama"],
+    streaming_service: "Netflix",
+    image: "https://via.placeholder.com/150",
+    user_rating: 10,
+    tv_parental_guidelines: "TV-MA",
+    number_of_seasons: 5,
+    total_episodes: 62,
+    watched: "Not Watched",
+    profiles: ["1"]
+  },
+  {
+    id: '3',
+    title: 'The Office',
+    description: 'A comedic look at office life.',
+    genres: ['Comedy'],
+    streaming_service: 'Peacock',
+    watched: 'Watched',
+    image: 'https://via.placeholder.com/96?text=The+Office&font=roboto',
+    profiles: ['3'],
+  },
+  {
+    id: '4',
+    title: 'The Mandalorian',
+    description: 'A bounty hunter in the Star Wars universe.',
+    genres: ['Sci-Fi', 'Action'],
+    streaming_service: 'Disney+',
+    watched: 'Watching',
+    image: 'https://via.placeholder.com/96?text=The+Madalorain&font=roboto',
+    profiles: ['4'],
+  },
+  {
+    id: '5',
+    title: 'Parks and Recreation',
+    description: 'The quirky employees of Pawnee, Indiana.',
+    genres: ['Comedy'],
+    streaming_service: 'Peacock',
+    watched: 'Watched',
+    image: 'https://via.placeholder.com/96?text=Parks+and+Rec&font=roboto',
+    profiles: ['3'],
+  },
+]);
+
 export const sampleShows = JSON.stringify( [
     {
       id: "1",
