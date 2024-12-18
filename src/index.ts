@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 import express, { Express, Request, Response } from 'express';
 import { sampleEpisodes, sampleSeasons, sampleShow, sampleShows, sampleShows_2, sampleShows_3 } from './mock_data/mock_shows';
 import { sampleMovies } from './mock_data/mock_movies';
-import { sampleFamily } from './mock_data/mock_family';
+import { sampleAccount } from './mock_data/mock_account';
 
 dotenv.config();
 
@@ -93,22 +93,22 @@ app.get('/api/movies', (req, res) => {
   res.json(sampleMovies);
 });
 
-app.get('/api/family/:id', (req: Request, res: Response) => {
-  res.json(sampleFamily);
+app.get('/api/account/:id', (req: Request, res: Response) => {
+  res.json(sampleAccount);
 });
 
-app.put('/api/family', (req, res) => {
-  res.send('Got a PUT request at /api/family');
+app.put('/api/account', (req, res) => {
+  res.send('Got a PUT request at /api/account');
 });
 
-app.delete('/api/family/:id', (req, res) => {
+app.delete('/api/account/:id', (req, res) => {
   const { id } = req.params;
-  res.send(`Got a DELETE request at /api/family/${id}`);
+  res.send(`Got a DELETE request at /api/account/${id}`);
 });
 
-app.patch('/api/family/:id', (req, res) => {
+app.patch('/api/account/:id', (req, res) => {
   const { id } = req.params;
-  res.send(`Got a PATCH request at /api/family/${id}`);
+  res.send(`Got a PATCH request at /api/account/${id}`);
 });
 
 app.listen(port, () => {
