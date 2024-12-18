@@ -42,7 +42,7 @@ export const sampleAccount = JSON.stringify({
         },
         {
             id: "10",
-            name: "All"
+            name: "Whole Family"
         }
     ]
 });
