@@ -9,13 +9,23 @@ import {
   sampleShows_2,
   sampleShows_3,
 } from './mock_data/mock_shows';
+import bodyParser from 'body-parser';
+import cors from 'cors';
 import dotenv from 'dotenv';
 import express, { Express, Request, Response } from 'express';
+import multer from 'multer';
 
 dotenv.config();
 
 const app: Express = express();
 const port = process.env.PORT || 3000;
+
+// Middleware
+app.use(cors());
+app.use(bodyParser.json());
+
+// File upload setup
+const upload = multer({ dest: 'uploads/' });
 
 app.get('/', (req: Request, res: Response) => {
   res.send('KeepWatching API');
@@ -111,7 +121,8 @@ app.get('/api/account/:id', (req: Request, res: Response) => {
 });
 
 app.put('/api/account', (req, res) => {
-  res.send('Got a PUT request at /api/account');
+  console.log('PUT /api/account', req.body);
+  res.send(`Got a PUT request at /api/account with body: ${req.body.name}`);
 });
 
 app.delete('/api/account/:id', (req, res) => {
@@ -124,6 +135,9 @@ app.patch('/api/account/:id', (req, res) => {
   res.send(`Got a PATCH request at /api/account/${id}`);
 });
 
-app.listen(port, () => {
+app.listen(port, (err?: Error) => {
+  if (err) {
+    console.log(err);
+  }
   console.log(`[server]: Server is running at http://localhost:${port}`);
 });
