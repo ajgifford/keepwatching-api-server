@@ -19,6 +19,7 @@ dotenv.config();
 
 const app: Express = express();
 const port = process.env.PORT || 3000;
+let autoId: number = 100;
 
 // Middleware
 app.use(cors());
@@ -125,9 +126,18 @@ app.put('/api/account', (req, res) => {
   res.send(`Got a PUT request at /api/account with body: ${req.body.name}`);
 });
 
-app.delete('/api/account/:id', (req, res) => {
+// Adding a new profile
+app.post('/api/account/:id/profiles', (req, res) => {
   const { id } = req.params;
-  res.send(`Got a DELETE request at /api/account/${id}`);
+  console.log(`PUT /api/account/${id}/profiles`, req.body);
+  res.json(JSON.stringify({ id: `${autoId++}`, name: req.body.name }));
+});
+
+// Deleing a profile
+app.delete('/api/account/:id/profiles/:profileId', (req, res) => {
+  const { id, profileId } = req.params;
+  console.log(`DELETE /api/account/${id}/profiles/${profileId}`);
+  res.status(204).send();
 });
 
 app.patch('/api/account/:id', (req, res) => {
