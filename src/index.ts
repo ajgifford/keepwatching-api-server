@@ -1,8 +1,16 @@
+import { sampleAccount } from './mock_data/mock_account';
+import { sampleMovies } from './mock_data/mock_movies';
+import {
+  sampleEpisodes,
+  sampleSeasons,
+  sampleShow,
+  sampleShows,
+  sampleShowsWithProfiles,
+  sampleShows_2,
+  sampleShows_3,
+} from './mock_data/mock_shows';
 import dotenv from 'dotenv';
 import express, { Express, Request, Response } from 'express';
-import { sampleEpisodes, sampleSeasons, sampleShow, sampleShows, sampleShows_2, sampleShows_3, sampleShowsWithProfiles } from './mock_data/mock_shows';
-import { sampleMovies } from './mock_data/mock_movies';
-import { sampleAccount } from './mock_data/mock_account';
 
 dotenv.config();
 
@@ -29,19 +37,18 @@ app.get('/api/account/:accountId/shows', async (req: Request, res: Response) => 
 
 app.get('/api/shows/profile/:profileId', async (req: Request, res: Response) => {
   const { profileId } = req.params;
-  if(profileId == "1"){
+  if (profileId == '1') {
     res.json(sampleShows);
-  } 
-  else if (profileId == "2") {
-    res.json(sampleShows_2)
+  } else if (profileId == '2') {
+    res.json(sampleShows_2);
+  } else {
+    res.json(sampleShows_3);
   }
-  else {
-  res.json(sampleShows_3);}
 });
 
-app.get("/api/seasons/:showId", async (req: Request, res: Response) => {
+app.get('/api/seasons/:showId', async (req: Request, res: Response) => {
   const { showId } = req.params;
-  res.json(sampleSeasons)
+  res.json(sampleSeasons);
   // try {
   //   const seasons = await db.query("SELECT * FROM Seasons WHERE show_id = ?", [showId]);
   //   res.status(200).json(seasons);
@@ -51,7 +58,7 @@ app.get("/api/seasons/:showId", async (req: Request, res: Response) => {
   // }
 });
 
-app.get("/api/episodes/:seasonId", async (req: Request, res: Response) => {
+app.get('/api/episodes/:seasonId', async (req: Request, res: Response) => {
   const { seasonId } = req.params;
   res.json(sampleEpisodes);
 
@@ -65,7 +72,7 @@ app.get("/api/episodes/:seasonId", async (req: Request, res: Response) => {
 });
 
 // Endpoint to get a show by its ID with optional seasons and episodes
-app.get("/api/show/:id", async (req: Request, res: Response) => {
+app.get('/api/show/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
   const { includeSeasons } = req.query;
 
@@ -99,6 +106,7 @@ app.get('/api/movies', (req, res) => {
 });
 
 app.get('/api/account/:id', (req: Request, res: Response) => {
+  // res.header('Access-Control-Allow-Origin', '*');
   res.json(sampleAccount);
 });
 
