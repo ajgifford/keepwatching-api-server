@@ -14,6 +14,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import express, { Express, Request, Response } from 'express';
 import multer from 'multer';
+import mysql from 'mysql2/promise';
 
 dotenv.config();
 
@@ -27,6 +28,16 @@ app.use(bodyParser.json());
 
 // File upload setup
 const upload = multer({ dest: 'uploads/' });
+
+const pool = mysql.createPool({
+  host: process.env.MYSQL_HOST,
+  user: process.env.MYSQL_USER,
+  password: process.env.MYSQL_PWD,
+  database: process.env.MYSQL_DB,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+});
 
 app.get('/', (req: Request, res: Response) => {
   res.send('KeepWatching API');
