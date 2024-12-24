@@ -1,4 +1,4 @@
-import { sampleAccount } from './mock_data/mock_account';
+import { sampleAccount, sampleProfiles } from './mock_data/mock_account';
 import { sampleMovies } from './mock_data/mock_movies';
 import {
   sampleEpisodes,
@@ -132,16 +132,47 @@ app.get('/api/account/:id', (req: Request, res: Response) => {
   res.json(sampleAccount);
 });
 
-app.put('/api/account', (req, res) => {
-  console.log('PUT /api/account', req.body);
-  res.send(`Got a PUT request at /api/account with body: ${req.body.name}`);
+// Login
+app.post('/api/login', (req, res) => {
+  console.log(`POST /api/login`, req.body);
+  res.json(sampleAccount);
+});
+
+// Logout
+app.post('/api/logout', (req, res) => {
+  console.log(`POST /api/logout`, req.body);
+  res.send('logged out');
+});
+
+// Register new account
+app.post('/api/account', (req, res) => {
+  console.log('POST /api/account', req.body);
+  res.send(`Got a POST request at /api/account with body: ${req.body.name}`);
+});
+
+// Get profiles
+app.get('/api/account/:id/profiles', (req, res) => {
+  const { id } = req.params;
+  console.log(`GET /api/account/${id}/profiles`, req.body);
+  res.json(sampleProfiles);
 });
 
 // Adding a new profile
 app.post('/api/account/:id/profiles', (req, res) => {
   const { id } = req.params;
-  console.log(`PUT /api/account/${id}/profiles`, req.body);
-  res.json(JSON.stringify({ id: `${autoId++}`, name: req.body.name }));
+  console.log(`POST /api/account/${id}/profiles`, req.body);
+  res.json(
+    JSON.stringify({ id: `${autoId++}`, name: req.body.name, showsToWatch: 0, showsWatching: 0, showsWatched: 0 }),
+  );
+});
+
+// Editing a profile
+app.put('/api/account/:id/profiles/:profileId', (req, res) => {
+  const { id, profileId } = req.params;
+  console.log(`PUT /api/account/${id}/profiles/${profileId}`);
+  res.json(
+    JSON.stringify({ id: `${profileId}`, name: req.body.name, showsToWatch: 0, showsWatching: 0, showsWatched: 0 }),
+  );
 });
 
 // Deleing a profile
