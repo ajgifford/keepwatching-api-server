@@ -9,6 +9,8 @@ import {
   sampleShows_2,
   sampleShows_3,
 } from './mock_data/mock_shows';
+import authRouter from './routes/authRouter';
+import profilesRouter from './routes/profilesRouter';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -20,11 +22,12 @@ dotenv.config();
 
 const app: Express = express();
 const port = process.env.PORT || 3000;
-let autoId: number = 100;
 
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
+app.use(authRouter);
+app.use(profilesRouter);
 
 // File upload setup
 const upload = multer({ dest: 'uploads/' });
@@ -130,56 +133,6 @@ app.get('/api/movies', (req, res) => {
 app.get('/api/account/:id', (req: Request, res: Response) => {
   // res.header('Access-Control-Allow-Origin', '*');
   res.json(sampleAccount);
-});
-
-// Login
-app.post('/api/login', (req, res) => {
-  console.log(`POST /api/login`, req.body);
-  res.json(sampleAccount);
-});
-
-// Logout
-app.post('/api/logout', (req, res) => {
-  console.log(`POST /api/logout`, req.body);
-  res.send('logged out');
-});
-
-// Register new account
-app.post('/api/account', (req, res) => {
-  console.log('POST /api/account', req.body);
-  res.send(`Got a POST request at /api/account with body: ${req.body.name}`);
-});
-
-// Get profiles
-app.get('/api/account/:id/profiles', (req, res) => {
-  const { id } = req.params;
-  console.log(`GET /api/account/${id}/profiles`, req.body);
-  res.json(sampleProfiles);
-});
-
-// Adding a new profile
-app.post('/api/account/:id/profiles', (req, res) => {
-  const { id } = req.params;
-  console.log(`POST /api/account/${id}/profiles`, req.body);
-  res.json(
-    JSON.stringify({ id: `${autoId++}`, name: req.body.name, showsToWatch: 0, showsWatching: 0, showsWatched: 0 }),
-  );
-});
-
-// Editing a profile
-app.put('/api/account/:id/profiles/:profileId', (req, res) => {
-  const { id, profileId } = req.params;
-  console.log(`PUT /api/account/${id}/profiles/${profileId}`);
-  res.json(
-    JSON.stringify({ id: `${profileId}`, name: req.body.name, showsToWatch: 0, showsWatching: 0, showsWatched: 0 }),
-  );
-});
-
-// Deleing a profile
-app.delete('/api/account/:id/profiles/:profileId', (req, res) => {
-  const { id, profileId } = req.params;
-  console.log(`DELETE /api/account/${id}/profiles/${profileId}`);
-  res.status(204).send();
 });
 
 app.patch('/api/account/:id', (req, res) => {
