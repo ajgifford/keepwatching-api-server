@@ -1,3 +1,5 @@
+import { authenticate } from './middleware/authMiddleware';
+import { errorHandler } from './middleware/errorMiddleware';
 import { sampleAccount, sampleProfiles } from './mock_data/mock_account';
 import { sampleMovies } from './mock_data/mock_movies';
 import {
@@ -11,22 +13,43 @@ import {
 } from './mock_data/mock_shows';
 import authRouter from './routes/authRouter';
 import profilesRouter from './routes/profilesRouter';
+import dotenvx from '@dotenvx/dotenvx';
 import bodyParser from 'body-parser';
+import cookieParser from 'cookie-parser';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import express, { Express, Request, Response } from 'express';
+import helmet from 'helmet';
 import multer from 'multer';
 
-dotenv.config();
+dotenvx.config();
 
 const app: Express = express();
 const port = process.env.PORT || 3000;
 
+interface AccountBasicInfo {
+  id: number;
+  name: string;
+  email: string;
+}
+
+declare global {
+  namespace Express {
+    interface Request {
+      account?: AccountBasicInfo | null;
+    }
+  }
+}
+
 // Middleware
+app.use(helmet());
 app.use(cors());
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(authRouter);
-app.use(profilesRouter);
+app.use('/api/account', profilesRouter);
+app.use(cookieParser());
+
+app.use(errorHandler);
 
 // File upload setup
 const upload = multer({ dest: 'uploads/' });

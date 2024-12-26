@@ -1,10 +1,10 @@
-import { authenticateUser, logoutUser, registerUser } from '../controllers/authController';
+import { login, logout, register } from '../controllers/authController';
 import express from 'express';
 
 const router = express.Router();
 
-router.post('/api/account', registerUser);
-router.post('/api/login', authenticateUser);
-router.post('/api/logout', logoutUser);
+router.post('/api/account', register);
+router.post('/api/login', login);
+router.post('/api/logout', logout);
 
 export default router;

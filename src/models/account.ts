@@ -1,45 +1,55 @@
-import db from '../utils/db';
+import pool from '../utils/db';
 import bcrypt from 'bcryptjs';
 
 interface IAccount {
   id?: number;
-  name: string;
+  account_name: string;
   email: string;
-  password: string;
+  password_hash: string;
   comparePassword: (enteredPassword: string) => Promise<boolean>;
 }
 
 class Account {
   id?: number;
-  name: string;
+  account_name: string;
   email: string;
-  password: string;
+  password_hash: string;
 
   constructor(name: string, email: string, password: string, id?: number) {
-    this.name = name;
+    this.account_name = name;
     this.email = email;
-    this.password = password;
+    this.password_hash = password;
     if (id) this.id = id;
   }
 
   async save() {
-    const hashedPassword = await bcrypt.hash(this.password, 10);
-    const query = `INSERT INTO accounts (name, email, password) VALUES (?, ?, ?)`;
-    const [result] = await db.execute(query, [this.name, this.email, hashedPassword]);
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(this.password_hash, salt);
+    const query = `INSERT INTO accounts (account_name, email, password_hash) VALUES (?, ?, ?)`;
+    const [result] = await pool.execute(query, [this.account_name, this.email, hashedPassword]);
     this.id = (result as any).insertId;
   }
 
   static async findByEmail(email: string): Promise<Account | null> {
     const query = `SELECT * FROM accounts WHERE email = ?`;
-    const [rows] = await db.execute(query, [email]);
+    const [rows] = await pool.execute(query, [email]);
     const accounts = rows as any[];
     if (accounts.length === 0) return null;
     const account = accounts[0];
-    return new Account(account.name, account.email, account.password, account.id);
+    return new Account(account.account_name, account.email, account.password_hash, account.id);
+  }
+
+  static async findById(id: number): Promise<Account | null> {
+    const query = `SELECT * FROM accounts WHERE id = ?`;
+    const [rows] = await pool.execute(query, [id]);
+    const accounts = rows as any[];
+    if (accounts.length === 0) return null;
+    const account = accounts[0];
+    return new Account(account.account_name, account.email, account.password_hash, account.id);
   }
 
   async comparePassword(enteredPassword: string): Promise<boolean> {
-    return await bcrypt.compare(enteredPassword, this.password);
+    return await bcrypt.compare(enteredPassword, this.password_hash);
   }
 }
 
