@@ -3,7 +3,7 @@ import { Request, Response } from 'express';
 
 export const getAccountProfiles = async (req: Request, res: Response) => {
   const { id } = req.params;
-  console.log(`GET /api/account/${id}/profiles`, req.body);
+  console.log(`GET /api/accounts/${id}/profiles`, req.body);
   try {
     const profiles = await Profile.getAllByAccountId(Number(id));
     res.status(200).json(profiles);
@@ -16,7 +16,7 @@ export const getAccountProfiles = async (req: Request, res: Response) => {
 export const addProfile = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { name } = req.body;
-  console.log(`POST /api/account/${id}/profiles`, req.body);
+  console.log(`POST /api/accounts/${id}/profiles`, req.body);
   const profile = new Profile(Number(id), name);
   await profile.save();
 
@@ -28,7 +28,7 @@ export const addProfile = async (req: Request, res: Response) => {
 export const editProfile = async (req: Request, res: Response) => {
   const { id, profileId } = req.params;
   const { name } = req.body;
-  console.log(`PUT /api/account/${id}/profiles/${profileId}`);
+  console.log(`PUT /api/accounts/${id}/profiles/${profileId}`);
 
   const profile = await Profile.findById(Number(profileId));
   if (profile) {
@@ -43,7 +43,7 @@ export const editProfile = async (req: Request, res: Response) => {
 
 export const deleteProfile = async (req: Request, res: Response) => {
   const { id, profileId } = req.params;
-  console.log(`DELETE /api/account/${id}/profiles/${profileId}`);
+  console.log(`DELETE /api/accounts/${id}/profiles/${profileId}`);
 
   const profile = await Profile.findById(Number(profileId));
   if (profile) {
@@ -52,4 +52,10 @@ export const deleteProfile = async (req: Request, res: Response) => {
   } else {
     res.status(401).json({ message: 'Profile not found' });
   }
+};
+
+export const addFavorite = async (req: Request, res: Response) => {
+  const { id, profileId } = req.params;
+  console.log(`POST /api/accounts/${id}/profiles/${profileId}/favorites`, req.body);
+  res.status(200).json(req.body);
 };

@@ -3,7 +3,7 @@ import express from 'express';
 
 const router = express.Router();
 
-router.post('/api/account', register);
+router.post('/api/accounts', register);
 router.post('/api/login', login);
 router.post('/api/logout', logout);
 

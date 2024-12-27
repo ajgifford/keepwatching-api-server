@@ -4,7 +4,7 @@ import { clearToken, generateToken } from '../utils/auth';
 import { Request, Response } from 'express';
 
 export const register = async (req: Request, res: Response) => {
-  console.log('POST /api/account', req.body);
+  console.log('POST /api/accounts', req.body);
   const { name, email, password } = req.body;
   const accountExists = await Account.findByEmail(email);
 

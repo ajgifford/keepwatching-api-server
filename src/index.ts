@@ -67,7 +67,7 @@ app.get('/api/shows/:showId', async (req: Request, res: Response) => {
   res.json(sampleShow);
 });
 
-app.get('/api/account/:accountId/shows', async (req: Request, res: Response) => {
+app.get('/api/accounts/:accountId/shows', async (req: Request, res: Response) => {
   const { accountId } = req.params;
   res.json(sampleShowsWithProfiles);
 });
@@ -142,14 +142,14 @@ app.get('/api/movies', (req, res) => {
   res.json(sampleMovies);
 });
 
-app.get('/api/account/:id', (req: Request, res: Response) => {
+app.get('/api/accounts/:id', (req: Request, res: Response) => {
   // res.header('Access-Control-Allow-Origin', '*');
   res.json(sampleAccount);
 });
 
-app.patch('/api/account/:id', (req, res) => {
+app.patch('/api/accounts/:id', (req, res) => {
   const { id } = req.params;
-  res.send(`Got a PATCH request at /api/account/${id}`);
+  res.send(`Got a PATCH request at /api/accounts/${id}`);
 });
 
 app.listen(port, (err?: Error) => {
