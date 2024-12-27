@@ -46,7 +46,7 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(authRouter);
-app.use('/api/account', profilesRouter);
+app.use(profilesRouter);
 app.use(cookieParser());
 
 app.use(errorHandler);

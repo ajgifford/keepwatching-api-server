@@ -3,9 +3,9 @@ import express from 'express';
 
 const router = express.Router();
 
-router.get('/:id/profiles', getAccountProfiles);
-router.post('/:id/profiles', addProfile);
-router.put('/:id/profiles/:profileId', editProfile);
-router.delete('/:id/profiles/:profileId', deleteProfile);
+router.get('/api/account/:id/profiles', getAccountProfiles);
+router.post('/api/account/:id/profiles', addProfile);
+router.put('/api/account/:id/profiles/:profileId', editProfile);
+router.delete('/api/account/:id/profiles/:profileId', deleteProfile);
 
 export default router;

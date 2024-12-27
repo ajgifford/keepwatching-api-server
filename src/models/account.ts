@@ -36,7 +36,7 @@ class Account {
     const accounts = rows as any[];
     if (accounts.length === 0) return null;
     const account = accounts[0];
-    return new Account(account.account_name, account.email, account.password_hash, account.id);
+    return new Account(account.account_name, account.email, account.password_hash, account.account_id);
   }
 
   static async findById(id: number): Promise<Account | null> {
