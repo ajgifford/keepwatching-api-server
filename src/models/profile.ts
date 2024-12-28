@@ -4,11 +4,24 @@ class Profile {
   id?: number;
   account_id: number;
   name: string;
+  showsToWatch?: number = 0;
+  showsWatching?: number = 0;
+  showsWatched?: number = 0;
 
-  constructor(account_id: number, name: string, id?: number) {
+  constructor(
+    account_id: number,
+    name: string,
+    id?: number,
+    showsToWatch?: number,
+    showsWatching?: number,
+    showsWacthed?: number,
+  ) {
     this.account_id = account_id;
     this.name = name;
     if (id) this.id = id;
+    if (showsToWatch) this.showsToWatch = showsToWatch;
+    if (showsWatching) this.showsWatching = showsWatching;
+    if (showsWacthed) this.showsWatched = showsWacthed;
   }
 
   async save() {

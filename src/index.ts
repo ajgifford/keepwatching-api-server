@@ -12,6 +12,7 @@ import {
   sampleShows_3,
 } from './mock_data/mock_shows';
 import authRouter from './routes/authRouter';
+import favoritesRouter from './routes/favoritesRouter';
 import profilesRouter from './routes/profilesRouter';
 import dotenvx from '@dotenvx/dotenvx';
 import bodyParser from 'body-parser';
@@ -47,6 +48,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(authRouter);
 app.use(profilesRouter);
+app.use(favoritesRouter);
 app.use(cookieParser());
 
 app.use(errorHandler);
