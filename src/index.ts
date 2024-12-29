@@ -1,3 +1,5 @@
+import 'dotenv/config';
+
 import { authenticate } from './middleware/authMiddleware';
 import { errorHandler } from './middleware/errorMiddleware';
 import { sampleAccount, sampleProfiles } from './mock_data/mock_account';
@@ -12,17 +14,16 @@ import {
   sampleShows_3,
 } from './mock_data/mock_shows';
 import authRouter from './routes/authRouter';
+import discoverRouter from './routes/discoverRouter';
 import favoritesRouter from './routes/favoritesRouter';
 import profilesRouter from './routes/profilesRouter';
-import dotenvx from '@dotenvx/dotenvx';
+import searchRouter from './routes/searchRouter';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { Express, Request, Response } from 'express';
 import helmet from 'helmet';
 import multer from 'multer';
-
-dotenvx.config();
 
 const app: Express = express();
 const port = process.env.PORT || 3000;
@@ -48,6 +49,8 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(authRouter);
 app.use(profilesRouter);
+app.use(searchRouter);
+app.use(discoverRouter);
 app.use(favoritesRouter);
 app.use(cookieParser());
 
