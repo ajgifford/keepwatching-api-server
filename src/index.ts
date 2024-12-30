@@ -15,9 +15,9 @@ import {
 } from './mock_data/mock_shows';
 import authRouter from './routes/authRouter';
 import discoverRouter from './routes/discoverRouter';
-import favoritesRouter from './routes/favoritesRouter';
 import profilesRouter from './routes/profilesRouter';
 import searchRouter from './routes/searchRouter';
+import showsRouter from './routes/showsRouter';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
@@ -51,7 +51,7 @@ app.use(authRouter);
 app.use(profilesRouter);
 app.use(searchRouter);
 app.use(discoverRouter);
-app.use(favoritesRouter);
+app.use(showsRouter);
 app.use(cookieParser());
 
 app.use(errorHandler);
@@ -145,16 +145,6 @@ app.get('/api/show/:id', async (req: Request, res: Response) => {
 
 app.get('/api/movies', (req, res) => {
   res.json(sampleMovies);
-});
-
-app.get('/api/accounts/:id', (req: Request, res: Response) => {
-  // res.header('Access-Control-Allow-Origin', '*');
-  res.json(sampleAccount);
-});
-
-app.patch('/api/accounts/:id', (req, res) => {
-  const { id } = req.params;
-  res.send(`Got a PATCH request at /api/accounts/${id}`);
 });
 
 app.listen(port, (err?: Error) => {

@@ -1,5 +1,5 @@
 import { axiosTMDBAPIInstance } from '../utils/axiosInstance';
-import axios from 'axios';
+import { createImagePath } from '../utils/imageUtility';
 import { Request, Response } from 'express';
 
 const tvGenreIdToGenreMap: Map<number, string> = new Map();
@@ -34,7 +34,7 @@ export const searchShow = async (req: Request, res: Response) => {
       genres: generateTVGenreArray(result.genre_ids),
       premiered: result.first_air_date,
       summary: result.overview,
-      image: `http://image.tmdb.org/t/p/w185/${result.poster_path}`,
+      image: createImagePath(result.poster_path),
       rating: result.vote_average,
     };
   });
