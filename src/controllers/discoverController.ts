@@ -10,7 +10,6 @@ export const discoverTopShows = async (req: Request, res: Response) => {
       service: `${req.query.service}`,
     },
   };
-  console.log('Request Options', config);
   const response = await axiosStreamingAPIInstance.get('/shows/top', config);
   res.status(200).json(response.data);
 };
