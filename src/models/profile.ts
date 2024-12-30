@@ -34,7 +34,7 @@ class Profile {
     const query = 'UPDATE profiles SET name = ? WHERE profile_id = ?';
     const [result] = await pool.execute(query, [name, this.id]);
     if ((result as any).affectedRows === 0) return null;
-    return await Profile.findById(this.id!);
+    return new Profile(this.account_id, name, this.id, this.showsToWatch, this.showsWatching, this.showsWatched);
   }
 
   async delete(id: number) {
@@ -53,10 +53,20 @@ class Profile {
   }
 
   static async getAllByAccountId(account_id: number): Promise<Profile[]> {
-    const query = `SELECT * FROM profiles WHERE account_id = ?`;
+    const query = `SELECT * FROM profile_show_counts WHERE account_id = ?`;
     const [rows] = await pool.execute(query, [account_id]);
     const profiles = rows as any[];
-    return profiles.map((profile) => new Profile(profile.account_id, profile.name, profile.profile_id));
+    return profiles.map(
+      (profile) =>
+        new Profile(
+          profile.account_id,
+          profile.profile_name,
+          profile.profile_id,
+          profile.not_watched_count,
+          profile.watching_count,
+          profile.watched_count,
+        ),
+    );
   }
 }
 

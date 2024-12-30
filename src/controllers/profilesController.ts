@@ -41,9 +41,9 @@ export const editProfile = asyncHandler(async (req: Request, res: Response) => {
       result: {
         id: updatedProfle?.id,
         name: updatedProfle?.name,
-        showsToWatch: 0,
-        showsWatching: 0,
-        showsWatched: 0,
+        showsToWatch: updatedProfle?.showsToWatch,
+        showsWatching: updatedProfle?.showsWatching,
+        showsWatched: updatedProfle?.showsWatched,
       },
     });
   } else {
