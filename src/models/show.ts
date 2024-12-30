@@ -65,17 +65,17 @@ class Show {
   }
 
   async saveGenres(show_id: number, genre_id: number) {
-    const query = 'INSERT into tvshowgenres (show_id, genre_id) VALUE (?,?)';
+    const query = 'INSERT into tv_show_genres (show_id, genre_id) VALUE (?,?)';
     await pool.execute(query, [show_id, genre_id]);
   }
 
   async saveFavorite(profile_id: string) {
-    const query = 'INSERT into showfavorites (profile_id, show_id) VALUE (?,?)';
+    const query = 'INSERT into show_favorites (profile_id, show_id) VALUE (?,?)';
     await pool.execute(query, [Number(profile_id), this.id]);
   }
 
   async initializeWatchStatus(profile_id: string) {
-    const query = 'INSERT into showwatchstatus (profile_id, show_id) VALUE (?,?)';
+    const query = 'INSERT into show_watch_status (profile_id, show_id) VALUE (?,?)';
     await pool.execute(query, [Number(profile_id), this.id]);
   }
 
