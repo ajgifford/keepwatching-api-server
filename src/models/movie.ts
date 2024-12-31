@@ -99,6 +99,12 @@ class Movie {
     if ((result as any).affectedRows === 0) return false;
     return true;
   }
+
+  static async getMoviesForProfile(profile_id: string) {
+    const query = 'SELECT * FROM profile_movies where profile_id = ?';
+    const [rows] = await pool.execute(query, [Number(profile_id)]);
+    return rows;
+  }
 }
 
 export default Movie;

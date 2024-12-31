@@ -55,6 +55,18 @@ function getUSWatchProviders(movie: MovieDetails): string {
   return usWatchProvider?.flatrate[0]?.provider_name ?? 'Theater';
 }
 
+export const getMovies = async (req: Request, res: Response) => {
+  const { profileId } = req.params;
+  console.log(`GET /api/profiles/${profileId}/movies`);
+  try {
+    const results = await Movie.getMoviesForProfile(profileId);
+    const json = { message: 'Successfully retrieved movies for a profile', results: results };
+    res.status(200).json(json);
+  } catch (error) {
+    res.status(500).json({ message: 'Unexpected error while getting movies', error: error });
+  }
+};
+
 export const addFavorite = async (req: Request, res: Response) => {
   const { profileId } = req.params;
   console.log(`POST /api/profiles/${profileId}/movies/favorites`, req.body);
