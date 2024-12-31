@@ -70,11 +70,6 @@ class Show {
   }
 
   async saveFavorite(profile_id: string) {
-    const query = 'INSERT into show_favorites (profile_id, show_id) VALUE (?,?)';
-    await pool.execute(query, [Number(profile_id), this.id]);
-  }
-
-  async initializeWatchStatus(profile_id: string) {
     const query = 'INSERT into show_watch_status (profile_id, show_id) VALUE (?,?)';
     await pool.execute(query, [Number(profile_id), this.id]);
   }
@@ -103,7 +98,7 @@ class Show {
   }
 
   static async updateWatchStatus(profile_id: string, show_id: number, status: string): Promise<boolean> {
-    const query = 'UPDATE showwatchstatus SET status = ? WHERE profile_id = ? AND show_id = ?';
+    const query = 'UPDATE show_watch_status SET status = ? WHERE profile_id = ? AND show_id = ?';
     const [result] = await pool.execute(query, [status, profile_id, show_id]);
     if ((result as any).affectedRows === 0) return false;
     return true;

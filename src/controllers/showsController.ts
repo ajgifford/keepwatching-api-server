@@ -66,7 +66,6 @@ export const addFavorite = async (req: Request, res: Response) => {
       await showToFavorite.save();
     }
     await showToFavorite.saveFavorite(profileId);
-    await showToFavorite.initializeWatchStatus(profileId);
     res
       .status(200)
       .json({ message: `Successfully saved ${showToFavorite.title} as a favorite`, results: [showToFavorite] });

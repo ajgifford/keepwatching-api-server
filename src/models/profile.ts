@@ -53,7 +53,7 @@ class Profile {
   }
 
   static async getAllByAccountId(account_id: number): Promise<Profile[]> {
-    const query = `SELECT * FROM profile_show_counts WHERE account_id = ?`;
+    const query = `SELECT * FROM profile_watch_counts WHERE account_id = ?`;
     const [rows] = await pool.execute(query, [account_id]);
     const profiles = rows as any[];
     return profiles.map(

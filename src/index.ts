@@ -15,6 +15,7 @@ import {
 } from './mock_data/mock_shows';
 import authRouter from './routes/authRouter';
 import discoverRouter from './routes/discoverRouter';
+import moviesRouter from './routes/moviesRouter';
 import profilesRouter from './routes/profilesRouter';
 import searchRouter from './routes/searchRouter';
 import showsRouter from './routes/showsRouter';
@@ -52,6 +53,7 @@ app.use(profilesRouter);
 app.use(searchRouter);
 app.use(discoverRouter);
 app.use(showsRouter);
+app.use(moviesRouter);
 app.use(cookieParser());
 
 app.use(errorHandler);
