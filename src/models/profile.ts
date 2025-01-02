@@ -7,6 +7,8 @@ class Profile {
   showsToWatch?: number = 0;
   showsWatching?: number = 0;
   showsWatched?: number = 0;
+  moviesToWatch?: number = 0;
+  moviesWatched?: number = 0;
 
   constructor(
     account_id: number,
@@ -15,6 +17,8 @@ class Profile {
     showsToWatch?: number,
     showsWatching?: number,
     showsWacthed?: number,
+    moviesToWatch?: number,
+    movesWatched?: number,
   ) {
     this.account_id = account_id;
     this.name = name;
@@ -22,6 +26,8 @@ class Profile {
     if (showsToWatch) this.showsToWatch = showsToWatch;
     if (showsWatching) this.showsWatching = showsWatching;
     if (showsWacthed) this.showsWatched = showsWacthed;
+    if (moviesToWatch) this.moviesToWatch = moviesToWatch;
+    if (movesWatched) this.moviesWatched = movesWatched;
   }
 
   async save() {
@@ -34,7 +40,16 @@ class Profile {
     const query = 'UPDATE profiles SET name = ? WHERE profile_id = ?';
     const [result] = await pool.execute(query, [name, this.id]);
     if ((result as any).affectedRows === 0) return null;
-    return new Profile(this.account_id, name, this.id, this.showsToWatch, this.showsWatching, this.showsWatched);
+    return new Profile(
+      this.account_id,
+      name,
+      this.id,
+      this.showsToWatch,
+      this.showsWatching,
+      this.showsWatched,
+      this.moviesToWatch,
+      this.moviesWatched,
+    );
   }
 
   async delete(id: number) {
@@ -62,9 +77,11 @@ class Profile {
           profile.account_id,
           profile.profile_name,
           profile.profile_id,
-          profile.not_watched_count,
-          profile.watching_count,
-          profile.watched_count,
+          profile.show_not_watched_count,
+          profile.show_watching_count,
+          profile.show_watched_count,
+          profile.movie_not_watched_count,
+          profile.movie_watched_count,
         ),
     );
   }

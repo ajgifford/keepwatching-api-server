@@ -35,15 +35,17 @@ export const editProfile = asyncHandler(async (req: Request, res: Response) => {
 
   const profile = await Profile.findById(Number(profileId));
   if (profile) {
-    const updatedProfle = await profile.update(name);
+    const updatedProfile = await profile.update(name);
     res.status(200).json({
       message: 'Profile edited successfully',
       result: {
-        id: updatedProfle?.id,
-        name: updatedProfle?.name,
-        showsToWatch: updatedProfle?.showsToWatch,
-        showsWatching: updatedProfle?.showsWatching,
-        showsWatched: updatedProfle?.showsWatched,
+        id: updatedProfile?.id,
+        name: updatedProfile?.name,
+        showsToWatch: updatedProfile?.showsToWatch,
+        showsWatching: updatedProfile?.showsWatching,
+        showsWatched: updatedProfile?.showsWatched,
+        moviesToWatch: updatedProfile?.moviesToWatch,
+        moviesWatched: updatedProfile?.moviesWatched,
       },
     });
   } else {
