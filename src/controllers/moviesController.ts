@@ -96,6 +96,7 @@ export const addFavorite = async (req: Request, res: Response) => {
       await movieToFavorite.save();
     }
     await movieToFavorite.saveFavorite(profileId);
+    //todo get the full object and return so it can be added to the state
     res
       .status(200)
       .json({ message: `Successfully svaed ${movieToFavorite.title} as a favorite`, results: [movieToFavorite] });
@@ -108,7 +109,7 @@ export const updateWatchStatus = async (req: Request, res: Response) => {
   const { profileId } = req.params;
   console.log(`PUT /api/profiles/${profileId}/movies/watchstatus`, req.body);
   try {
-    const movie_id = req.body.id;
+    const movie_id = req.body.movie_id;
     const status = req.body.status;
     const success = await Movie.updateWatchStatus(profileId, movie_id, status);
     if (success) {
