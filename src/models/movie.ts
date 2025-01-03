@@ -1,4 +1,5 @@
 import pool from '../utils/db';
+import { QueryResult } from 'mysql2';
 
 class Movie {
   id?: number;
@@ -43,7 +44,6 @@ class Movie {
   }
 
   async save() {
-    console.log('Saving a movie', this);
     const query =
       'INSERT into movies (tmdb_id, title, description, release_date, runtime, image, user_rating, mpa_rating, streaming_service) VALUE (?, ?, ?, ?, ?, ?, ?, ?, ?)';
     const [result] = await pool.execute(query, [
@@ -100,10 +100,17 @@ class Movie {
     return true;
   }
 
-  static async getMoviesForProfile(profile_id: string) {
+  static async getAllMoviesForProfile(profile_id: string) {
     const query = 'SELECT * FROM profile_movies where profile_id = ?';
     const [rows] = await pool.execute(query, [Number(profile_id)]);
     return rows;
+  }
+
+  static async getMovieForProfile(profile_id: string, movie_id: number) {
+    const query = 'SELECT * FROM profile_movies where profile_id = ? AND movie_id = ?';
+    const [rows] = await pool.execute(query, [Number(profile_id), movie_id]);
+    const movies = rows as any[];
+    return movies[0];
   }
 }
 

@@ -59,7 +59,7 @@ export const getMovies = async (req: Request, res: Response) => {
   const { profileId } = req.params;
   console.log(`GET /api/profiles/${profileId}/movies`);
   try {
-    const results = await Movie.getMoviesForProfile(profileId);
+    const results = await Movie.getAllMoviesForProfile(profileId);
     const json = { message: 'Successfully retrieved movies for a profile', results: results };
     res.status(200).json(json);
   } catch (error) {
@@ -96,10 +96,8 @@ export const addFavorite = async (req: Request, res: Response) => {
       await movieToFavorite.save();
     }
     await movieToFavorite.saveFavorite(profileId);
-    //todo get the full object and return so it can be added to the state
-    res
-      .status(200)
-      .json({ message: `Successfully svaed ${movieToFavorite.title} as a favorite`, results: [movieToFavorite] });
+    const newMovie = await Movie.getMovieForProfile(profileId, movieToFavorite.id!);
+    res.status(200).json({ message: `Successfully saved ${movieToFavorite.title} as a favorite`, results: [newMovie] });
   } catch (error) {
     res.status(500).json({ message: 'Unexpected error while adding a favorite', error: error });
   }
