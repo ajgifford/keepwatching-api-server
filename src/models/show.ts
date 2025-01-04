@@ -90,8 +90,8 @@ class Show {
       show.content_rating,
       show.id,
       show.streaming_service,
-      show.season_count,
       show.episode_count,
+      show.season_count,
       undefined,
       undefined,
     );
@@ -102,6 +102,19 @@ class Show {
     const [result] = await pool.execute(query, [status, profile_id, show_id]);
     if ((result as any).affectedRows === 0) return false;
     return true;
+  }
+
+  static async getAllShowsForProfile(profile_id: string) {
+    const query = 'SELECT * FROM profile_shows where profile_id = ?';
+    const [rows] = await pool.execute(query, [Number(profile_id)]);
+    return rows;
+  }
+
+  static async getShowForProfile(profile_id: string, show_id: number) {
+    const query = 'SELECT * FROM profile_shows where profile_id = ? AND show_id = ?';
+    const [rows] = await pool.execute(query, [Number(profile_id), show_id]);
+    const shows = rows as any[];
+    return shows[0];
   }
 }
 

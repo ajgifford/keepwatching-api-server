@@ -60,8 +60,7 @@ export const getMovies = async (req: Request, res: Response) => {
   console.log(`GET /api/profiles/${profileId}/movies`);
   try {
     const results = await Movie.getAllMoviesForProfile(profileId);
-    const json = { message: 'Successfully retrieved movies for a profile', results: results };
-    res.status(200).json(json);
+    res.status(200).json({ message: 'Successfully retrieved movies for a profile', results: results });
   } catch (error) {
     res.status(500).json({ message: 'Unexpected error while getting movies', error: error });
   }

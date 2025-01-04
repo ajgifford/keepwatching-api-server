@@ -38,6 +38,17 @@ function getUSNetwork(networks: Network[]): string {
   return 'unknown';
 }
 
+export const getShows = async (req: Request, res: Response) => {
+  const { profileId } = req.params;
+  console.log(`GET /api/profiles/${profileId}/shows`);
+  try {
+    const results = await Show.getAllShowsForProfile(profileId);
+    res.status(200).json({ message: 'Successfully retrieved shows for a profile', results: results });
+  } catch (error) {
+    res.status(500).json({ message: 'Unexpected error while getting shows', error: error });
+  }
+};
+
 export const addFavorite = async (req: Request, res: Response) => {
   const { profileId } = req.params;
   console.log(`POST /api/profiles/${profileId}/shows/favorites`, req.body);
@@ -58,17 +69,16 @@ export const addFavorite = async (req: Request, res: Response) => {
         getUSRating(responseShow.content_ratings),
         undefined,
         getUSNetwork(responseShow.networks),
-        responseShow.number_of_seasons,
         responseShow.number_of_episodes,
+        responseShow.number_of_seasons,
         undefined,
         responseShow.genres.map((genre: { id: any }) => genre.id),
       );
       await showToFavorite.save();
     }
     await showToFavorite.saveFavorite(profileId);
-    res
-      .status(200)
-      .json({ message: `Successfully saved ${showToFavorite.title} as a favorite`, results: [showToFavorite] });
+    const newShow = await Show.getShowForProfile(profileId, showToFavorite.id!);
+    res.status(200).json({ message: `Successfully saved ${showToFavorite.title} as a favorite`, results: [newShow] });
   } catch (error) {
     res.status(500).json({ message: 'Unexpected error while adding a favorite', error: error });
   }
@@ -78,7 +88,7 @@ export const updateWatchStatus = async (req: Request, res: Response) => {
   const { profileId } = req.params;
   console.log(`PUT /api/profiles/${profileId}/shows/watchstatus`, req.body);
   try {
-    const show_id = req.body.id;
+    const show_id = req.body.show_id;
     const status = req.body.status;
     const success = await Show.updateWatchStatus(profileId, show_id, status);
     if (success) {
