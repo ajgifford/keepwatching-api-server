@@ -1,33 +1,14 @@
 import pool from '../utils/db';
 
 class Profile {
-  id?: number;
   account_id: number;
   name: string;
-  showsToWatch?: number = 0;
-  showsWatching?: number = 0;
-  showsWatched?: number = 0;
-  moviesToWatch?: number = 0;
-  moviesWatched?: number = 0;
+  id?: number;
 
-  constructor(
-    account_id: number,
-    name: string,
-    id?: number,
-    showsToWatch?: number,
-    showsWatching?: number,
-    showsWacthed?: number,
-    moviesToWatch?: number,
-    movesWatched?: number,
-  ) {
+  constructor(account_id: number, name: string, id?: number) {
     this.account_id = account_id;
     this.name = name;
     if (id) this.id = id;
-    if (showsToWatch) this.showsToWatch = showsToWatch;
-    if (showsWatching) this.showsWatching = showsWatching;
-    if (showsWacthed) this.showsWatched = showsWacthed;
-    if (moviesToWatch) this.moviesToWatch = moviesToWatch;
-    if (movesWatched) this.moviesWatched = movesWatched;
   }
 
   async save() {
@@ -40,16 +21,7 @@ class Profile {
     const query = 'UPDATE profiles SET name = ? WHERE profile_id = ?';
     const [result] = await pool.execute(query, [name, this.id]);
     if ((result as any).affectedRows === 0) return null;
-    return new Profile(
-      this.account_id,
-      name,
-      this.id,
-      this.showsToWatch,
-      this.showsWatching,
-      this.showsWatched,
-      this.moviesToWatch,
-      this.moviesWatched,
-    );
+    return new Profile(this.account_id, name, this.id);
   }
 
   async delete(id: number) {
@@ -68,22 +40,10 @@ class Profile {
   }
 
   static async getAllByAccountId(account_id: number): Promise<Profile[]> {
-    const query = `SELECT * FROM profile_watch_counts WHERE account_id = ?`;
+    const query = `SELECT * FROM profiles WHERE account_id = ?`;
     const [rows] = await pool.execute(query, [account_id]);
     const profiles = rows as any[];
-    return profiles.map(
-      (profile) =>
-        new Profile(
-          profile.account_id,
-          profile.profile_name,
-          profile.profile_id,
-          profile.show_not_watched_count,
-          profile.show_watching_count,
-          profile.show_watched_count,
-          profile.movie_not_watched_count,
-          profile.movie_watched_count,
-        ),
-    );
+    return profiles.map((profile) => new Profile(profile.account_id, profile.name, profile.profile_id));
   }
 }
 

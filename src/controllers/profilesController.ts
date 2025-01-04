@@ -6,9 +6,12 @@ import asyncHandler from 'express-async-handler';
 export const getAccountProfiles = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
   console.log(`GET /api/accounts/${id}/profiles`, req.body);
-
   const profiles = await Profile.getAllByAccountId(Number(id));
-  res.status(200).json({ message: `Retrieved profiles for account ${id}`, results: profiles });
+  if (profiles) {
+    res.status(200).json({ message: `Retrieved profiles for account ${id}`, results: profiles });
+  } else {
+    throw new BadRequestError('Failed to get profiles for account');
+  }
 });
 
 export const addProfile = asyncHandler(async (req: Request, res: Response) => {
@@ -41,11 +44,6 @@ export const editProfile = asyncHandler(async (req: Request, res: Response) => {
       result: {
         id: updatedProfile?.id,
         name: updatedProfile?.name,
-        showsToWatch: updatedProfile?.showsToWatch,
-        showsWatching: updatedProfile?.showsWatching,
-        showsWatched: updatedProfile?.showsWatched,
-        moviesToWatch: updatedProfile?.moviesToWatch,
-        moviesWatched: updatedProfile?.moviesWatched,
       },
     });
   } else {
