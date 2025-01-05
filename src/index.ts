@@ -19,6 +19,7 @@ import moviesRouter from './routes/moviesRouter';
 import profilesRouter from './routes/profilesRouter';
 import searchRouter from './routes/searchRouter';
 import showsRouter from './routes/showsRouter';
+import { getCachedStreamingServiceIds, loadStreamingService } from './utils/wacthProvidersUtility';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
@@ -65,9 +66,19 @@ app.get('/', (req: Request, res: Response) => {
   res.send('KeepWatching API');
 });
 
-app.listen(port, (err?: Error) => {
-  if (err) {
-    console.log(err);
+const startServer = async () => {
+  try {
+    console.log('Fetching initial data from the database...');
+    await loadStreamingService();
+    console.log('Data fetched and cached successfully.');
+
+    app.listen(port, () => {
+      console.log(`Server is running on http://localhost:${port}`);
+    });
+  } catch (error) {
+    console.error('Error starting the server:', error);
+    process.exit(1);
   }
-  console.log(`[server]: Server is running at http://localhost:${port}`);
-});
+};
+
+startServer();

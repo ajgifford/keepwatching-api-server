@@ -11,8 +11,7 @@ class Movie {
   image: string;
   user_rating: number;
   mpa_rating: string;
-  streaming_service?: string;
-  genres?: string[];
+  streaming_services?: number[];
   genreIds?: number[];
 
   constructor(
@@ -25,8 +24,7 @@ class Movie {
     user_rating: number,
     mpa_rating: string,
     id?: number,
-    streaming_service?: string,
-    genres?: string[],
+    streaming_services?: number[],
     genreIds?: number[],
   ) {
     this.tmdb_id = tmdb_id;
@@ -38,14 +36,13 @@ class Movie {
     this.user_rating = user_rating;
     this.mpa_rating = mpa_rating;
     if (id) this.id = id;
-    if (streaming_service) this.streaming_service = streaming_service;
-    if (genres) this.genres = genres;
+    if (streaming_services) this.streaming_services = streaming_services;
     if (genreIds) this.genreIds = genreIds;
   }
 
   async save() {
     const query =
-      'INSERT into movies (tmdb_id, title, description, release_date, runtime, image, user_rating, mpa_rating, streaming_service) VALUE (?, ?, ?, ?, ?, ?, ?, ?, ?)';
+      'INSERT into movies (tmdb_id, title, description, release_date, runtime, image, user_rating, mpa_rating) VALUE (?, ?, ?, ?, ?, ?, ?, ?)';
     const [result] = await pool.execute(query, [
       this.tmdb_id,
       this.title,
@@ -55,15 +52,20 @@ class Movie {
       this.image,
       this.user_rating,
       this.mpa_rating,
-      this.streaming_service,
     ]);
     this.id = (result as any).insertId;
     this.genreIds?.map((genre_id) => this.saveGenres(this.id!, genre_id));
+    this.streaming_services?.map((streaming_service_id) => this.saveStreamingServices(this.id!, streaming_service_id));
   }
 
   async saveGenres(movie_id: number, genre_id: number) {
     const query = 'INSERT into movie_genres (movie_id, genre_id) VALUE (?,?)';
     await pool.execute(query, [movie_id, genre_id]);
+  }
+
+  async saveStreamingServices(movie_id: number, streaming_service_id: number) {
+    const query = 'INSERT into movie_services (movie_id, streaming_service_id) VALUE (?, ?)';
+    await pool.execute(query, [movie_id, streaming_service_id]);
   }
 
   async saveFavorite(profile_id: string) {
@@ -87,7 +89,6 @@ class Movie {
       movie.user_rating,
       movie.mpa_rating,
       movie.id,
-      movie.streaming_service,
       undefined,
       undefined,
     );

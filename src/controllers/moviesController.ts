@@ -1,6 +1,7 @@
 import Movie from '../models/movie';
 import { axiosTMDBAPIInstance } from '../utils/axiosInstance';
 import { createImagePath } from '../utils/imageUtility';
+import { getUSWatchProviders } from '../utils/wacthProvidersUtility';
 import { Request, Response } from 'express';
 
 interface ReleaseDates {
@@ -21,24 +22,6 @@ interface Release {
   type: number;
 }
 
-interface ProviderInfo {
-  link: string;
-  flatrate: {
-    logo_path: string;
-    provider_id: number;
-    provider_name: string;
-    display_priority: number;
-  }[];
-}
-
-interface WatchProviders {
-  results: Record<string, ProviderInfo>;
-}
-
-interface MovieDetails {
-  'watch/providers': WatchProviders;
-}
-
 function getUSMPARating(releaseDates: ReleaseDates): string {
   for (const releaseDate of releaseDates.results) {
     if (releaseDate.iso_3166_1 === 'US') {
@@ -47,12 +30,6 @@ function getUSMPARating(releaseDates: ReleaseDates): string {
     }
   }
   return 'PG';
-}
-
-function getUSWatchProviders(movie: MovieDetails): string {
-  const watchProviders = movie['watch/providers']?.results;
-  const usWatchProvider = watchProviders.US;
-  return usWatchProvider?.flatrate[0]?.provider_name ?? 'Theater';
 }
 
 export const getMovies = async (req: Request, res: Response) => {
@@ -89,7 +66,6 @@ export const addFavorite = async (req: Request, res: Response) => {
         getUSMPARating(responseMovie.release_dates),
         undefined,
         getUSWatchProviders(responseMovie),
-        undefined,
         responseMovie.genres.map((genre: { id: any }) => genre.id),
       );
       await movieToFavorite.save();

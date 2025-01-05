@@ -1,6 +1,7 @@
 import Show from '../models/show';
 import { axiosTMDBAPIInstance } from '../utils/axiosInstance';
 import { createImagePath } from '../utils/imageUtility';
+import { getUSWatchProviders } from '../utils/wacthProvidersUtility';
 import { Request, Response } from 'express';
 
 interface ContentRating {
@@ -29,15 +30,6 @@ function getUSRating(contentRatings: ContentRatings): string {
   return 'TV-G';
 }
 
-function getUSNetwork(networks: Network[]): string {
-  for (const network of networks) {
-    if (network.origin_country === 'US') {
-      return network.name;
-    }
-  }
-  return 'unknown';
-}
-
 export const getShows = async (req: Request, res: Response) => {
   const { profileId } = req.params;
   console.log(`GET /api/profiles/${profileId}/shows`);
@@ -57,7 +49,9 @@ export const addFavorite = async (req: Request, res: Response) => {
     const show_id = req.body.id;
     let showToFavorite = await Show.findByTMDBId(show_id);
     if (!showToFavorite) {
-      const response = await axiosTMDBAPIInstance.get(`/tv/${show_id}?append_to_response=content_ratings`);
+      const response = await axiosTMDBAPIInstance.get(
+        `/tv/${show_id}?append_to_response=content_ratings,watch/providers`,
+      );
       const responseShow = response.data;
       showToFavorite = new Show(
         responseShow.id,
@@ -68,10 +62,9 @@ export const addFavorite = async (req: Request, res: Response) => {
         responseShow.vote_average,
         getUSRating(responseShow.content_ratings),
         undefined,
-        getUSNetwork(responseShow.networks),
+        getUSWatchProviders(responseShow),
         responseShow.number_of_episodes,
         responseShow.number_of_seasons,
-        undefined,
         responseShow.genres.map((genre: { id: any }) => genre.id),
       );
       await showToFavorite.save();
