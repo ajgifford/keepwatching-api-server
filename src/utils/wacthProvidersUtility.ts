@@ -18,7 +18,10 @@ export function getUSWatchProviders(content: ContentDetails): number[] {
         streaming_service_ids.push(item.provider_id);
       }
     });
-    return streaming_service_ids;
+    if (streaming_service_ids.length > 0) {
+      return streaming_service_ids;
+    }
+    return [9999];
   }
   return [9999];
 }
