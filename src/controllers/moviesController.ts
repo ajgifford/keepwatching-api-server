@@ -65,7 +65,7 @@ export const addFavorite = async (req: Request, res: Response) => {
         responseMovie.vote_average,
         getUSMPARating(responseMovie.release_dates),
         undefined,
-        getUSWatchProviders(responseMovie),
+        getUSWatchProviders(responseMovie, 9998),
         responseMovie.genres.map((genre: { id: any }) => genre.id),
       );
       await movieToFavorite.save();

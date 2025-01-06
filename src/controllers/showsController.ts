@@ -14,13 +14,6 @@ interface ContentRatings {
   results: ContentRating[];
 }
 
-interface Network {
-  id: string;
-  logo_path: string;
-  name: string;
-  origin_country: string;
-}
-
 function getUSRating(contentRatings: ContentRatings): string {
   for (const result of contentRatings.results) {
     if (result.iso_3166_1 === 'US') {
@@ -62,7 +55,7 @@ export const addFavorite = async (req: Request, res: Response) => {
         responseShow.vote_average,
         getUSRating(responseShow.content_ratings),
         undefined,
-        getUSWatchProviders(responseShow),
+        getUSWatchProviders(responseShow, 9999),
         responseShow.number_of_episodes,
         responseShow.number_of_seasons,
         responseShow.genres.map((genre: { id: any }) => genre.id),

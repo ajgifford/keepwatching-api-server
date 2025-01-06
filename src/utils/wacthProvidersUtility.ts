@@ -7,7 +7,7 @@ export const setCachedStreamingServiceIds = (data: number[]): void => {
   cachedStreaminServiceIds = data;
 };
 
-export function getUSWatchProviders(content: ContentDetails): number[] {
+export function getUSWatchProviders(content: ContentDetails, defaultProvider: number): number[] {
   const watchProviders = content['watch/providers']?.results;
   const usWatchProvider = watchProviders.US;
   if (usWatchProvider && usWatchProvider.flatrate.length > 0) {
@@ -21,9 +21,9 @@ export function getUSWatchProviders(content: ContentDetails): number[] {
     if (streaming_service_ids.length > 0) {
       return streaming_service_ids;
     }
-    return [9999];
+    return [defaultProvider];
   }
-  return [9999];
+  return [defaultProvider];
 }
 
 export async function loadStreamingService() {
