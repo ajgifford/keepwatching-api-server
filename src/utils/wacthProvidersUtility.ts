@@ -10,7 +10,7 @@ export const setCachedStreamingServiceIds = (data: number[]): void => {
 export function getUSWatchProviders(content: ContentDetails, defaultProvider: number): number[] {
   const watchProviders = content['watch/providers']?.results;
   const usWatchProvider = watchProviders.US;
-  if (usWatchProvider && usWatchProvider.flatrate.length > 0) {
+  if (usWatchProvider && usWatchProvider.flatrate && usWatchProvider.flatrate.length > 0) {
     const streaming_service_ids: number[] = [];
     usWatchProvider.flatrate.forEach((item) => {
       const id = item.provider_id;
