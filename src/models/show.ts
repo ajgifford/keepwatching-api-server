@@ -1,4 +1,5 @@
 import pool from '../utils/db';
+import Season from './season';
 
 class Show {
   id?: number;
@@ -71,9 +72,17 @@ class Show {
     await pool.execute(query, [show_id, streaming_service_id]);
   }
 
-  async saveFavorite(profile_id: string) {
+  async saveFavorite(profile_id: string, save_children: boolean) {
     const query = 'INSERT into show_watch_status (profile_id, show_id) VALUE (?,?)';
     await pool.execute(query, [Number(profile_id), this.id]);
+    if (save_children) {
+      const seasonQuery = 'SELECT id FROM seasons WHERE show_id = ?';
+      const [rows] = await pool.execute(seasonQuery, [this.id]);
+      const season_ids = rows as any[];
+      season_ids.forEach((id) => {
+        Season.saveFavoriteWithEpisodes(profile_id, id.id);
+      });
+    }
   }
 
   static async findByTMDBId(tmdb_id: number): Promise<Show | null> {
@@ -116,6 +125,16 @@ class Show {
     const [rows] = await pool.execute(query, [Number(profile_id), show_id]);
     const shows = rows as any[];
     return shows[0];
+  }
+
+  static async getShowWithSeasonsForProfile(profile_id: string, show_id: string) {
+    const query = 'SELECT * FROM profile_shows where profile_id = ? AND show_id = ?';
+    const [rows] = await pool.execute(query, [Number(profile_id), Number(show_id)]);
+    const shows = rows as any[];
+    const show = shows[0];
+    const seasons = await Season.getSeasonsForShow(profile_id, show_id);
+    show.seasons = seasons;
+    return show;
   }
 }
 

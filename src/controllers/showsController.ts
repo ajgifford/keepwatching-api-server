@@ -1,3 +1,5 @@
+import Episode from '../models/episode';
+import Season from '../models/season';
 import Show from '../models/show';
 import { axiosTMDBAPIInstance } from '../utils/axiosInstance';
 import { createImagePath } from '../utils/imageUtility';
@@ -34,40 +36,102 @@ export const getShows = async (req: Request, res: Response) => {
   }
 };
 
+export const getSeasons = async (req: Request, res: Response) => {
+  const { profileId, showId } = req.params;
+  console.log(`GET /api/profiles/${profileId}/shows/${showId}/seasons`);
+  try {
+    const show = await Show.getShowWithSeasonsForProfile(profileId, showId);
+    res.status(200).json({ message: 'Successfully retrieved seasons for a show', results: [show] });
+  } catch (error) {
+    res.status(500).json({ message: 'Unexpected error while getting seasons', error: error });
+  }
+};
+
 export const addFavorite = async (req: Request, res: Response) => {
   const { profileId } = req.params;
   console.log(`POST /api/profiles/${profileId}/shows/favorites`, req.body);
 
   try {
     const show_id = req.body.id;
-    let showToFavorite = await Show.findByTMDBId(show_id);
-    if (!showToFavorite) {
-      const response = await axiosTMDBAPIInstance.get(
-        `/tv/${show_id}?append_to_response=content_ratings,watch/providers`,
-      );
-      const responseShow = response.data;
-      showToFavorite = new Show(
-        responseShow.id,
-        responseShow.name,
-        responseShow.overview,
-        responseShow.first_air_date,
-        createImagePath(responseShow.poster_path),
-        responseShow.vote_average,
-        getUSRating(responseShow.content_ratings),
-        undefined,
-        getUSWatchProviders(responseShow, 9999),
-        responseShow.number_of_episodes,
-        responseShow.number_of_seasons,
-        responseShow.genres.map((genre: { id: any }) => genre.id),
-      );
-      await showToFavorite.save();
+    const existingShowToFavorite = await Show.findByTMDBId(show_id);
+    if (existingShowToFavorite) {
+      console.log('Favoriting an existing show');
+      return favoriteExistingShowForNewProfile(existingShowToFavorite, profileId, res);
     }
-    await showToFavorite.saveFavorite(profileId);
-    const newShow = await Show.getShowForProfile(profileId, showToFavorite.id!);
-    res.status(200).json({ message: `Successfully saved ${showToFavorite.title} as a favorite`, results: [newShow] });
+    console.log('Favoriting a new show');
+    favoriteNewShow(show_id, profileId, res);
   } catch (error) {
     res.status(500).json({ message: 'Unexpected error while adding a favorite', error: error });
   }
+};
+
+const favoriteExistingShowForNewProfile = async (showToFavorite: Show, profileId: string, res: Response) => {
+  await showToFavorite.saveFavorite(profileId, true);
+  const show = await Show.getShowForProfile(profileId, showToFavorite.id!);
+  res.status(200).json({ message: `Successfully saved ${showToFavorite.title} as a favorite`, results: [show] });
+};
+
+const favoriteNewShow = async (show_id: number, profileId: string, res: Response) => {
+  const response = await axiosTMDBAPIInstance.get(`/tv/${show_id}?append_to_response=content_ratings,watch/providers`);
+  const responseShow = response.data;
+  const newShowToFavorite = new Show(
+    responseShow.id,
+    responseShow.name,
+    responseShow.overview,
+    responseShow.first_air_date,
+    createImagePath(responseShow.poster_path),
+    responseShow.vote_average,
+    getUSRating(responseShow.content_ratings),
+    undefined,
+    getUSWatchProviders(responseShow, 9999),
+    responseShow.number_of_episodes,
+    responseShow.number_of_seasons,
+    responseShow.genres.map((genre: { id: any }) => genre.id),
+  );
+  await newShowToFavorite.save();
+  await newShowToFavorite.saveFavorite(profileId, false);
+  const show = await Show.getShowForProfile(profileId, newShowToFavorite.id!);
+  res.status(200).json({ message: `Successfully saved ${newShowToFavorite.title} as a favorite`, results: [show] });
+  fetchSeasonsAndEpisodes(responseShow, newShowToFavorite.id!, profileId);
+};
+
+const fetchSeasonsAndEpisodes = async (show: any, show_id: number, profileId: string) => {
+  show.seasons.map(async (responseSeason: any) => {
+    const season = new Season(
+      show_id,
+      responseSeason.id,
+      responseSeason.name,
+      responseSeason.overview,
+      responseSeason.season_number,
+      responseSeason.air_date,
+      createImagePath(responseSeason.poster_path),
+      responseSeason.episode_count,
+    );
+    await season.save();
+    await season.saveFavorite(profileId);
+
+    const response = await axiosTMDBAPIInstance.get(`/tv/${show.id}/season/${season.season_number}`);
+    const responseData = response.data;
+    const episodes = responseData.episodes.map(async (responseEpisode: any) => {
+      const episode = new Episode(
+        responseEpisode.id,
+        show_id,
+        season.id!,
+        responseEpisode.episode_number,
+        responseEpisode.episode_type,
+        responseEpisode.season_number,
+        responseEpisode.name,
+        responseEpisode.overview,
+        responseEpisode.air_date,
+        responseEpisode.runtime,
+        createImagePath(responseEpisode.still_path),
+      );
+      await episode.save();
+      await episode.saveFavorite(profileId);
+    });
+    season.episodes = episodes;
+    return season;
+  });
 };
 
 export const updateWatchStatus = async (req: Request, res: Response) => {
