@@ -2,24 +2,13 @@ import 'dotenv/config';
 
 import { authenticate } from './middleware/authMiddleware';
 import { errorHandler } from './middleware/errorMiddleware';
-import { sampleAccount, sampleProfiles } from './mock_data/mock_account';
-import { sampleMovies } from './mock_data/mock_movies';
-import {
-  sampleEpisodes,
-  sampleSeasons,
-  sampleShow,
-  sampleShows,
-  sampleShowsWithProfiles,
-  sampleShows_2,
-  sampleShows_3,
-} from './mock_data/mock_shows';
 import authRouter from './routes/authRouter';
 import discoverRouter from './routes/discoverRouter';
 import moviesRouter from './routes/moviesRouter';
 import profilesRouter from './routes/profilesRouter';
 import searchRouter from './routes/searchRouter';
 import showsRouter from './routes/showsRouter';
-import { getCachedStreamingServiceIds, loadStreamingService } from './utils/wacthProvidersUtility';
+import { loadStreamingService } from './utils/wacthProvidersUtility';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
