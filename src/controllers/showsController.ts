@@ -55,10 +55,8 @@ export const addFavorite = async (req: Request, res: Response) => {
     const show_id = req.body.id;
     const existingShowToFavorite = await Show.findByTMDBId(show_id);
     if (existingShowToFavorite) {
-      console.log('Favoriting an existing show');
       return favoriteExistingShowForNewProfile(existingShowToFavorite, profileId, res);
     }
-    console.log('Favoriting a new show');
     favoriteNewShow(show_id, profileId, res);
   } catch (error) {
     res.status(500).json({ message: 'Unexpected error while adding a favorite', error: error });
@@ -134,19 +132,22 @@ const fetchSeasonsAndEpisodes = async (show: any, show_id: number, profileId: st
   });
 };
 
-export const updateWatchStatus = async (req: Request, res: Response) => {
+export const updateShowWatchStatus = async (req: Request, res: Response) => {
   const { profileId } = req.params;
   console.log(`PUT /api/profiles/${profileId}/shows/watchstatus`, req.body);
   try {
     const show_id = req.body.show_id;
     const status = req.body.status;
-    const success = await Show.updateWatchStatus(profileId, show_id, status);
+    const recursive: boolean = req.body.recursive;
+    const success = recursive
+      ? await Show.updateAllWatchStatuses(profileId, show_id, status)
+      : await Show.updateWatchStatus(profileId, show_id, status);
     if (success) {
-      res.status(200).json({ message: 'Successfully updated the watch status' });
+      res.status(200).json({ message: 'Successfully updated the show watch status' });
     } else {
       res.status(400).json({ message: 'No status was updated' });
     }
   } catch (error) {
-    res.status(500).json({ message: 'Unexpected error while updating a watch status', error: error });
+    res.status(500).json({ message: 'Unexpected error while updating a show watch status', error: error });
   }
 };

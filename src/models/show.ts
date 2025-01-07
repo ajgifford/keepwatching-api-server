@@ -108,9 +108,27 @@ class Show {
   }
 
   static async updateWatchStatus(profile_id: string, show_id: number, status: string): Promise<boolean> {
-    const query = 'UPDATE show_watch_status SET status = ? WHERE profile_id = ? AND show_id = ?';
-    const [result] = await pool.execute(query, [status, profile_id, show_id]);
-    if ((result as any).affectedRows === 0) return false;
+    const showQuery = 'UPDATE show_watch_status SET status = ? WHERE profile_id = ? AND show_id = ?';
+    const [showResult] = await pool.execute(showQuery, [status, profile_id, show_id]);
+    if ((showResult as any).affectedRows === 0) return false;
+    return true;
+  }
+
+  static async updateAllWatchStatuses(profile_id: string, show_id: number, status: string): Promise<boolean> {
+    //update show
+    const showQuery = 'UPDATE show_watch_status SET status = ? WHERE profile_id = ? AND show_id = ?';
+    const [showResult] = await pool.execute(showQuery, [status, profile_id, show_id]);
+    if ((showResult as any).affectedRows === 0) return false;
+    //update seasons (for show)
+    const seasonsQuery =
+      'UPDATE season_watch_status SET status = ? WHERE profile_id = ? AND season_id IN (SELECT id FROM seasons WHERE show_id = ?)';
+    const [seasonsResult] = await pool.execute(seasonsQuery, [status, profile_id, show_id]);
+    if ((seasonsResult as any).affectedRows === 0) return false;
+    //update episodes (for seasons/show)
+    const episodesQuery =
+      'UPDATE episode_watch_status SET status = ? WHERE profile_id = ? AND episode_id IN (SELECT id FROM episodes WHERE season_id IN (SELECT id FROM seasons WHERE show_id = ?))';
+    const [episodesResult] = await pool.execute(episodesQuery, [status, profile_id, show_id]);
+    if ((episodesResult as any).affectedRows === 0) return false;
     return true;
   }
 

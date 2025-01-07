@@ -68,9 +68,22 @@ class Season {
   }
 
   static async updateWatchStatus(profile_id: string, season_id: number, status: string): Promise<boolean> {
-    const query = 'UPDATE season_watch_status SET status = ? WHERE profile_id = ? AND season_id = ?';
-    const [result] = await pool.execute(query, [status, profile_id, season_id]);
-    if ((result as any).affectedRows === 0) return false;
+    const seasonQuery = 'UPDATE season_watch_status SET status = ? WHERE profile_id = ? AND season_id = ?';
+    const [seasonResult] = await pool.execute(seasonQuery, [status, profile_id, season_id]);
+    if ((seasonResult as any).affectedRows === 0) return false;
+    return true;
+  }
+
+  static async updateAllWatchStatuses(profile_id: string, season_id: number, status: string): Promise<boolean> {
+    //update season
+    const seasonQuery = 'UPDATE season_watch_status SET status = ? WHERE profile_id = ? AND season_id = ?';
+    const [seasonResult] = await pool.execute(seasonQuery, [status, profile_id, season_id]);
+    if ((seasonResult as any).affectedRows === 0) return false;
+    //update episodes (for seasons)
+    const episodeQuery =
+      'UPDATE episode_watch_status SET status = ? WHERE profile_id = ? AND episode_id IN (SELECT id from episodes where season_id = ?)';
+    const [episodeResult] = await pool.execute(episodeQuery, [status, profile_id, season_id]);
+    if ((episodeResult as any).affectedRows === 0) return false;
     return true;
   }
 

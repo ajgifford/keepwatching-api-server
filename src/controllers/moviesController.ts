@@ -78,7 +78,7 @@ export const addFavorite = async (req: Request, res: Response) => {
   }
 };
 
-export const updateWatchStatus = async (req: Request, res: Response) => {
+export const updateMovieWatchStatus = async (req: Request, res: Response) => {
   const { profileId } = req.params;
   console.log(`PUT /api/profiles/${profileId}/movies/watchstatus`, req.body);
   try {
