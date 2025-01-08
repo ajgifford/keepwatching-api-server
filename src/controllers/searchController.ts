@@ -1,6 +1,6 @@
 import { axiosTMDBAPIInstance } from '../utils/axiosInstance';
 import { generateGenreArray } from '../utils/genreUtility';
-import { createImagePath } from '../utils/imageUtility';
+import { buildTMDBImagePath } from '../utils/imageUtility';
 import { Request, Response } from 'express';
 
 export const searchShows = async (req: Request, res: Response) => {
@@ -16,7 +16,7 @@ export const searchShows = async (req: Request, res: Response) => {
       genres: generateGenreArray(result.genre_ids),
       premiered: result.first_air_date,
       summary: result.overview,
-      image: createImagePath(result.poster_path),
+      image: buildTMDBImagePath(result.poster_path),
       rating: result.vote_average,
     };
   });
@@ -38,7 +38,7 @@ export const searchMovies = async (req: Request, res: Response) => {
       genres: generateGenreArray(result.genre_ids),
       premiered: result.release_date,
       summary: result.overview,
-      image: createImagePath(result.poster_path),
+      image: buildTMDBImagePath(result.poster_path),
       rating: result.vote_average,
     };
   });

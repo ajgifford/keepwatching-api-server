@@ -1,6 +1,7 @@
 import { AuthenticationError, BadRequestError } from '../middleware/errorMiddleware';
 import Account from '../models/account';
 import { clearToken, generateToken } from '../utils/auth';
+import { buildAccountImagePath } from '../utils/imageUtility';
 import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 
@@ -24,7 +25,7 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
         id: account.id,
         name: account.account_name,
         email: account.email,
-        image: buildImageString(account.account_name),
+        image: buildAccountImagePath(account.account_name),
       },
     });
   } else {
@@ -45,7 +46,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
         id: account.id,
         name: account.account_name,
         email: account.email,
-        image: buildImageString(account.account_name),
+        image: buildAccountImagePath(account.account_name),
       },
     });
   } else {
@@ -58,12 +59,3 @@ export const logout = asyncHandler(async (req: Request, res: Response) => {
   clearToken(res);
   res.status(200).json({ message: 'Successfully logged out' });
 });
-
-function buildImageString(accountName: string): string {
-  const formattedAccountName = replaceSpacesWithPlus(accountName);
-  return `https://placehold.co/300x200/orange/white?text=${formattedAccountName}&font=roboto`;
-}
-
-function replaceSpacesWithPlus(input: string): string {
-  return input.replace(/ /g, '+');
-}

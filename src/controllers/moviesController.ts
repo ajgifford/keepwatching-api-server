@@ -1,6 +1,6 @@
 import Movie from '../models/movie';
 import { axiosTMDBAPIInstance } from '../utils/axiosInstance';
-import { createImagePath } from '../utils/imageUtility';
+import { buildTMDBImagePath } from '../utils/imageUtility';
 import { getUSWatchProviders } from '../utils/wacthProvidersUtility';
 import { Request, Response } from 'express';
 
@@ -61,7 +61,7 @@ export const addFavorite = async (req: Request, res: Response) => {
         responseMovie.overview,
         responseMovie.release_date,
         responseMovie.runtime,
-        createImagePath(responseMovie.poster_path),
+        buildTMDBImagePath(responseMovie.poster_path),
         responseMovie.vote_average,
         getUSMPARating(responseMovie.release_dates),
         undefined,
