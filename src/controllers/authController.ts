@@ -5,7 +5,7 @@ import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 
 export const register = asyncHandler(async (req: Request, res: Response) => {
-  console.log('POST /api/accounts', req.body);
+  console.log('POST /api/accounts');
   const { name, email, password } = req.body;
   const accountExists = await Account.findByEmail(email);
 
@@ -33,7 +33,7 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const login = asyncHandler(async (req: Request, res: Response) => {
-  console.log(`POST /api/login`, req.body);
+  console.log(`POST /api/login`);
   const { email, password } = req.body;
   const account = await Account.findByEmail(email);
 
@@ -54,7 +54,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const logout = asyncHandler(async (req: Request, res: Response) => {
-  console.log(`POST /api/logout`, req.body);
+  console.log(`POST /api/logout`);
   clearToken(res);
   res.status(200).json({ message: 'Successfully logged out' });
 });
