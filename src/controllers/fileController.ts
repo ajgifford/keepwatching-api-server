@@ -53,17 +53,3 @@ export const upload = asyncHandler(async (req: Request, res: Response) => {
     });
   }
 });
-
-export const download = (req: Request, res: Response) => {
-  const fileName = req.params.name;
-  console.log(`GET /api/download/${fileName}`, req.body);
-  const directoryPath = __basedir + '/uploads/';
-
-  res.download(directoryPath + fileName, fileName, (err) => {
-    if (err) {
-      res.status(500).send({
-        message: 'Could not download the file. ' + err,
-      });
-    }
-  });
-};
