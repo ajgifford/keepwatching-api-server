@@ -24,7 +24,7 @@ export const addProfile = asyncHandler(async (req: Request, res: Response) => {
   if (profile) {
     res.status(201).json({
       message: 'Profile added successfully',
-      result: { id: profile.id, name: profile.name, showsToWatch: 0, showsWatching: 0, showsWatched: 0 },
+      result: { id: profile.id, name: profile.name },
     });
   } else {
     throw new BadRequestError('Failed to add a profile');

@@ -1,7 +1,7 @@
 import { AuthenticationError, BadRequestError } from '../middleware/errorMiddleware';
 import Account from '../models/account';
 import { clearToken, generateToken } from '../utils/auth';
-import { buildAccountImagePath } from '../utils/imageUtility';
+import { buildDefaultAccountImagePath, getAccountImage } from '../utils/imageUtility';
 import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 
@@ -15,17 +15,17 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
   }
 
   const account = new Account(name, email, password);
-  await account.save();
+  await account.register();
 
   if (account) {
-    generateToken(res, account.id!);
+    generateToken(res, account.account_id!);
     res.status(201).json({
       message: 'Account registered successfully',
       result: {
-        id: account.id,
+        id: account.account_id,
         name: account.account_name,
         email: account.email,
-        image: buildAccountImagePath(account.account_name),
+        image: getAccountImage(account),
       },
     });
   } else {
@@ -39,14 +39,14 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   const account = await Account.findByEmail(email);
 
   if (account && (await account.comparePassword(password))) {
-    generateToken(res, account.id!);
+    generateToken(res, account.account_id!);
     res.status(201).json({
       message: 'Login successful',
       result: {
-        id: account.id,
+        id: account.account_id,
         name: account.account_name,
         email: account.email,
-        image: buildAccountImagePath(account.account_name),
+        image: getAccountImage(account),
       },
     });
   } else {

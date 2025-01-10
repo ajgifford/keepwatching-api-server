@@ -26,7 +26,7 @@ const authenticate = asyncHandler(async (req: Request, res: Response, next: Next
       throw new AuthenticationError('Account not found');
     }
 
-    req.account = { id: account.id!, name: account.account_name, email: account.email };
+    req.account = { id: account.account_id!, name: account.account_name, email: account.email };
     next();
   } catch (e) {
     console.log(e);

@@ -5,6 +5,7 @@ import { errorHandler } from './middleware/errorMiddleware';
 import authRouter from './routes/authRouter';
 import discoverRouter from './routes/discoverRouter';
 import epiosdesRouter from './routes/episodesRouter';
+import fileRouter from './routes/fileRouter';
 import moviesRouter from './routes/moviesRouter';
 import profilesRouter from './routes/profilesRouter';
 import searchRouter from './routes/searchRouter';
@@ -17,9 +18,11 @@ import cors from 'cors';
 import express, { Express, Request, Response } from 'express';
 import helmet from 'helmet';
 import multer from 'multer';
+import path from 'path';
 
 const app: Express = express();
 const port = process.env.PORT || 3000;
+export const __basedir = path.resolve(__dirname, '..');
 
 interface AccountBasicInfo {
   id: number;
@@ -36,7 +39,11 @@ declare global {
 }
 
 // Middleware
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginEmbedderPolicy: false,
+  }),
+);
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -48,7 +55,9 @@ app.use(showsRouter);
 app.use(seasonsRouter);
 app.use(epiosdesRouter);
 app.use(moviesRouter);
+app.use(fileRouter);
 app.use(cookieParser());
+app.use('/uploads', express.static('uploads'));
 
 app.use(errorHandler);
 
