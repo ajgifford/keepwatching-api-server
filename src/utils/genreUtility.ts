@@ -28,8 +28,8 @@ genreIdToGenreMap.set(10752, 'War');
 genreIdToGenreMap.set(10768, 'War & Politics');
 genreIdToGenreMap.set(37, 'Western');
 
-export function generateGenreArray(genreIds: number[]): string[] {
-  let genres: string[] = [];
+export function generateGenreArrayFromIds(genreIds: number[]): string[] {
+  const genres: string[] = [];
   genreIds.map((id) => {
     genres.push(genreIdToGenreMap.get(id)!);
   });

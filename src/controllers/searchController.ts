@@ -1,5 +1,5 @@
 import { axiosTMDBAPIInstance } from '../utils/axiosInstance';
-import { generateGenreArray } from '../utils/genreUtility';
+import { generateGenreArrayFromIds } from '../utils/genreUtility';
 import { buildTMDBImagePath } from '../utils/imageUtility';
 import { Request, Response } from 'express';
 
@@ -13,7 +13,7 @@ export const searchShows = async (req: Request, res: Response) => {
     return {
       id: result.id,
       title: result.name,
-      genres: generateGenreArray(result.genre_ids),
+      genres: generateGenreArrayFromIds(result.genre_ids),
       premiered: result.first_air_date,
       summary: result.overview,
       image: buildTMDBImagePath(result.poster_path),
@@ -22,7 +22,6 @@ export const searchShows = async (req: Request, res: Response) => {
   });
 
   res.status(200).json({ results: searchResult });
-  //&append_to_response=release_dates
 };
 
 export const searchMovies = async (req: Request, res: Response) => {
@@ -35,7 +34,7 @@ export const searchMovies = async (req: Request, res: Response) => {
     return {
       id: result.id,
       title: result.title,
-      genres: generateGenreArray(result.genre_ids),
+      genres: generateGenreArrayFromIds(result.genre_ids),
       premiered: result.release_date,
       summary: result.overview,
       image: buildTMDBImagePath(result.poster_path),
