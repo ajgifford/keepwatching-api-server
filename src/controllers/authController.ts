@@ -1,12 +1,19 @@
 import { AuthenticationError, BadRequestError } from '../middleware/errorMiddleware';
 import Account from '../models/account';
 import { clearToken, generateToken } from '../utils/auth';
-import { buildDefaultAccountImagePath, getAccountImage } from '../utils/imageUtility';
+import { getAccountImage } from '../utils/imageUtility';
 import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
+import { validationResult } from 'express-validator';
 
 export const register = asyncHandler(async (req: Request, res: Response) => {
   console.log('POST /api/accounts');
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    res.status(400).json({ errors: errors.array() });
+    return;
+  }
+
   const { name, email, password } = req.body;
   const accountExists = await Account.findByEmail(email);
 
@@ -35,6 +42,12 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
 
 export const login = asyncHandler(async (req: Request, res: Response) => {
   console.log(`POST /api/login`);
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    res.status(400).json({ errors: errors.array() });
+    return;
+  }
+
   const { email, password } = req.body;
   const account = await Account.findByEmail(email);
 
