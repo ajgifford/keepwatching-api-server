@@ -1,5 +1,6 @@
 import pool from '../utils/db';
 import Season from './season';
+import { RowDataPacket } from 'mysql2';
 
 class Show {
   id?: number;
@@ -14,6 +15,13 @@ class Show {
   season_count?: number = 0;
   episode_count?: number = 0;
   genreIds?: number[];
+  status?: string;
+  type?: string;
+  in_production?: 0 | 1;
+  last_air_date?: string;
+  last_episode_to_air?: number;
+  next_episode_to_air?: number | null;
+  network?: string | null;
 
   constructor(
     tmdb_id: number,
@@ -28,7 +36,15 @@ class Show {
     episode_count?: number,
     season_count?: number,
     genreIds?: number[],
+    status?: string,
+    type?: string,
+    in_production?: 0 | 1,
+    last_air_date?: string,
+    last_episode_to_air?: number | null,
+    next_episode_to_air?: number | null,
+    network?: string | null,
   ) {
+    console.log('Passed in in_production', in_production);
     this.tmdb_id = tmdb_id;
     this.title = title;
     this.description = description;
@@ -41,11 +57,19 @@ class Show {
     if (season_count) this.season_count = season_count;
     if (episode_count) this.episode_count = episode_count;
     if (genreIds) this.genreIds = genreIds;
+    if (status) this.status = status;
+    if (type) this.type = type;
+    if (in_production !== undefined) this.in_production = in_production;
+    if (last_air_date) this.last_air_date = last_air_date;
+    if (last_episode_to_air) this.last_episode_to_air = last_episode_to_air;
+    if (next_episode_to_air !== undefined) this.next_episode_to_air = next_episode_to_air;
+    if (network !== undefined) this.network = network;
   }
 
   async save() {
+    console.log(this);
     const query =
-      'INSERT into shows (tmdb_id, title, description, release_date, image, user_rating, content_rating, season_count, episode_count) VALUE (?, ?, ?, ?, ?, ?, ?, ?, ?)';
+      'INSERT into shows (tmdb_id, title, description, release_date, image, user_rating, content_rating, season_count, episode_count, status, type, in_production, last_air_date, last_episode_to_air, next_episode_to_air, network) VALUE (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
     const [result] = await pool.execute(query, [
       this.tmdb_id,
       this.title,
@@ -56,6 +80,13 @@ class Show {
       this.content_rating,
       this.season_count,
       this.episode_count,
+      this.status,
+      this.type,
+      this.in_production,
+      this.last_air_date,
+      this.last_episode_to_air,
+      this.next_episode_to_air,
+      this.network,
     ]);
     this.id = (result as any).insertId;
     this.genreIds?.map((genre_id) => this.saveGenres(this.id!, genre_id));
@@ -134,8 +165,45 @@ class Show {
 
   static async getAllShowsForProfile(profile_id: string) {
     const query = 'SELECT * FROM profile_shows where profile_id = ?';
-    const [rows] = await pool.execute(query, [Number(profile_id)]);
-    return rows;
+    const [rows] = await pool.execute<RowDataPacket[]>(query, [Number(profile_id)]);
+    const transformedRows = rows.map(this.transformRow);
+    return transformedRows;
+  }
+
+  private static transformRow(row: RowDataPacket) {
+    const {
+      last_episode_title,
+      last_episode_air_date,
+      last_episode_number,
+      last_episode_season,
+      next_episode_title,
+      next_episode_air_date,
+      next_episode_number,
+      next_episode_season,
+      seasons,
+      ...rest
+    } = row;
+
+    return {
+      ...rest,
+      seasons,
+      last_episode: last_episode_title
+        ? {
+            title: last_episode_title,
+            air_date: last_episode_air_date,
+            episode_number: last_episode_number,
+            season_number: last_episode_season,
+          }
+        : null,
+      next_episode: next_episode_title
+        ? {
+            title: next_episode_title,
+            air_date: next_episode_air_date,
+            episode_number: next_episode_number,
+            season_number: next_episode_season,
+          }
+        : null,
+    };
   }
 
   static async getShowForProfile(profile_id: string, show_id: number) {
@@ -147,9 +215,9 @@ class Show {
 
   static async getShowWithSeasonsForProfile(profile_id: string, show_id: string) {
     const query = 'SELECT * FROM profile_shows where profile_id = ? AND show_id = ?';
-    const [rows] = await pool.execute(query, [Number(profile_id), Number(show_id)]);
-    const shows = rows as any[];
-    const show = shows[0];
+    const [rows] = await pool.execute<RowDataPacket[]>(query, [Number(profile_id), Number(show_id)]);
+    const transformedRows = rows.map(this.transformRow);
+    const show = transformedRows[0];
     const seasons = await Season.getSeasonsForShow(profile_id, show_id);
     show.seasons = seasons;
     return show;

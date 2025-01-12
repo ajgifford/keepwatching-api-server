@@ -16,6 +16,22 @@ interface ContentRatings {
   results: ContentRating[];
 }
 
+interface Network {
+  id: string;
+  logo_path: string;
+  name: string;
+  origin_country: string;
+}
+
+function getUSNetwork(networks: Network[]): string | null {
+  for (const network of networks) {
+    if (network.origin_country === 'US') {
+      return network.name;
+    }
+  }
+  return null;
+}
+
 function getUSRating(contentRatings: ContentRatings): string {
   for (const result of contentRatings.results) {
     if (result.iso_3166_1 === 'US') {
@@ -23,6 +39,18 @@ function getUSRating(contentRatings: ContentRatings): string {
     }
   }
   return 'TV-G';
+}
+
+function getInProduction(show: { in_production: boolean }): 0 | 1 {
+  console.log('In Production >> ', show);
+  return show.in_production ? 1 : 0;
+}
+
+function getEpisodeToAirId(episode: { id: number } | null) {
+  if (episode) {
+    return episode.id;
+  }
+  return null;
 }
 
 export const getShows = async (req: Request, res: Response) => {
@@ -36,7 +64,7 @@ export const getShows = async (req: Request, res: Response) => {
   }
 };
 
-export const getSeasons = async (req: Request, res: Response) => {
+export const getShowDetails = async (req: Request, res: Response) => {
   const { profileId, showId } = req.params;
   console.log(`GET /api/profiles/${profileId}/shows/${showId}/seasons`);
   try {
@@ -85,6 +113,13 @@ const favoriteNewShow = async (show_id: number, profileId: string, res: Response
     responseShow.number_of_episodes,
     responseShow.number_of_seasons,
     responseShow.genres.map((genre: { id: any }) => genre.id),
+    responseShow.status,
+    responseShow.type,
+    getInProduction(responseShow.in_production),
+    responseShow.last_air_date,
+    getEpisodeToAirId(responseShow.last_episode_to_air),
+    getEpisodeToAirId(responseShow.next_episode_to_air),
+    getUSNetwork(responseShow.networks),
   );
   await newShowToFavorite.save();
   await newShowToFavorite.saveFavorite(profileId, false);
