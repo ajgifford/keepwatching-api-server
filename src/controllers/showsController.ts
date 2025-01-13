@@ -42,7 +42,6 @@ function getUSRating(contentRatings: ContentRatings): string {
 }
 
 function getInProduction(show: { in_production: boolean }): 0 | 1 {
-  console.log('In Production >> ', show);
   return show.in_production ? 1 : 0;
 }
 

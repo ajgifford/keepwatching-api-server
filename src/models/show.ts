@@ -44,7 +44,6 @@ class Show {
     next_episode_to_air?: number | null,
     network?: string | null,
   ) {
-    console.log('Passed in in_production', in_production);
     this.tmdb_id = tmdb_id;
     this.title = title;
     this.description = description;
