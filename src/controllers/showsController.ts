@@ -74,6 +74,17 @@ export const getShowDetails = async (req: Request, res: Response) => {
   }
 };
 
+export const getNextWatchForProfile = async (req: Request, res: Response) => {
+  const { profileId } = req.params;
+  console.log(`GET /api/profiles/${profileId}/shows/nextWatch`);
+  try {
+    const shows = await Show.getNextWatchForProfile(profileId);
+    res.status(200).json({ message: 'Successfully retrieved the next watches for a profile', results: shows });
+  } catch (error) {
+    res.status(500).json({ message: 'Unexpected error while getting the next watches for a profile', error: error });
+  }
+};
+
 export const addFavorite = async (req: Request, res: Response) => {
   const { profileId } = req.params;
   console.log(`POST /api/profiles/${profileId}/shows/favorites`, req.body);

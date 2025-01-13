@@ -66,7 +66,6 @@ class Show {
   }
 
   async save() {
-    console.log(this);
     const query =
       'INSERT into shows (tmdb_id, title, description, release_date, image, user_rating, content_rating, season_count, episode_count, status, type, in_production, last_air_date, last_episode_to_air, next_episode_to_air, network) VALUE (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
     const [result] = await pool.execute(query, [
@@ -220,6 +219,12 @@ class Show {
     const seasons = await Season.getSeasonsForShow(profile_id, show_id);
     show.seasons = seasons;
     return show;
+  }
+
+  static async getNextWatchForProfile(profile_id: string) {
+    const query = 'SELECT * from profile_next_watch where profile_id = ?';
+    const [rows] = await pool.execute(query, [Number(profile_id)]);
+    return rows;
   }
 }
 
