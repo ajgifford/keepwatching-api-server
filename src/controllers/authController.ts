@@ -33,6 +33,7 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
         name: account.account_name,
         email: account.email,
         image: getAccountImage(account),
+        default_profile_id: account.default_profile_id,
       },
     });
   } else {
@@ -60,6 +61,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
         name: account.account_name,
         email: account.email,
         image: getAccountImage(account),
+        default_profile_id: account.default_profile_id,
       },
     });
   } else {
