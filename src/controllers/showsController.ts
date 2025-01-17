@@ -126,7 +126,7 @@ const favoriteNewShow = async (show_id: number, profileId: string, res: Response
     responseShow.genres.map((genre: { id: any }) => genre.id),
     responseShow.status,
     responseShow.type,
-    getInProduction(responseShow.in_production),
+    getInProduction(responseShow),
     responseShow.last_air_date,
     getEpisodeToAirId(responseShow.last_episode_to_air),
     getEpisodeToAirId(responseShow.next_episode_to_air),
@@ -213,4 +213,9 @@ export const updateShowWatchStatus = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ message: 'Unexpected error while updating a show watch status', error: error });
   }
+};
+
+export const updateShows = async (req: Request, res: Response) => {
+  console.log(`POST /api/updateShows`);
+  res.sendStatus(202);
 };
