@@ -71,6 +71,11 @@ class Episode {
     await pool.execute(query, [Number(profile_id), episode_id]);
   }
 
+  static async removeFavorite(profile_id: string, episode_id: number) {
+    const query = 'DELETE FROM episode_watch_status WHERE profile_id = ? AND episode_id = ?';
+    await pool.execute(query, [Number(profile_id), episode_id]);
+  }
+
   static async updateWatchStatus(profile_id: string, episode_id: number, status: string): Promise<boolean> {
     const query = 'UPDATE episode_watch_status SET status = ? WHERE profile_id = ? AND episode_id = ?';
     const [result] = await pool.execute(query, [status, profile_id, episode_id]);

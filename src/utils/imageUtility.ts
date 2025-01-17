@@ -1,10 +1,11 @@
 import Account from '../models/account';
+import Profile from '../models/profile';
 
 export function buildTMDBImagePath(path: string, size: string = 'w185'): string {
   return `http://image.tmdb.org/t/p/${size}/${path}`;
 }
 
-export function buildDefaultAccountImagePath(accountName: string): string {
+export function buildDefaultImagePath(accountName: string): string {
   const formattedAccountName = replaceSpacesWithPlus(accountName);
   return `https://placehold.co/300x200/orange/white?text=${formattedAccountName}&font=roboto`;
 }
@@ -19,14 +20,28 @@ export function buildAccountImageName(id: string, mimetype: string) {
   return `accountImage_${id}_${Date.now()}.${extension}`;
 }
 
-export function buildAccountImageURL(image: string) {
-  return `http://localhost:${process.env.PORT}/uploads/${image}`;
+export function buildProfileImageName(id: string, mimetype: string) {
+  const extArray = mimetype.split('/');
+  const extension = extArray[extArray.length - 1];
+  return `profileImage_${id}_${Date.now()}.${extension}`;
+}
+
+export function buildLocalImageURL(image: string, folder: string) {
+  return `http://localhost:${process.env.PORT}/uploads/${folder}/${image}`;
 }
 
 export function getAccountImage(account: Account) {
   if (account.image) {
-    return buildAccountImageURL(account.image);
+    return buildLocalImageURL(account.image, 'accounts');
   } else {
-    return buildDefaultAccountImagePath(account.account_name);
+    return buildDefaultImagePath(account.account_name);
+  }
+}
+
+export function getProfileImage(profile: Profile) {
+  if (profile.image) {
+    return buildLocalImageURL(profile.image, 'profiles');
+  } else {
+    return buildDefaultImagePath(profile.name);
   }
 }

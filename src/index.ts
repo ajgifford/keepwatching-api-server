@@ -2,12 +2,12 @@ import 'dotenv/config';
 
 import { authenticate } from './middleware/authMiddleware';
 import { errorHandler } from './middleware/errorMiddleware';
+import accountRouter from './routes/accountRouter';
 import authRouter from './routes/authRouter';
 import discoverRouter from './routes/discoverRouter';
 import epiosdesRouter from './routes/episodesRouter';
 import fileRouter from './routes/fileRouter';
 import moviesRouter from './routes/moviesRouter';
-import profilesRouter from './routes/profilesRouter';
 import searchRouter from './routes/searchRouter';
 import seasonsRouter from './routes/seasonsRouter';
 import showsRouter from './routes/showsRouter';
@@ -17,7 +17,6 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { Express, Request, Response } from 'express';
 import helmet from 'helmet';
-import multer from 'multer';
 import path from 'path';
 
 const app: Express = express();
@@ -48,7 +47,7 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(authRouter);
-app.use(profilesRouter);
+app.use(accountRouter);
 app.use(searchRouter);
 app.use(discoverRouter);
 app.use(showsRouter);
@@ -60,9 +59,6 @@ app.use(cookieParser());
 app.use('/uploads', express.static('uploads'));
 
 app.use(errorHandler);
-
-// File upload setup
-const upload = multer({ dest: 'uploads/' });
 
 app.get('/', (req: Request, res: Response) => {
   res.send('KeepWatching API');

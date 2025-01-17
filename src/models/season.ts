@@ -67,6 +67,17 @@ class Season {
     });
   }
 
+  static async removeFavorite(profile_id: string, season_id: number) {
+    const query = 'DELETE FROM season_watch_status WHERE profile_id = ? AND season_id = ?';
+    await pool.execute(query, [Number(profile_id), season_id]);
+    const episodeQuery = 'SELECT id FROM episodes WHERE season_id = ?';
+    const [rows] = await pool.execute(episodeQuery, [season_id]);
+    const episode_ids = rows as any[];
+    episode_ids.forEach((id) => {
+      Episode.removeFavorite(profile_id, id.id);
+    });
+  }
+
   static async updateWatchStatus(profile_id: string, season_id: number, status: string): Promise<boolean> {
     const seasonQuery = 'UPDATE season_watch_status SET status = ? WHERE profile_id = ? AND season_id = ?';
     const [seasonResult] = await pool.execute(seasonQuery, [status, profile_id, season_id]);

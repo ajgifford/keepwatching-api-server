@@ -1,3 +1,4 @@
+import { BadRequestError } from '../middleware/errorMiddleware';
 import Movie from '../models/movie';
 import { axiosTMDBAPIInstance } from '../utils/axiosInstance';
 import { buildTMDBImagePath } from '../utils/imageUtility';
@@ -72,9 +73,26 @@ export const addFavorite = async (req: Request, res: Response) => {
     }
     await movieToFavorite.saveFavorite(profileId);
     const newMovie = await Movie.getMovieForProfile(profileId, movieToFavorite.id!);
-    res.status(200).json({ message: `Successfully saved ${movieToFavorite.title} as a favorite`, results: [newMovie] });
+    res.status(200).json({ message: `Successfully saved ${movieToFavorite.title} as a favorite`, result: newMovie });
   } catch (error) {
     res.status(500).json({ message: 'Unexpected error while adding a favorite', error: error });
+  }
+};
+
+export const removeFavorite = async (req: Request, res: Response) => {
+  const { profileId, movieId } = req.params;
+  console.log(`DELETE /api/profiles/${profileId}/movies/favorites/${movieId}`);
+
+  try {
+    const movieToRemove = await Movie.findById(Number(movieId));
+    if (movieToRemove) {
+      movieToRemove.removeFavorite(profileId);
+      res.status(200).json({ message: 'Successfully removed the movie from favorites', result: movieToRemove });
+    } else {
+      throw new BadRequestError('Failed to remove the movie as a favorite');
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Unexpected error while removing a favorite', error: error });
   }
 };
 

@@ -73,12 +73,28 @@ class Movie {
     await pool.execute(query, [Number(profile_id), this.id]);
   }
 
+  async removeFavorite(profile_id: string) {
+    const query = 'DELETE FROM movie_watch_status WHERE profile_id = ? AND movie_id = ?';
+    await pool.execute(query, [profile_id, this.id]);
+  }
+
+  static async findById(id: number): Promise<Movie | null> {
+    const query = `SELECT * FROM movies WHERE id = ?`;
+    const [rows] = await pool.execute(query, [id]);
+    const movies = rows as any[];
+    if (movies.length === 0) return null;
+    return this.transformMovie(movies[0]);
+  }
+
   static async findByTMDBId(tmdb_id: number): Promise<Movie | null> {
     const query = `SELECT * FROM movies WHERE tmdb_id = ?`;
     const [rows] = await pool.execute(query, [tmdb_id]);
     const movies = rows as any[];
     if (movies.length === 0) return null;
-    const movie = movies[0];
+    return this.transformMovie(movies[0]);
+  }
+
+  private static transformMovie(movie: any): Movie {
     return new Movie(
       movie.tmdb_id,
       movie.title,
@@ -112,6 +128,20 @@ class Movie {
     const [rows] = await pool.execute(query, [Number(profile_id), movie_id]);
     const movies = rows as any[];
     return movies[0];
+  }
+
+  static async getRecentMovieReleasesForProfile(profile_id: string) {
+    const query =
+      'SELECT movie_id from profile_movies WHERE profile_id = ? AND release_date BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY) AND CURRENT_DATE() ORDER BY release_date DESC LIMIT 6';
+    const [rows] = await pool.execute(query, [Number(profile_id)]);
+    return rows;
+  }
+
+  static async getUpcomingMovieReleasesForProfile(profile_id: string) {
+    const query =
+      'SELECT movie_id from profile_movies WHERE profile_id = ? AND release_date BETWEEN CURRENT_DATE() AND DATE_ADD(CURRENT_DATE(), INTERVAL 60 DAY) ORDER BY release_date LIMIT 6';
+    const [rows] = await pool.execute(query, [Number(profile_id)]);
+    return rows;
   }
 }
 

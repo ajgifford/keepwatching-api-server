@@ -114,6 +114,39 @@ class Show {
     }
   }
 
+  async removeFavorite(profile_id: string) {
+    const query = 'DELETE FROM show_watch_status WHERE profile_id = ? AND show_id = ?';
+    await pool.execute(query, [profile_id, this.id]);
+    const seasonQuery = 'SELECT id FROM seasons WHERE show_id = ?';
+    const [rows] = await pool.execute(seasonQuery, [this.id]);
+    const season_ids = rows as any[];
+    season_ids.forEach((id) => {
+      Season.removeFavorite(profile_id, id.id);
+    });
+  }
+
+  static async findById(id: number): Promise<Show | null> {
+    const query = `SELECT * FROM shows WHERE id = ?`;
+    const [rows] = await pool.execute(query, [id]);
+    const shows = rows as any[];
+    if (shows.length === 0) return null;
+    const show = shows[0];
+    return new Show(
+      show.tmdb_id,
+      show.title,
+      show.description,
+      show.release_date,
+      show.image,
+      show.user_rating,
+      show.content_rating,
+      show.id,
+      undefined,
+      show.episode_count,
+      show.season_count,
+      undefined,
+    );
+  }
+
   static async findByTMDBId(tmdb_id: number): Promise<Show | null> {
     const query = `SELECT * FROM shows WHERE tmdb_id = ?`;
     const [rows] = await pool.execute(query, [tmdb_id]);
@@ -168,6 +201,29 @@ class Show {
     return transformedRows;
   }
 
+  static async getShowForProfile(profile_id: string, show_id: number) {
+    const query = 'SELECT * FROM profile_shows where profile_id = ? AND show_id = ?';
+    const [rows] = await pool.execute(query, [Number(profile_id), show_id]);
+    const shows = rows as any[];
+    return shows[0];
+  }
+
+  static async getShowWithSeasonsForProfile(profile_id: string, show_id: string) {
+    const query = 'SELECT * FROM profile_shows where profile_id = ? AND show_id = ?';
+    const [rows] = await pool.execute<RowDataPacket[]>(query, [Number(profile_id), Number(show_id)]);
+    const transformedRows = rows.map(this.transformRow);
+    const show = transformedRows[0];
+    const seasons = await Season.getSeasonsForShow(profile_id, show_id);
+    show.seasons = seasons;
+    return show;
+  }
+
+  static async getNextWatchForProfile(profile_id: string) {
+    const query = 'SELECT * from profile_next_watch where profile_id = ? LIMIT 8';
+    const [rows] = await pool.execute(query, [Number(profile_id)]);
+    return rows;
+  }
+
   private static transformRow(row: RowDataPacket) {
     const {
       last_episode_title,
@@ -202,29 +258,6 @@ class Show {
           }
         : null,
     };
-  }
-
-  static async getShowForProfile(profile_id: string, show_id: number) {
-    const query = 'SELECT * FROM profile_shows where profile_id = ? AND show_id = ?';
-    const [rows] = await pool.execute(query, [Number(profile_id), show_id]);
-    const shows = rows as any[];
-    return shows[0];
-  }
-
-  static async getShowWithSeasonsForProfile(profile_id: string, show_id: string) {
-    const query = 'SELECT * FROM profile_shows where profile_id = ? AND show_id = ?';
-    const [rows] = await pool.execute<RowDataPacket[]>(query, [Number(profile_id), Number(show_id)]);
-    const transformedRows = rows.map(this.transformRow);
-    const show = transformedRows[0];
-    const seasons = await Season.getSeasonsForShow(profile_id, show_id);
-    show.seasons = seasons;
-    return show;
-  }
-
-  static async getNextWatchForProfile(profile_id: string) {
-    const query = 'SELECT * from profile_next_watch where profile_id = ?';
-    const [rows] = await pool.execute(query, [Number(profile_id)]);
-    return rows;
   }
 }
 

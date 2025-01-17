@@ -8,7 +8,15 @@ const maxSize: number = 2 * 1024 * 1024;
 
 const storage: StorageEngine = multer.diskStorage({
   destination: (req: Request, file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
-    cb(null, __basedir + '/uploads/');
+    let destinationPath;
+    if (req.path.startsWith('/api/upload/accounts/')) {
+      destinationPath = __basedir + '/uploads/accounts';
+    } else if (req.path.startsWith('/api/upload/profiles/')) {
+      destinationPath = __basedir + '/uploads/profiles';
+    } else {
+      destinationPath = __basedir + '/uploads'; // Fallback directory
+    }
+    cb(null, destinationPath);
   },
   filename: (req: Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
     const { id } = req.params;

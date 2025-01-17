@@ -46,7 +46,7 @@ class Account implements IAccount {
     this.default_profile_id = (profileResult as any).insertId;
   }
 
-  async updateProfileImage(image_path: string) {
+  async updateAccountImage(image_path: string) {
     const query = 'UPDATE accounts SET image = ? WHERE account_id = ?';
     const [result] = await pool.execute(query, [image_path, this.account_id]);
     if ((result as any).affectedRows === 0) return null;
@@ -58,6 +58,13 @@ class Account implements IAccount {
       this.account_id,
       this.default_profile_id,
     );
+  }
+
+  async editAccount(account_name: string, default_profile_id: number) {
+    const query = 'UPDATE accounts SET account_name = ?, default_profile_id = ? WHERE account_id = ?';
+    const [result] = await pool.execute(query, [account_name, default_profile_id, this.account_id]);
+    if ((result as any).affectedRows === 0) return null;
+    return new Account(account_name, this.email, this.password_hash, this.image, this.account_id, default_profile_id);
   }
 
   static async findByEmail(email: string): Promise<Account | null> {
