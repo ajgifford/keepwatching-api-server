@@ -2,7 +2,7 @@ import Account from '../models/account';
 import Profile from '../models/profile';
 
 export function buildTMDBImagePath(path: string, size: string = 'w185'): string {
-  return `http://image.tmdb.org/t/p/${size}/${path}`;
+  return `http://image.tmdb.org/t/p/${size}${path}`;
 }
 
 export function buildDefaultImagePath(accountName: string): string {

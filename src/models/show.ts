@@ -1,4 +1,5 @@
 import pool from '../utils/db';
+import { ShowUpdates } from './content';
 import Season from './season';
 import { RowDataPacket } from 'mysql2';
 
@@ -67,7 +68,7 @@ class Show {
 
   async save() {
     const query =
-      'INSERT into shows (tmdb_id, title, description, release_date, image, user_rating, content_rating, season_count, episode_count, status, type, in_production, last_air_date, last_episode_to_air, next_episode_to_air, network) VALUE (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
+      'INSERT into shows (tmdb_id, title, description, release_date, image, user_rating, content_rating, season_count, episode_count, status, type, in_production, last_air_date, last_episode_to_air, next_episode_to_air, network) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
     const [result] = await pool.execute(query, [
       this.tmdb_id,
       this.title,
@@ -87,22 +88,59 @@ class Show {
       this.network,
     ]);
     this.id = (result as any).insertId;
-    this.genreIds?.map((genre_id) => this.saveGenres(this.id!, genre_id));
-    this.streaming_services?.map((streaming_service_id) => this.saveStreamingServices(this.id!, streaming_service_id));
+    this.genreIds?.map((genre_id) => this.saveGenre(this.id!, genre_id));
+    this.streaming_services?.map((streaming_service_id) => this.saveStreamingService(this.id!, streaming_service_id));
   }
 
-  async saveGenres(show_id: number, genre_id: number) {
-    const query = 'INSERT into tv_show_genres (show_id, genre_id) VALUE (?,?)';
+  async update() {
+    const query =
+      'UPDATE shows SET title = ?, description = ?, release_date = ?, image = ?, user_rating = ?, content_rating = ?, season_count = ?, episode_count = ?, status = ?, type = ?, in_production = ?, last_air_date = ?, last_episode_to_air = ?, next_episode_to_air = ?, network = ? WHERE tmdb_id = ?';
+    const [result] = await pool.execute(query, [
+      this.title,
+      this.description,
+      this.release_date,
+      this.image,
+      this.user_rating,
+      this.content_rating,
+      this.season_count,
+      this.episode_count,
+      this.status,
+      this.type,
+      this.in_production,
+      this.last_air_date,
+      this.last_episode_to_air,
+      this.next_episode_to_air,
+      this.network,
+      this.tmdb_id,
+    ]);
+    this.genreIds?.forEach((genre_id) => this.updateGenre(this.id!, genre_id));
+    this.streaming_services?.forEach((streaming_service_id) =>
+      this.updateStreamingService(this.id!, streaming_service_id),
+    );
+  }
+
+  async saveGenre(show_id: number, genre_id: number) {
+    const query = 'INSERT INTO tv_show_genres (show_id, genre_id) VALUES (?,?)';
     await pool.execute(query, [show_id, genre_id]);
   }
 
-  async saveStreamingServices(show_id: number, streaming_service_id: number) {
-    const query = 'INSERT into tv_show_services (show_id, streaming_service_id) VALUE (?, ?)';
+  async updateGenre(show_id: number, genre_id: number) {
+    const query = 'INSERT IGNORE INTO tv_show_genres (show_id, genre_id) VALUES (?,?)';
+    await pool.execute(query, [show_id, genre_id]);
+  }
+
+  async saveStreamingService(show_id: number, streaming_service_id: number) {
+    const query = 'INSERT into tv_show_services (show_id, streaming_service_id) VALUES (?, ?)';
+    await pool.execute(query, [show_id, streaming_service_id]);
+  }
+
+  async updateStreamingService(show_id: number, streaming_service_id: number) {
+    const query = 'INSERT IGNORE INTO tv_show_services (show_id, streaming_service_id) VALUES (?, ?)';
     await pool.execute(query, [show_id, streaming_service_id]);
   }
 
   async saveFavorite(profile_id: string, save_children: boolean) {
-    const query = 'INSERT into show_watch_status (profile_id, show_id) VALUE (?,?)';
+    const query = 'INSERT into show_watch_status (profile_id, show_id) VALUES (?,?)';
     await pool.execute(query, [Number(profile_id), this.id]);
     if (save_children) {
       const seasonQuery = 'SELECT id FROM seasons WHERE show_id = ?';
@@ -222,6 +260,30 @@ class Show {
     const query = 'SELECT * from profile_next_watch where profile_id = ? LIMIT 8';
     const [rows] = await pool.execute(query, [Number(profile_id)]);
     return rows;
+  }
+
+  static async getShowsForUpdates(): Promise<ShowUpdates[]> {
+    const showIdQuery = `SELECT id, title, tmdb_id, created_at, updated_at from shows where in_production = 1 AND status NOT IN ('Canceled', 'Ended')`;
+    const [rows] = await pool.execute<RowDataPacket[]>(showIdQuery);
+    const shows = rows.map((row) => {
+      return {
+        id: row.id,
+        title: row.title,
+        tmdb_id: row.tmdb_id,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+      };
+    });
+    return shows;
+  }
+
+  async getProfilesForShow(): Promise<number[]> {
+    const query = 'SELECT profile_id FROM show_watch_status where show_id = ?';
+    const [rows] = await pool.execute<RowDataPacket[]>(query, [this.id]);
+    const profileIds = rows.map((row) => {
+      return row.profile_id;
+    });
+    return profileIds;
   }
 
   private static transformRow(row: RowDataPacket) {

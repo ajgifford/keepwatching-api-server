@@ -42,7 +42,7 @@ class Movie {
 
   async save() {
     const query =
-      'INSERT into movies (tmdb_id, title, description, release_date, runtime, image, user_rating, mpa_rating) VALUE (?, ?, ?, ?, ?, ?, ?, ?)';
+      'INSERT into movies (tmdb_id, title, description, release_date, runtime, image, user_rating, mpa_rating) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
     const [result] = await pool.execute(query, [
       this.tmdb_id,
       this.title,
@@ -59,17 +59,17 @@ class Movie {
   }
 
   async saveGenres(movie_id: number, genre_id: number) {
-    const query = 'INSERT into movie_genres (movie_id, genre_id) VALUE (?,?)';
+    const query = 'INSERT into movie_genres (movie_id, genre_id) VALUES (?,?)';
     await pool.execute(query, [movie_id, genre_id]);
   }
 
   async saveStreamingServices(movie_id: number, streaming_service_id: number) {
-    const query = 'INSERT into movie_services (movie_id, streaming_service_id) VALUE (?, ?)';
+    const query = 'INSERT into movie_services (movie_id, streaming_service_id) VALUES (?, ?)';
     await pool.execute(query, [movie_id, streaming_service_id]);
   }
 
   async saveFavorite(profile_id: string) {
-    const query = 'INSERT into movie_watch_status (profile_id, movie_id) VALUE (?,?)';
+    const query = 'INSERT into movie_watch_status (profile_id, movie_id) VALUES (?,?)';
     await pool.execute(query, [Number(profile_id), this.id]);
   }
 

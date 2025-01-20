@@ -3,55 +3,10 @@ import Episode from '../models/episode';
 import Season from '../models/season';
 import Show from '../models/show';
 import { axiosTMDBAPIInstance } from '../utils/axiosInstance';
+import { getEpisodeToAirId, getInProduction, getUSNetwork, getUSRating } from '../utils/contentUtility';
 import { buildTMDBImagePath } from '../utils/imageUtility';
 import { getUSWatchProviders } from '../utils/wacthProvidersUtility';
 import { Request, Response } from 'express';
-
-interface ContentRating {
-  descriptors: string[];
-  iso_3166_1: string;
-  rating: string;
-}
-
-interface ContentRatings {
-  results: ContentRating[];
-}
-
-interface Network {
-  id: string;
-  logo_path: string;
-  name: string;
-  origin_country: string;
-}
-
-function getUSNetwork(networks: Network[]): string | null {
-  for (const network of networks) {
-    if (network.origin_country === 'US') {
-      return network.name;
-    }
-  }
-  return null;
-}
-
-function getUSRating(contentRatings: ContentRatings): string {
-  for (const result of contentRatings.results) {
-    if (result.iso_3166_1 === 'US') {
-      return result.rating;
-    }
-  }
-  return 'TV-G';
-}
-
-function getInProduction(show: { in_production: boolean }): 0 | 1 {
-  return show.in_production ? 1 : 0;
-}
-
-function getEpisodeToAirId(episode: { id: number } | null) {
-  if (episode) {
-    return episode.id;
-  }
-  return null;
-}
 
 export const getShows = async (req: Request, res: Response) => {
   const { profileId } = req.params;
@@ -156,7 +111,7 @@ const fetchSeasonsAndEpisodes = async (show: any, show_id: number, profileId: st
 
     const response = await axiosTMDBAPIInstance.get(`/tv/${show.id}/season/${season.season_number}`);
     const responseData = response.data;
-    const episodes = responseData.episodes.map(async (responseEpisode: any) => {
+    responseData.episodes.forEach(async (responseEpisode: any) => {
       const episode = new Episode(
         responseEpisode.id,
         show_id,
@@ -173,8 +128,6 @@ const fetchSeasonsAndEpisodes = async (show: any, show_id: number, profileId: st
       await episode.save();
       await episode.saveFavorite(profileId);
     });
-    season.episodes = episodes;
-    return season;
   });
 };
 
@@ -213,9 +166,4 @@ export const updateShowWatchStatus = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ message: 'Unexpected error while updating a show watch status', error: error });
   }
-};
-
-export const updateShows = async (req: Request, res: Response) => {
-  console.log(`POST /api/updateShows`);
-  res.sendStatus(202);
 };

@@ -1,3 +1,4 @@
+import { updateShows } from '../controllers/changesController';
 import {
   addFavorite,
   getNextWatchForProfile,
@@ -5,7 +6,6 @@ import {
   getShows,
   removeFavorite,
   updateShowWatchStatus,
-  updateShows,
 } from '../controllers/showsController';
 import express from 'express';
 
