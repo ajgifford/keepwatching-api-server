@@ -8,8 +8,9 @@ import { getEpisodeToAirId, getInProduction, getUSMPARating, getUSNetwork, getUS
 import { buildTMDBImagePath } from '../utils/imageUtility';
 import { getUSWatchProviders } from '../utils/wacthProvidersUtility';
 import { Request, Response } from 'express';
+import CronJob from 'node-cron';
 
-export const supportedChangesSets = [
+const supportedChangesSets = [
   'air_date',
   'episode',
   'episode_number',
@@ -30,25 +31,42 @@ export const supportedChangesSets = [
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export const updateMovies = async (req: Request, res: Response) => {
-  console.log(`POST /api/updateMovies START`);
-  const startTime = performance.now();
+export function initScheduledJobs() {
+  const showsJob = CronJob.schedule('0 2 * * *', () => {
+    console.log('Starting the show change job');
+    const startTime = performance.now();
+    updateShows();
+    const endTime = performance.now();
+    console.log(`Ending the show change job`, endTime - startTime);
+  });
+
+  const moviesJob = CronJob.schedule('0 1 7,14,21,28 * *', () => {
+    console.log('Starting the movie change job');
+    const startTime = performance.now();
+    updateMovies();
+    const endTime = performance.now();
+    console.log(`Ending the movie change job`, endTime - startTime);
+  });
+
+  showsJob.start();
+  moviesJob.start();
+  console.log('Job Scheduler Initialized');
+}
+
+async function updateMovies() {
   try {
     const movies = await Movie.getMoviesForUpdates();
     movies.forEach(async (movie) => {
       await sleep(500);
       await checkForMovieChanges(movie);
     });
-    res.sendStatus(202);
-    const endTime = performance.now();
-    console.log(`POST /api/updateMovies END >>> `, endTime - startTime);
   } catch (error) {
-    res.status(500).json({ message: 'Unexpected error while checking for movie updates', error: error });
+    console.log({ message: 'Unexpected error while checking for movie updates', error: error });
   }
-};
+}
 
 async function checkForMovieChanges(content: ContentUpdates) {
-  const { currentDate, pastDate } = generateDates();
+  const { currentDate, pastDate } = generateDates(10);
   try {
     const changesResponse = await axiosTMDBAPIInstance.get(
       `movie/${content.tmdb_id}/changes?end_date=${currentDate}&start_date=${pastDate}`,
@@ -81,25 +99,20 @@ async function checkForMovieChanges(content: ContentUpdates) {
   }
 }
 
-export const updateShows = async (req: Request, res: Response) => {
-  console.log(`POST /api/updateShows START`);
-  const startTime = performance.now();
+async function updateShows() {
   try {
     const shows = await Show.getShowsForUpdates();
     shows.forEach(async (show) => {
       await sleep(500);
       await checkForShowChanges(show);
     });
-    res.sendStatus(202);
-    const endTime = performance.now();
-    console.log(`POST /api/updateShows END >>> `, endTime - startTime);
   } catch (error) {
-    res.status(500).json({ message: 'Unexpected error while checking for show updates' });
+    console.log({ message: 'Unexpected error while checking for show updates', error: error });
   }
-};
+}
 
 async function checkForShowChanges(content: ContentUpdates) {
-  const { currentDate, pastDate } = generateDates();
+  const { currentDate, pastDate } = generateDates(2);
   try {
     const changesResponse = await axiosTMDBAPIInstance.get(
       `tv/${content.tmdb_id}/changes?end_date=${currentDate}&start_date=${pastDate}`,
@@ -206,7 +219,7 @@ function filterSeasonChanges(changes: ChangeItem[]) {
 }
 
 async function checkSeasonForEpisodeChanges(season_id: number) {
-  const { currentDate, pastDate } = generateDates();
+  const { currentDate, pastDate } = generateDates(2);
   try {
     const response = await axiosTMDBAPIInstance.get(
       `tv/season/${season_id}/changes?end_date=${currentDate}&start_date=${pastDate}`,
@@ -218,11 +231,11 @@ async function checkSeasonForEpisodeChanges(season_id: number) {
   }
 }
 
-function generateDates(): { currentDate: string; pastDate: string } {
+function generateDates(lookback: number): { currentDate: string; pastDate: string } {
   const currentDate = new Date();
   const pastDate = new Date();
 
-  pastDate.setDate(currentDate.getDate() - 14);
+  pastDate.setDate(currentDate.getDate() - lookback);
 
   const formatDate = (date: Date): string => {
     const year = date.getFullYear();

@@ -1,5 +1,6 @@
 import 'dotenv/config';
 
+import { initScheduledJobs } from './controllers/changesController';
 import { authenticate } from './middleware/authMiddleware';
 import { errorHandler } from './middleware/errorMiddleware';
 import accountRouter from './routes/accountRouter';
@@ -69,6 +70,8 @@ const startServer = async () => {
     console.log('Fetching initial data from the database...');
     await loadStreamingService();
     console.log('Data fetched and cached successfully.');
+
+    initScheduledJobs();
 
     app.listen(port, () => {
       console.log(`Server is running on http://localhost:${port}`);

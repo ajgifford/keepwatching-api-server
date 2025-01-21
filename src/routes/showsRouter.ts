@@ -1,4 +1,3 @@
-import { updateShows } from '../controllers/changesController';
 import {
   addFavorite,
   getNextWatchForProfile,
@@ -17,6 +16,5 @@ router.delete('/api/profiles/:profileId/shows/favorites/:showId', removeFavorite
 router.put('/api/profiles/:profileId/shows/watchstatus', updateShowWatchStatus);
 router.get('/api/profiles/:profileId/shows/:showId/details', getShowDetails);
 router.get('/api/profiles/:profileId/shows/nextWatch', getNextWatchForProfile);
-router.post('/api/updateShows', updateShows);
 
 export default router;
