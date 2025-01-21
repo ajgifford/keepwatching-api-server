@@ -33,7 +33,7 @@ export interface Network {
   origin_country: string;
 }
 
-export interface ShowUpdates {
+export interface ContentUpdates {
   id: number;
   title: string;
   tmdb_id: number;
@@ -60,9 +60,20 @@ export interface Changes {
   changes: Change[];
 }
 
-export enum ContentType {
-  Show,
-  Season,
-  Episode,
-  Movie,
+export interface ReleaseDates {
+  results: ReleaseDate[];
+}
+
+export interface ReleaseDate {
+  iso_3166_1: string;
+  release_dates: Release[];
+}
+
+export interface Release {
+  certification: string;
+  descriptors: string[];
+  iso_639_1: string;
+  note: string;
+  release_date: Date;
+  type: number;
 }

@@ -1,5 +1,6 @@
 import pool from '../utils/db';
-import { QueryResult } from 'mysql2';
+import { ContentUpdates } from './content';
+import { QueryResult, RowDataPacket } from 'mysql2';
 
 class Movie {
   id?: number;
@@ -54,17 +55,34 @@ class Movie {
       this.mpa_rating,
     ]);
     this.id = (result as any).insertId;
-    this.genreIds?.map((genre_id) => this.saveGenres(this.id!, genre_id));
-    this.streaming_services?.map((streaming_service_id) => this.saveStreamingServices(this.id!, streaming_service_id));
+    this.genreIds?.map((genre_id) => this.saveGenre(this.id!, genre_id));
+    this.streaming_services?.map((streaming_service_id) => this.saveStreamingService(this.id!, streaming_service_id));
   }
 
-  async saveGenres(movie_id: number, genre_id: number) {
-    const query = 'INSERT into movie_genres (movie_id, genre_id) VALUES (?,?)';
+  async update() {
+    const query =
+      'UPDATE movies SET title = ?, description = ?, release_date = ?, runtime = ?, image = ?, user_rating = ?, mpa_rating = ? WHERE tmdb_id = ?';
+    await pool.execute(query, [
+      this.title,
+      this.description,
+      this.release_date,
+      this.runtime,
+      this.image,
+      this.user_rating,
+      this.mpa_rating,
+      this.tmdb_id,
+    ]);
+    this.genreIds?.map((genre_id) => this.saveGenre(this.id!, genre_id));
+    this.streaming_services?.map((streaming_service_id) => this.saveStreamingService(this.id!, streaming_service_id));
+  }
+
+  async saveGenre(movie_id: number, genre_id: number) {
+    const query = 'INSERT IGNORE into movie_genres (movie_id, genre_id) VALUES (?,?)';
     await pool.execute(query, [movie_id, genre_id]);
   }
 
-  async saveStreamingServices(movie_id: number, streaming_service_id: number) {
-    const query = 'INSERT into movie_services (movie_id, streaming_service_id) VALUES (?, ?)';
+  async saveStreamingService(movie_id: number, streaming_service_id: number) {
+    const query = 'INSERT IGNORE into movie_services (movie_id, streaming_service_id) VALUES (?, ?)';
     await pool.execute(query, [movie_id, streaming_service_id]);
   }
 
@@ -142,6 +160,21 @@ class Movie {
       'SELECT movie_id from profile_movies WHERE profile_id = ? AND release_date BETWEEN CURRENT_DATE() AND DATE_ADD(CURRENT_DATE(), INTERVAL 60 DAY) ORDER BY release_date LIMIT 6';
     const [rows] = await pool.execute(query, [Number(profile_id)]);
     return rows;
+  }
+
+  static async getMoviesForUpdates(): Promise<ContentUpdates[]> {
+    const query = `SELECT id, title, tmdb_id, created_at, updated_at FROM movies WHERE release_date > NOW() - INTERVAL 30 DAY`;
+    const [rows] = await pool.execute<RowDataPacket[]>(query);
+    const movies = rows.map((row) => {
+      return {
+        id: row.id,
+        title: row.title,
+        tmdb_id: row.tmdb_id,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+      };
+    });
+    return movies;
   }
 }
 

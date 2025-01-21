@@ -1,5 +1,5 @@
 import pool from '../utils/db';
-import { ShowUpdates } from './content';
+import { ContentUpdates } from './content';
 import Season from './season';
 import { RowDataPacket } from 'mysql2';
 
@@ -95,7 +95,7 @@ class Show {
   async update() {
     const query =
       'UPDATE shows SET title = ?, description = ?, release_date = ?, image = ?, user_rating = ?, content_rating = ?, season_count = ?, episode_count = ?, status = ?, type = ?, in_production = ?, last_air_date = ?, last_episode_to_air = ?, next_episode_to_air = ?, network = ? WHERE tmdb_id = ?';
-    const [result] = await pool.execute(query, [
+    await pool.execute(query, [
       this.title,
       this.description,
       this.release_date,
@@ -113,9 +113,9 @@ class Show {
       this.network,
       this.tmdb_id,
     ]);
-    this.genreIds?.forEach((genre_id) => this.updateGenre(this.id!, genre_id));
+    this.genreIds?.forEach((genre_id) => this.saveGenre(this.id!, genre_id));
     this.streaming_services?.forEach((streaming_service_id) =>
-      this.updateStreamingService(this.id!, streaming_service_id),
+      this.saveStreamingService(this.id!, streaming_service_id),
     );
   }
 
@@ -124,18 +124,8 @@ class Show {
     await pool.execute(query, [show_id, genre_id]);
   }
 
-  async updateGenre(show_id: number, genre_id: number) {
-    const query = 'INSERT IGNORE INTO tv_show_genres (show_id, genre_id) VALUES (?,?)';
-    await pool.execute(query, [show_id, genre_id]);
-  }
-
   async saveStreamingService(show_id: number, streaming_service_id: number) {
     const query = 'INSERT into tv_show_services (show_id, streaming_service_id) VALUES (?, ?)';
-    await pool.execute(query, [show_id, streaming_service_id]);
-  }
-
-  async updateStreamingService(show_id: number, streaming_service_id: number) {
-    const query = 'INSERT IGNORE INTO tv_show_services (show_id, streaming_service_id) VALUES (?, ?)';
     await pool.execute(query, [show_id, streaming_service_id]);
   }
 
@@ -262,9 +252,9 @@ class Show {
     return rows;
   }
 
-  static async getShowsForUpdates(): Promise<ShowUpdates[]> {
-    const showIdQuery = `SELECT id, title, tmdb_id, created_at, updated_at from shows where in_production = 1 AND status NOT IN ('Canceled', 'Ended')`;
-    const [rows] = await pool.execute<RowDataPacket[]>(showIdQuery);
+  static async getShowsForUpdates(): Promise<ContentUpdates[]> {
+    const query = `SELECT id, title, tmdb_id, created_at, updated_at from shows where in_production = 1 AND status NOT IN ('Canceled', 'Ended')`;
+    const [rows] = await pool.execute<RowDataPacket[]>(query);
     const shows = rows.map((row) => {
       return {
         id: row.id,

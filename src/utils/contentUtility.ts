@@ -1,4 +1,4 @@
-import { ContentRatings, Network } from '../models/content';
+import { ContentRatings, Network, Release, ReleaseDates } from '../models/content';
 
 export function getUSNetwork(networks: Network[]): string | null {
   for (const network of networks) {
@@ -27,4 +27,14 @@ export function getEpisodeToAirId(episode: { id: number } | null) {
     return episode.id;
   }
   return null;
+}
+
+export function getUSMPARating(releaseDates: ReleaseDates): string {
+  for (const releaseDate of releaseDates.results) {
+    if (releaseDate.iso_3166_1 === 'US') {
+      const release: Release = releaseDate.release_dates[0];
+      return release.certification;
+    }
+  }
+  return 'PG';
 }

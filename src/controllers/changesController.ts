@@ -1,9 +1,10 @@
-import { Change, ChangeItem, ShowUpdates } from '../models/content';
+import { Change, ChangeItem, ContentUpdates } from '../models/content';
 import Episode from '../models/episode';
+import Movie from '../models/movie';
 import Season from '../models/season';
 import Show from '../models/show';
 import { axiosTMDBAPIInstance } from '../utils/axiosInstance';
-import { getEpisodeToAirId, getInProduction, getUSNetwork, getUSRating } from '../utils/contentUtility';
+import { getEpisodeToAirId, getInProduction, getUSMPARating, getUSNetwork, getUSRating } from '../utils/contentUtility';
 import { buildTMDBImagePath } from '../utils/imageUtility';
 import { getUSWatchProviders } from '../utils/wacthProvidersUtility';
 import { Request, Response } from 'express';
@@ -29,6 +30,57 @@ export const supportedChangesSets = [
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+export const updateMovies = async (req: Request, res: Response) => {
+  console.log(`POST /api/updateMovies START`);
+  const startTime = performance.now();
+  try {
+    const movies = await Movie.getMoviesForUpdates();
+    movies.forEach(async (movie) => {
+      await sleep(500);
+      await checkForMovieChanges(movie);
+    });
+    res.sendStatus(202);
+    const endTime = performance.now();
+    console.log(`POST /api/updateMovies END >>> `, endTime - startTime);
+  } catch (error) {
+    res.status(500).json({ message: 'Unexpected error while checking for movie updates', error: error });
+  }
+};
+
+async function checkForMovieChanges(content: ContentUpdates) {
+  const { currentDate, pastDate } = generateDates();
+  try {
+    const changesResponse = await axiosTMDBAPIInstance.get(
+      `movie/${content.tmdb_id}/changes?end_date=${currentDate}&start_date=${pastDate}`,
+    );
+    const changes: Change[] = changesResponse.data.changes;
+    const supportedChanges = changes.filter((item) => supportedChangesSets.includes(item.key));
+    if (supportedChanges.length > 0) {
+      console.log('Movies has changes, updating >>> ', content.title);
+      const movieDetailsResponse = await axiosTMDBAPIInstance.get(
+        `/movie/${content.tmdb_id}?append_to_response=release_dates%2Cwatch%2Fproviders&language=en-US`,
+      );
+      const movieDetails = movieDetailsResponse.data;
+      const movieToFavorite = new Movie(
+        movieDetails.id,
+        movieDetails.title,
+        movieDetails.overview,
+        movieDetails.release_date,
+        movieDetails.runtime,
+        buildTMDBImagePath(movieDetails.poster_path),
+        movieDetails.vote_average,
+        getUSMPARating(movieDetails.release_dates),
+        content.id,
+        getUSWatchProviders(movieDetails, 9998),
+        movieDetails.genres.map((genre: { id: any }) => genre.id),
+      );
+      movieToFavorite.update();
+    }
+  } catch (error) {
+    console.error('Error checking movie changes', content, error);
+  }
+}
+
 export const updateShows = async (req: Request, res: Response) => {
   console.log(`POST /api/updateShows START`);
   const startTime = performance.now();
@@ -46,55 +98,55 @@ export const updateShows = async (req: Request, res: Response) => {
   }
 };
 
-async function checkForShowChanges(show: ShowUpdates) {
+async function checkForShowChanges(content: ContentUpdates) {
   const { currentDate, pastDate } = generateDates();
   try {
-    const response = await axiosTMDBAPIInstance.get(
-      `tv/${show.tmdb_id}/changes?end_date=${currentDate}&start_date=${pastDate}`,
+    const changesResponse = await axiosTMDBAPIInstance.get(
+      `tv/${content.tmdb_id}/changes?end_date=${currentDate}&start_date=${pastDate}`,
     );
-    const changes: Change[] = response.data.changes;
+    const changes: Change[] = changesResponse.data.changes;
     const supportedChanges = changes.filter((item) => supportedChangesSets.includes(item.key));
     if (supportedChanges.length > 0) {
-      console.log('Show has changes, updating >>> ', show.title);
-      const response = await axiosTMDBAPIInstance.get(
-        `/tv/${show.tmdb_id}?append_to_response=content_ratings,watch/providers`,
+      console.log('Show has changes, updating >>> ', content.title);
+      const showDetailsResponse = await axiosTMDBAPIInstance.get(
+        `/tv/${content.tmdb_id}?append_to_response=content_ratings,watch/providers`,
       );
-      const responseShow = response.data;
+      const showDetails = showDetailsResponse.data;
       const showToUpdate = new Show(
-        responseShow.id,
-        responseShow.name,
-        responseShow.overview,
-        responseShow.first_air_date,
-        buildTMDBImagePath(responseShow.poster_path),
-        responseShow.vote_average,
-        getUSRating(responseShow.content_ratings),
-        show.id,
-        getUSWatchProviders(responseShow, 9999),
-        responseShow.number_of_episodes,
-        responseShow.number_of_seasons,
-        responseShow.genres.map((genre: { id: any }) => genre.id),
-        responseShow.status,
-        responseShow.type,
-        getInProduction(responseShow),
-        responseShow.last_air_date,
-        getEpisodeToAirId(responseShow.last_episode_to_air),
-        getEpisodeToAirId(responseShow.next_episode_to_air),
-        getUSNetwork(responseShow.networks),
+        showDetails.id,
+        showDetails.name,
+        showDetails.overview,
+        showDetails.first_air_date,
+        buildTMDBImagePath(showDetails.poster_path),
+        showDetails.vote_average,
+        getUSRating(showDetails.content_ratings),
+        content.id,
+        getUSWatchProviders(showDetails, 9999),
+        showDetails.number_of_episodes,
+        showDetails.number_of_seasons,
+        showDetails.genres.map((genre: { id: any }) => genre.id),
+        showDetails.status,
+        showDetails.type,
+        getInProduction(showDetails),
+        showDetails.last_air_date,
+        getEpisodeToAirId(showDetails.last_episode_to_air),
+        getEpisodeToAirId(showDetails.next_episode_to_air),
+        getUSNetwork(showDetails.networks),
       );
       await showToUpdate.update();
       const profileIds = await showToUpdate.getProfilesForShow();
 
       const seasonChanges = changes.filter((item) => item.key === 'season');
       if (seasonChanges.length > 0) {
-        processSeasonChanges(seasonChanges[0].items, responseShow, show, profileIds);
+        processSeasonChanges(seasonChanges[0].items, showDetails, content, profileIds);
       }
     }
   } catch (error) {
-    console.error('Error checking show changes', show, error);
+    console.error('Error checking show changes', content, error);
   }
 }
 
-function processSeasonChanges(changes: ChangeItem[], responseShow: any, show: ShowUpdates, profileIds: number[]) {
+function processSeasonChanges(changes: ChangeItem[], responseShow: any, content: ContentUpdates, profileIds: number[]) {
   const uniqueSeasonIds = filterSeasonChanges(changes);
   const responseShowSeasons = responseShow.seasons;
   console.log('Show has changes to season(s), updating >>>', uniqueSeasonIds);
@@ -103,7 +155,7 @@ function processSeasonChanges(changes: ChangeItem[], responseShow: any, show: Sh
     const responseShowSeason = responseShowSeasons.find((season: { id: number }) => season.id === season_id);
     if (responseShowSeason) {
       const seasonToUpdate = new Season(
-        show.id,
+        content.id,
         responseShowSeason.id,
         responseShowSeason.name,
         responseShowSeason.overview,
@@ -118,12 +170,14 @@ function processSeasonChanges(changes: ChangeItem[], responseShow: any, show: Sh
       const seasonHasEpisodeChanges = await checkSeasonForEpisodeChanges(season_id);
       if (seasonHasEpisodeChanges) {
         console.log('Season has episode changes, updating >>>', seasonToUpdate.season_number);
-        const response = await axiosTMDBAPIInstance.get(`/tv/${show.tmdb_id}/season/${seasonToUpdate.season_number}`);
+        const response = await axiosTMDBAPIInstance.get(
+          `/tv/${content.tmdb_id}/season/${seasonToUpdate.season_number}`,
+        );
         const responseData = response.data;
         responseData.episodes.forEach(async (responseEpisode: any) => {
           const episodeToUpdate = new Episode(
             responseEpisode.id,
-            show.id,
+            content.id,
             seasonToUpdate.id!,
             responseEpisode.episode_number,
             responseEpisode.episode_type,

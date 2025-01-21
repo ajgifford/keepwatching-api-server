@@ -1,37 +1,10 @@
 import { BadRequestError } from '../middleware/errorMiddleware';
 import Movie from '../models/movie';
 import { axiosTMDBAPIInstance } from '../utils/axiosInstance';
+import { getUSMPARating } from '../utils/contentUtility';
 import { buildTMDBImagePath } from '../utils/imageUtility';
 import { getUSWatchProviders } from '../utils/wacthProvidersUtility';
 import { Request, Response } from 'express';
-
-interface ReleaseDates {
-  results: ReleaseDate[];
-}
-
-interface ReleaseDate {
-  iso_3166_1: string;
-  release_dates: Release[];
-}
-
-interface Release {
-  certification: string;
-  descriptors: string[];
-  iso_639_1: string;
-  note: string;
-  release_date: Date;
-  type: number;
-}
-
-function getUSMPARating(releaseDates: ReleaseDates): string {
-  for (const releaseDate of releaseDates.results) {
-    if (releaseDate.iso_3166_1 === 'US') {
-      const release: Release = releaseDate.release_dates[0];
-      return release.certification;
-    }
-  }
-  return 'PG';
-}
 
 export const getMovies = async (req: Request, res: Response) => {
   const { profileId } = req.params;
