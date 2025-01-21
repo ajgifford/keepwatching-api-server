@@ -1,8 +1,8 @@
 import { axiosStreamingAPIInstance } from '../utils/axiosInstance';
 import { Request, Response } from 'express';
 
+// GET /api/discover/top
 export const discoverTopShows = async (req: Request, res: Response) => {
-  console.log(`GET /api/discover/top`, req.query);
   const showType = req.query.showType as string;
   const service = req.query.service as string;
   const config = {

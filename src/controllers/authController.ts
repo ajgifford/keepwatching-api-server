@@ -6,8 +6,8 @@ import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 import { validationResult } from 'express-validator';
 
+// POST /api/accounts
 export const register = asyncHandler(async (req: Request, res: Response) => {
-  console.log('POST /api/accounts');
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     res.status(400).json({ errors: errors.array() });
@@ -41,8 +41,8 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
+// POST /api/login
 export const login = asyncHandler(async (req: Request, res: Response) => {
-  console.log(`POST /api/login`);
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     res.status(400).json({ errors: errors.array() });
@@ -69,8 +69,8 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
+// POST /api/logout
 export const logout = asyncHandler(async (req: Request, res: Response) => {
-  console.log(`POST /api/logout`);
   clearToken(res);
   res.status(200).json({ message: 'Successfully logged out' });
 });

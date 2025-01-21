@@ -8,9 +8,9 @@ import { buildTMDBImagePath } from '../utils/imageUtility';
 import { getUSWatchProviders } from '../utils/wacthProvidersUtility';
 import { Request, Response } from 'express';
 
+// GET /api/profiles/${profileId}/shows
 export const getShows = async (req: Request, res: Response) => {
   const { profileId } = req.params;
-  console.log(`GET /api/profiles/${profileId}/shows`);
   try {
     const results = await Show.getAllShowsForProfile(profileId);
     res.status(200).json({ message: 'Successfully retrieved shows for a profile', results: results });
@@ -19,9 +19,9 @@ export const getShows = async (req: Request, res: Response) => {
   }
 };
 
+// GET /api/profiles/${profileId}/shows/${showId}/seasons
 export const getShowDetails = async (req: Request, res: Response) => {
   const { profileId, showId } = req.params;
-  console.log(`GET /api/profiles/${profileId}/shows/${showId}/seasons`);
   try {
     const show = await Show.getShowWithSeasonsForProfile(profileId, showId);
     res.status(200).json({ message: 'Successfully retrieved seasons for a show', results: show });
@@ -30,9 +30,9 @@ export const getShowDetails = async (req: Request, res: Response) => {
   }
 };
 
+// GET /api/profiles/${profileId}/shows/nextWatch
 export const getNextWatchForProfile = async (req: Request, res: Response) => {
   const { profileId } = req.params;
-  console.log(`GET /api/profiles/${profileId}/shows/nextWatch`);
   try {
     const shows = await Show.getNextWatchForProfile(profileId);
     res.status(200).json({ message: 'Successfully retrieved the next watches for a profile', results: shows });
@@ -41,10 +41,9 @@ export const getNextWatchForProfile = async (req: Request, res: Response) => {
   }
 };
 
+// POST /api/profiles/${profileId}/shows/favorites
 export const addFavorite = async (req: Request, res: Response) => {
   const { profileId } = req.params;
-  console.log(`POST /api/profiles/${profileId}/shows/favorites`, req.body);
-
   try {
     const show_id = req.body.id;
     const existingShowToFavorite = await Show.findByTMDBId(show_id);
@@ -131,10 +130,9 @@ const fetchSeasonsAndEpisodes = async (show: any, show_id: number, profileId: st
   });
 };
 
+// DELETE /api/profiles/${profileId}/shows/favorites/${showId}
 export const removeFavorite = async (req: Request, res: Response) => {
   const { profileId, showId } = req.params;
-  console.log(`DELETE /api/profiles/${profileId}/shows/favorites/${showId}`);
-
   try {
     const showToRemove = await Show.findById(Number(showId));
     if (showToRemove) {
@@ -148,9 +146,9 @@ export const removeFavorite = async (req: Request, res: Response) => {
   }
 };
 
+// PUT /api/profiles/${profileId}/shows/watchstatus
 export const updateShowWatchStatus = async (req: Request, res: Response) => {
   const { profileId } = req.params;
-  console.log(`PUT /api/profiles/${profileId}/shows/watchstatus`, req.body);
   try {
     const show_id = req.body.show_id;
     const status = req.body.status;

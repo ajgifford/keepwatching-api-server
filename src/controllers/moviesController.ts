@@ -6,9 +6,9 @@ import { buildTMDBImagePath } from '../utils/imageUtility';
 import { getUSWatchProviders } from '../utils/wacthProvidersUtility';
 import { Request, Response } from 'express';
 
+// GET /api/profiles/${profileId}/movies
 export const getMovies = async (req: Request, res: Response) => {
   const { profileId } = req.params;
-  console.log(`GET /api/profiles/${profileId}/movies`);
   try {
     const results = await Movie.getAllMoviesForProfile(profileId);
     res.status(200).json({ message: 'Successfully retrieved movies for a profile', results: results });
@@ -17,9 +17,9 @@ export const getMovies = async (req: Request, res: Response) => {
   }
 };
 
+// POST /api/profiles/${profileId}/movies/favorites
 export const addFavorite = async (req: Request, res: Response) => {
   const { profileId } = req.params;
-  console.log(`POST /api/profiles/${profileId}/movies/favorites`, req.body);
 
   try {
     const movie_id = req.body.id;
@@ -52,10 +52,9 @@ export const addFavorite = async (req: Request, res: Response) => {
   }
 };
 
+// DELETE /api/profiles/${profileId}/movies/favorites/${movieId}
 export const removeFavorite = async (req: Request, res: Response) => {
   const { profileId, movieId } = req.params;
-  console.log(`DELETE /api/profiles/${profileId}/movies/favorites/${movieId}`);
-
   try {
     const movieToRemove = await Movie.findById(Number(movieId));
     if (movieToRemove) {
@@ -69,9 +68,9 @@ export const removeFavorite = async (req: Request, res: Response) => {
   }
 };
 
+// PUT /api/profiles/${profileId}/movies/watchstatus
 export const updateMovieWatchStatus = async (req: Request, res: Response) => {
   const { profileId } = req.params;
-  console.log(`PUT /api/profiles/${profileId}/movies/watchstatus`, req.body);
   try {
     const movie_id = req.body.movie_id;
     const status = req.body.status;

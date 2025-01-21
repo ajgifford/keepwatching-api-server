@@ -1,8 +1,11 @@
 import 'dotenv/config';
 
 import { initScheduledJobs } from './controllers/changesController';
+import { cliLogger, httpLogger } from './logger/logger';
+import { ErrorMessages } from './logger/loggerModel';
 import { authenticate } from './middleware/authMiddleware';
 import { errorHandler } from './middleware/errorMiddleware';
+import responseInterceptor from './middleware/loggerMiddleware';
 import accountRouter from './routes/accountRouter';
 import authRouter from './routes/authRouter';
 import discoverRouter from './routes/discoverRouter';
@@ -47,6 +50,7 @@ app.use(
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(responseInterceptor);
 app.use(authRouter);
 app.use(accountRouter);
 app.use(searchRouter);
@@ -67,17 +71,18 @@ app.get('/', (req: Request, res: Response) => {
 
 const startServer = async () => {
   try {
-    console.log('Fetching initial data from the database...');
+    cliLogger.info('Fetching initial data from the database...');
     await loadStreamingService();
-    console.log('Data fetched and cached successfully.');
+    cliLogger.info('Data fetched and cached successfully.');
 
     initScheduledJobs();
 
     app.listen(port, () => {
-      console.log(`Server is running on http://localhost:${port}`);
+      cliLogger.info(`Server is running on http://localhost:${port} 🚀🚀🚀`);
     });
   } catch (error) {
-    console.error('Error starting the server:', error);
+    cliLogger.error('Error starting the server! ❌');
+    httpLogger.error(ErrorMessages.AppStartupFail, { error });
     process.exit(1);
   }
 };

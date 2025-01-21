@@ -1,3 +1,5 @@
+import { cliLogger, httpLogger } from '../logger/logger';
+import { ErrorMessages } from '../logger/loggerModel';
 import { Change, ChangeItem, ContentUpdates } from '../models/content';
 import Episode from '../models/episode';
 import Movie from '../models/movie';
@@ -7,7 +9,6 @@ import { axiosTMDBAPIInstance } from '../utils/axiosInstance';
 import { getEpisodeToAirId, getInProduction, getUSMPARating, getUSNetwork, getUSRating } from '../utils/contentUtility';
 import { buildTMDBImagePath } from '../utils/imageUtility';
 import { getUSWatchProviders } from '../utils/wacthProvidersUtility';
-import { Request, Response } from 'express';
 import CronJob from 'node-cron';
 
 const supportedChangesSets = [
@@ -33,24 +34,20 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export function initScheduledJobs() {
   const showsJob = CronJob.schedule('0 2 * * *', () => {
-    console.log('Starting the show change job');
-    const startTime = performance.now();
+    cliLogger.info('Starting the show change job');
     updateShows();
-    const endTime = performance.now();
-    console.log(`Ending the show change job`, endTime - startTime);
+    cliLogger.info(`Ending the show change job`);
   });
 
   const moviesJob = CronJob.schedule('0 1 7,14,21,28 * *', () => {
-    console.log('Starting the movie change job');
-    const startTime = performance.now();
+    cliLogger.info('Starting the movie change job');
     updateMovies();
-    const endTime = performance.now();
-    console.log(`Ending the movie change job`, endTime - startTime);
+    cliLogger.info(`Ending the movie change job`);
   });
 
   showsJob.start();
   moviesJob.start();
-  console.log('Job Scheduler Initialized');
+  cliLogger.info('Job Scheduler Initialized');
 }
 
 async function updateMovies() {
@@ -61,7 +58,8 @@ async function updateMovies() {
       await checkForMovieChanges(movie);
     });
   } catch (error) {
-    console.log({ message: 'Unexpected error while checking for movie updates', error: error });
+    cliLogger.error({ message: 'Unexpected error while checking for movie updates', error: error });
+    httpLogger.error(ErrorMessages.MoviesChangeFail, { error });
   }
 }
 
@@ -74,7 +72,7 @@ async function checkForMovieChanges(content: ContentUpdates) {
     const changes: Change[] = changesResponse.data.changes;
     const supportedChanges = changes.filter((item) => supportedChangesSets.includes(item.key));
     if (supportedChanges.length > 0) {
-      console.log('Movies has changes, updating >>> ', content.title);
+      httpLogger.info(`Movie has changes, updating >>> ${content.title}`);
       const movieDetailsResponse = await axiosTMDBAPIInstance.get(
         `/movie/${content.tmdb_id}?append_to_response=release_dates%2Cwatch%2Fproviders&language=en-US`,
       );
@@ -95,7 +93,8 @@ async function checkForMovieChanges(content: ContentUpdates) {
       movieToFavorite.update();
     }
   } catch (error) {
-    console.error('Error checking movie changes', content, error);
+    cliLogger.error({ message: 'Error checking movie changes', error: error });
+    httpLogger.error(ErrorMessages.MovieChangeFail, { error });
   }
 }
 
@@ -107,7 +106,8 @@ async function updateShows() {
       await checkForShowChanges(show);
     });
   } catch (error) {
-    console.log({ message: 'Unexpected error while checking for show updates', error: error });
+    cliLogger.error({ message: 'Unexpected error while checking for show updates', error: error });
+    httpLogger.error(ErrorMessages.ShowsChangeFail, { error });
   }
 }
 
@@ -120,7 +120,7 @@ async function checkForShowChanges(content: ContentUpdates) {
     const changes: Change[] = changesResponse.data.changes;
     const supportedChanges = changes.filter((item) => supportedChangesSets.includes(item.key));
     if (supportedChanges.length > 0) {
-      console.log('Show has changes, updating >>> ', content.title);
+      httpLogger.info(`Show has changes, updating >>> ${content.title}`);
       const showDetailsResponse = await axiosTMDBAPIInstance.get(
         `/tv/${content.tmdb_id}?append_to_response=content_ratings,watch/providers`,
       );
@@ -155,14 +155,15 @@ async function checkForShowChanges(content: ContentUpdates) {
       }
     }
   } catch (error) {
-    console.error('Error checking show changes', content, error);
+    cliLogger.error({ message: 'Error checking show changes', error: error });
+    httpLogger.error(ErrorMessages.ShowChangeFail, { error });
   }
 }
 
 function processSeasonChanges(changes: ChangeItem[], responseShow: any, content: ContentUpdates, profileIds: number[]) {
   const uniqueSeasonIds = filterSeasonChanges(changes);
   const responseShowSeasons = responseShow.seasons;
-  console.log('Show has changes to season(s), updating >>>', uniqueSeasonIds);
+  httpLogger.info(`Show has changes to season(s), updating >>> ${uniqueSeasonIds}`);
   uniqueSeasonIds.forEach(async (season_id) => {
     await sleep(500);
     const responseShowSeason = responseShowSeasons.find((season: { id: number }) => season.id === season_id);
@@ -182,7 +183,7 @@ function processSeasonChanges(changes: ChangeItem[], responseShow: any, content:
 
       const seasonHasEpisodeChanges = await checkSeasonForEpisodeChanges(season_id);
       if (seasonHasEpisodeChanges) {
-        console.log('Season has episode changes, updating >>>', seasonToUpdate.season_number);
+        httpLogger.info(`Season has episode changes, updating >>> ${seasonToUpdate.season_number}`);
         const response = await axiosTMDBAPIInstance.get(
           `/tv/${content.tmdb_id}/season/${seasonToUpdate.season_number}`,
         );
@@ -227,7 +228,8 @@ async function checkSeasonForEpisodeChanges(season_id: number) {
     const changes: Change[] = response.data.changes;
     return changes.filter((item) => item.key === 'episode').length > 0;
   } catch (error) {
-    console.error('Error checking season changes', season_id, error);
+    cliLogger.error({ message: 'Error checking season changes', error: error });
+    httpLogger.error(ErrorMessages.SeasonChangeFail, { error });
   }
 }
 

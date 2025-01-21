@@ -7,9 +7,9 @@ import { getAccountImage, getProfileImage } from '../utils/imageUtility';
 import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 
+// GET /api/accounts/${id}/profiles
 export const getProfiles = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
-  console.log(`GET /api/accounts/${id}/profiles`, req.body);
   const profiles = await Profile.getAllByAccountId(Number(id));
   if (profiles) {
     const responseProfiles = profiles.map((profile) => {
@@ -21,9 +21,9 @@ export const getProfiles = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
+// GET /api/accounts/${id}/profiles/${profileId}
 export const getProfile = asyncHandler(async (req: Request, res: Response) => {
   const { id, profileId } = req.params;
-  console.log(`GET /api/accounts/${id}/profiles/${profileId}`, req.body);
   const profile = await Profile.findById(Number(profileId));
   if (profile) {
     const showResults = await Show.getAllShowsForProfile(profileId);
@@ -47,10 +47,10 @@ export const getProfile = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
+// PUT /api/accounts/${id}
 export const editAccount = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
   const { account_name, default_profile_id } = req.body;
-  console.log(`PUT /api/accounts/${id}`, req.body);
   const account = await Account.findById(Number(id));
   if (account) {
     const updatedAccount = await account.editAccount(account_name, Number(default_profile_id));
@@ -73,10 +73,10 @@ export const editAccount = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
+// POST /api/accounts/${id}/profiles
 export const addProfile = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
   const { name } = req.body;
-  console.log(`POST /api/accounts/${id}/profiles`, req.body);
   const profile = new Profile(Number(id), name);
   await profile.save();
 
@@ -90,11 +90,10 @@ export const addProfile = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
+// PUT /api/accounts/${id}/profiles/${profileId}
 export const editProfile = asyncHandler(async (req: Request, res: Response) => {
-  const { id, profileId } = req.params;
+  const { profileId } = req.params;
   const { name } = req.body;
-  console.log(`PUT /api/accounts/${id}/profiles/${profileId}`);
-
   const profile = await Profile.findById(Number(profileId));
   if (profile) {
     const updatedProfile = await profile.update(name);
@@ -115,10 +114,9 @@ export const editProfile = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
+// DELETE /api/accounts/${id}/profiles/${profileId}
 export const deleteProfile = asyncHandler(async (req: Request, res: Response) => {
-  const { id, profileId } = req.params;
-  console.log(`DELETE /api/accounts/${id}/profiles/${profileId}`);
-
+  const { profileId } = req.params;
   const profile = await Profile.findById(Number(profileId));
   if (profile) {
     const deleted = await profile.delete(Number(profileId));

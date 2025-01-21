@@ -1,9 +1,9 @@
 import Season from '../models/season';
 import { Request, Response } from 'express';
 
+// PUT /api/profiles/${profileId}/seasons/watchstatus
 export const updateSeasonWatchStatus = async (req: Request, res: Response) => {
   const { profileId } = req.params;
-  console.log(`PUT /api/profiles/${profileId}/seasons/watchstatus`, req.body);
   try {
     const season_id = req.body.season_id;
     const status = req.body.status;

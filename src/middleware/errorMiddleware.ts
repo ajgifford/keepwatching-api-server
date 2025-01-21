@@ -1,8 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 
 const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error(err.stack);
-
   if (err instanceof AuthenticationError) {
     res.status(401).json({ message: 'Unauthorized: ' + err.message });
   } else if (err instanceof BadRequestError) {
@@ -10,7 +8,7 @@ const errorHandler = (err: Error, req: Request, res: Response, next: NextFunctio
   } else if (err instanceof NotFoundError) {
     return res.status(401).json({ message: err.message || 'Item not found' });
   } else {
-    res.status(500).json({ message: 'Internal Server Error' });
+    res.status(500).json({ message: err.message || 'Internal Server Error' });
   }
 };
 

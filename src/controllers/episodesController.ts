@@ -1,9 +1,9 @@
 import Episode from '../models/episode';
 import { Request, Response } from 'express';
 
+// PUT /api/profiles/${profileId}/episodes/watchstatus
 export const updateEpisodeWatchStatus = async (req: Request, res: Response) => {
   const { profileId } = req.params;
-  console.log(`PUT /api/profiles/${profileId}/episodes/watchstatus`, req.body);
   try {
     const episode_id = req.body.episode_id;
     const status = req.body.status;

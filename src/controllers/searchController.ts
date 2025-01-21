@@ -3,9 +3,9 @@ import { generateGenreArrayFromIds } from '../utils/genreUtility';
 import { buildTMDBImagePath } from '../utils/imageUtility';
 import { Request, Response } from 'express';
 
+// GET /api/search/shows
 export const searchShows = async (req: Request, res: Response) => {
   const searchString = req.query.searchString;
-  console.log(`GET /api/search/shows`, req.query);
 
   const response = await axiosTMDBAPIInstance.get(`/search/tv?query=${searchString}`);
   const results: any[] = response.data.results;
@@ -24,10 +24,9 @@ export const searchShows = async (req: Request, res: Response) => {
   res.status(200).json({ results: searchResult });
 };
 
+// GET /api/search/movies
 export const searchMovies = async (req: Request, res: Response) => {
   const searchString = req.query.searchString;
-  console.log(`GET /api/search/movies`, req.query);
-
   const response = await axiosTMDBAPIInstance.get(`/search/movie?query=${searchString}&region=US`);
   const results: any[] = response.data.results;
   const searchResult = results.map((result) => {

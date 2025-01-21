@@ -1,4 +1,5 @@
 import { __basedir } from '..';
+import { cliLogger, httpLogger } from '../logger/logger';
 import { BadRequestError } from '../middleware/errorMiddleware';
 import uploadFileMiddleware from '../middleware/upload';
 import Account from '../models/account';
@@ -8,9 +9,9 @@ import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 import fs from 'fs';
 
+// POST /api/upload/accounts/${id}
 export const uploadAccountImage = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
-  console.log(`POST /api/upload/accounts/${id}`, req.body);
   try {
     await uploadFileMiddleware(req, res);
 
@@ -36,9 +37,9 @@ export const uploadAccountImage = asyncHandler(async (req: Request, res: Respons
           fs.unlink(filePath, (err) => {
             if (err) {
               if (err.code === 'ENOENT') {
-                console.log('File not found');
+                httpLogger.info('File not found when attemting to delete');
               } else {
-                console.error(err);
+                httpLogger.info('Unexpected exception when attempting to delete', err);
               }
             }
           });
@@ -56,9 +57,9 @@ export const uploadAccountImage = asyncHandler(async (req: Request, res: Respons
   }
 });
 
+// POST /api/upload/profiles/${id}
 export const uploadProfileImage = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
-  console.log(`POST /api/upload/profiles/${id}`, req.body);
   try {
     await uploadFileMiddleware(req, res);
 
@@ -82,9 +83,9 @@ export const uploadProfileImage = asyncHandler(async (req: Request, res: Respons
           fs.unlink(filePath, (err) => {
             if (err) {
               if (err.code === 'ENOENT') {
-                console.log('File not found');
+                httpLogger.info('File not found when attemting to delete');
               } else {
-                console.error(err);
+                httpLogger.info('Unexpected exception when attempting to delete', err);
               }
             }
           });
