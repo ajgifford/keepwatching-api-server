@@ -49,6 +49,6 @@
     "build": "npx tsc",
     "start": "node dist",
     "dev": "tsx watch src",
-    "format": "prettier --config ../prettier.config.js . --write"
+    "format": "prettier --config ./prettier.config.js . --write"
   }
 }

@@ -5,19 +5,12 @@ import tseslint from 'typescript-eslint';
 
 const ignores = [
     'node_modules/**',
-    'exchange_components/**',
     'coverage/**',
     'scripts/**',
     'web/**',
     'staged-themes/**',
-    'src/components/gen/**',
-    'src/main.js',
     'prettier.config.js',
-    'eslint.config.mjs',
-    '**/__snapshots__/**',
-    'test-config/jest.config.js',
-    'test-config/testSetup.ts',
-    'test-config/FixJSDOMEnvironment.ts',];
+    'eslint.config.mjs',];
 
 export default [ 
     pluginJs.configs.recommended, 
