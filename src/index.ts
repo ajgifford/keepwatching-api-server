@@ -19,9 +19,15 @@ import { loadStreamingService } from './utils/wacthProvidersUtility';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
-import express, { Express, Request, Response } from 'express';
+import express, { Express, NextFunction, Request, Response } from 'express';
+import fs from 'fs';
 import helmet from 'helmet';
+import https from 'https';
 import path from 'path';
+
+const privateKey = fs.readFileSync('certs/server.key', 'utf8');
+const certificate = fs.readFileSync('certs/server.crt', 'utf8');
+const credentials = { key: privateKey, cert: certificate };
 
 const app: Express = express();
 const port = process.env.PORT || 3000;
@@ -39,6 +45,15 @@ declare global {
       account?: AccountBasicInfo | null;
     }
   }
+}
+
+function ensureSecure(req: Request, res: Response, next: NextFunction) {
+  if (req.secure) {
+    // Request is already secure (HTTPS)
+    return next();
+  }
+  // Redirect to HTTPS version of the URL
+  res.redirect('https://' + req.hostname + req.originalUrl);
 }
 
 // Middleware
@@ -62,13 +77,14 @@ app.use(moviesRouter);
 app.use(fileRouter);
 app.use(cookieParser());
 app.use('/uploads', express.static('uploads'));
-
+app.use(ensureSecure);
 app.use(errorHandler);
 
 app.get('/', (req: Request, res: Response) => {
   res.send('KeepWatching API');
 });
 
+const server = https.createServer(credentials, app);
 const startServer = async () => {
   try {
     cliLogger.info('Fetching initial data from the database...');
@@ -77,8 +93,8 @@ const startServer = async () => {
 
     initScheduledJobs();
 
-    app.listen(port, () => {
-      cliLogger.info(`Server is running on http://localhost:${port} 🚀🚀🚀`);
+    server.listen(port, () => {
+      cliLogger.info(`Server is running on https://localhost:${port} 🚀🚀🚀`);
     });
   } catch (error) {
     cliLogger.error('Error starting the server! ❌');
