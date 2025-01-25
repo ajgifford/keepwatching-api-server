@@ -179,7 +179,7 @@ function processSeasonChanges(changes: ChangeItem[], responseShow: any, content:
         responseShowSeason.episode_count,
       );
       await seasonToUpdate.update();
-      profileIds.forEach((id) => seasonToUpdate.updateFavorite(id));
+      profileIds.forEach((id) => seasonToUpdate.saveFavorite(id));
 
       const seasonHasEpisodeChanges = await checkSeasonForEpisodeChanges(season_id);
       if (seasonHasEpisodeChanges) {
@@ -203,7 +203,7 @@ function processSeasonChanges(changes: ChangeItem[], responseShow: any, content:
             buildTMDBImagePath(responseEpisode.still_path),
           );
           await episodeToUpdate.update();
-          profileIds.forEach((id) => episodeToUpdate.updateFavorite(id));
+          profileIds.forEach((id) => episodeToUpdate.saveFavorite(id));
         });
       }
     }

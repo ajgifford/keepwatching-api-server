@@ -68,7 +68,7 @@ class Show {
 
   async save() {
     const query =
-      'INSERT into shows (tmdb_id, title, description, release_date, image, user_rating, content_rating, season_count, episode_count, status, type, in_production, last_air_date, last_episode_to_air, next_episode_to_air, network) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
+      'INSERT INTO shows (tmdb_id, title, description, release_date, image, user_rating, content_rating, season_count, episode_count, status, type, in_production, last_air_date, last_episode_to_air, next_episode_to_air, network) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
     const [result] = await pool.execute(query, [
       this.tmdb_id,
       this.title,
@@ -120,17 +120,17 @@ class Show {
   }
 
   async saveGenre(show_id: number, genre_id: number) {
-    const query = 'INSERT INTO tv_show_genres (show_id, genre_id) VALUES (?,?)';
+    const query = 'INSERT IGNORE INTO tv_show_genres (show_id, genre_id) VALUES (?,?)';
     await pool.execute(query, [show_id, genre_id]);
   }
 
   async saveStreamingService(show_id: number, streaming_service_id: number) {
-    const query = 'INSERT into tv_show_services (show_id, streaming_service_id) VALUES (?, ?)';
+    const query = 'INSERT IGNORE INTO tv_show_services (show_id, streaming_service_id) VALUES (?, ?)';
     await pool.execute(query, [show_id, streaming_service_id]);
   }
 
   async saveFavorite(profile_id: string, save_children: boolean) {
-    const query = 'INSERT into show_watch_status (profile_id, show_id) VALUES (?,?)';
+    const query = 'INSERT IGNORE INTO show_watch_status (profile_id, show_id) VALUES (?,?)';
     await pool.execute(query, [Number(profile_id), this.id]);
     if (save_children) {
       const seasonQuery = 'SELECT id FROM seasons WHERE show_id = ?';

@@ -90,18 +90,13 @@ class Episode {
     this.id = (result as any).insertId;
   }
 
-  async saveFavorite(profile_id: string) {
-    const query = 'INSERT into episode_watch_status (profile_id, episode_id) VALUES (?,?)';
+  async saveFavorite(profile_id: number) {
+    const query = 'INSERT IGNORE INTO episode_watch_status (profile_id, episode_id) VALUES (?,?)';
     await pool.execute(query, [Number(profile_id), this.id]);
   }
 
-  async updateFavorite(profile_id: number) {
-    const query = 'INSERT IGNORE INTO episode_watch_status (profile_id, episode_id) VALUES (?,?)';
-    await pool.execute(query, [profile_id, this.id]);
-  }
-
   static async saveFavorite(profile_id: string, episode_id: number) {
-    const query = 'INSERT into episode_watch_status (profile_id, episode_id) VALUES (?,?)';
+    const query = 'INSERT IGNORE INTO episode_watch_status (profile_id, episode_id) VALUES (?,?)';
     await pool.execute(query, [Number(profile_id), episode_id]);
   }
 

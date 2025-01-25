@@ -9,7 +9,7 @@ import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 import fs from 'fs';
 
-// POST /api/upload/accounts/${id}
+// POST /api/v1/upload/accounts/${id}
 export const uploadAccountImage = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
@@ -57,7 +57,7 @@ export const uploadAccountImage = asyncHandler(async (req: Request, res: Respons
   }
 });
 
-// POST /api/upload/profiles/${id}
+// POST /api/v1/upload/profiles/${id}
 export const uploadProfileImage = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
   try {

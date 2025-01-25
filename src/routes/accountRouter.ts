@@ -10,11 +10,11 @@ import express from 'express';
 
 const router = express.Router();
 
-router.put('/api/accounts/:id', editAccount);
-router.get('/api/accounts/:id/profiles', getProfiles);
-router.get('/api/accounts/:id/profiles/:profileId', getProfile);
-router.post('/api/accounts/:id/profiles', addProfile);
-router.put('/api/accounts/:id/profiles/:profileId', editProfile);
-router.delete('/api/accounts/:id/profiles/:profileId', deleteProfile);
+router.put('/api/v1/accounts/:id', editAccount);
+router.get('/api/v1/accounts/:id/profiles', getProfiles);
+router.get('/api/v1/accounts/:id/profiles/:profileId', getProfile);
+router.post('/api/v1/accounts/:id/profiles', addProfile);
+router.put('/api/v1/accounts/:id/profiles/:profileId', editProfile);
+router.delete('/api/v1/accounts/:id/profiles/:profileId', deleteProfile);
 
 export default router;

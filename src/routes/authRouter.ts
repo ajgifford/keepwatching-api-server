@@ -4,8 +4,8 @@ import express from 'express';
 
 const router = express.Router();
 
-router.post('/api/accounts', validateName, validateEmail, validatePassword, register);
-router.post('/api/login', validateEmail, validatePassword, login);
-router.post('/api/logout', logout);
+router.post('/api/v1/accounts', validateName, validateEmail, validatePassword, register);
+router.post('/api/v1/login', validateEmail, validatePassword, login);
+router.post('/api/v1/logout', logout);
 
 export default router;

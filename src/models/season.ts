@@ -37,7 +37,7 @@ class Season {
 
   async save() {
     const query =
-      'INSERT into seasons (show_id, tmdb_id, name, overview, season_number, release_date, image, number_of_episodes) VALUES (?,?,?,?,?,?,?,?)';
+      'INSERT INTO seasons (show_id, tmdb_id, name, overview, season_number, release_date, image, number_of_episodes) VALUES (?,?,?,?,?,?,?,?)';
     const [result] = await pool.execute(query, [
       this.show_id,
       this.tmdb_id,
@@ -53,7 +53,7 @@ class Season {
 
   async update() {
     const query =
-      'INSERT into seasons (show_id, tmdb_id, name, overview, season_number, release_date, image, number_of_episodes) VALUES (?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id), name = ?, overview = ?, season_number = ?, release_date = ?, image = ?, number_of_episodes = ?';
+      'INSERT INTO seasons (show_id, tmdb_id, name, overview, season_number, release_date, image, number_of_episodes) VALUES (?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id), name = ?, overview = ?, season_number = ?, release_date = ?, image = ?, number_of_episodes = ?';
     const [result] = await pool.execute(query, [
       // Insert Values
       this.show_id,
@@ -75,18 +75,13 @@ class Season {
     this.id = (result as any).insertId;
   }
 
-  async saveFavorite(profile_id: string) {
-    const query = 'INSERT into season_watch_status (profile_id, season_id) S (?,?)';
-    await pool.execute(query, [Number(profile_id), this.id]);
-  }
-
-  async updateFavorite(profile_id: number) {
+  async saveFavorite(profile_id: number) {
     const query = 'INSERT IGNORE INTO season_watch_status (profile_id, season_id) VALUES (?,?)';
     await pool.execute(query, [profile_id, this.id]);
   }
 
   static async saveFavoriteWithEpisodes(profile_id: string, season_id: number) {
-    const query = 'INSERT into season_watch_status (profile_id, season_id) VALUES (?,?)';
+    const query = 'INSERT IGNORE INTO season_watch_status (profile_id, season_id) VALUES (?,?)';
     await pool.execute(query, [Number(profile_id), season_id]);
     const episodeQuery = 'SELECT id FROM episodes WHERE season_id = ?';
     const [rows] = await pool.execute(episodeQuery, [season_id]);

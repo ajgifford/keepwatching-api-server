@@ -3,6 +3,6 @@ import express from 'express';
 
 const router = express.Router();
 
-router.get('/api/discover/top', discoverTopShows);
+router.get('/api/v1/discover/top', discoverTopShows);
 
 export default router;

@@ -1,7 +1,7 @@
 import Episode from '../models/episode';
 import { Request, Response } from 'express';
 
-// PUT /api/profiles/${profileId}/episodes/watchstatus
+// PUT /api/v1/profiles/${profileId}/episodes/watchstatus
 export const updateEpisodeWatchStatus = async (req: Request, res: Response) => {
   const { profileId } = req.params;
   try {

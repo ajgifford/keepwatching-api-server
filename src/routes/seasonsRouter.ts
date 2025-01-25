@@ -3,6 +3,6 @@ import express from 'express';
 
 const router = express.Router();
 
-router.put('/api/profiles/:profileId/seasons/watchstatus', updateSeasonWatchStatus);
+router.put('/api/v1/profiles/:profileId/seasons/watchstatus', updateSeasonWatchStatus);
 
 export default router;

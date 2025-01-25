@@ -7,7 +7,7 @@ import { getAccountImage, getProfileImage } from '../utils/imageUtility';
 import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 
-// GET /api/accounts/${id}/profiles
+// GET /api/v1/accounts/${id}/profiles
 export const getProfiles = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
   const profiles = await Profile.getAllByAccountId(Number(id));
@@ -21,7 +21,7 @@ export const getProfiles = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
-// GET /api/accounts/${id}/profiles/${profileId}
+// GET /api/v1/accounts/${id}/profiles/${profileId}
 export const getProfile = asyncHandler(async (req: Request, res: Response) => {
   const { id, profileId } = req.params;
   const profile = await Profile.findById(Number(profileId));
@@ -47,7 +47,7 @@ export const getProfile = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
-// PUT /api/accounts/${id}
+// PUT /api/v1/accounts/${id}
 export const editAccount = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
   const { account_name, default_profile_id } = req.body;
@@ -73,7 +73,7 @@ export const editAccount = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
-// POST /api/accounts/${id}/profiles
+// POST /api/v1/accounts/${id}/profiles
 export const addProfile = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
   const { name } = req.body;
@@ -90,7 +90,7 @@ export const addProfile = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
-// PUT /api/accounts/${id}/profiles/${profileId}
+// PUT /api/v1/accounts/${id}/profiles/${profileId}
 export const editProfile = asyncHandler(async (req: Request, res: Response) => {
   const { profileId } = req.params;
   const { name } = req.body;
@@ -114,7 +114,7 @@ export const editProfile = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
-// DELETE /api/accounts/${id}/profiles/${profileId}
+// DELETE /api/v1/accounts/${id}/profiles/${profileId}
 export const deleteProfile = asyncHandler(async (req: Request, res: Response) => {
   const { profileId } = req.params;
   const profile = await Profile.findById(Number(profileId));

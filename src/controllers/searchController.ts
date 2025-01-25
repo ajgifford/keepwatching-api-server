@@ -3,7 +3,7 @@ import { generateGenreArrayFromIds } from '../utils/genreUtility';
 import { buildTMDBImagePath } from '../utils/imageUtility';
 import { Request, Response } from 'express';
 
-// GET /api/search/shows
+// GET /api/v1/search/shows
 export const searchShows = async (req: Request, res: Response) => {
   const searchString = req.query.searchString;
 
@@ -24,7 +24,7 @@ export const searchShows = async (req: Request, res: Response) => {
   res.status(200).json({ results: searchResult });
 };
 
-// GET /api/search/movies
+// GET /api/v1/search/movies
 export const searchMovies = async (req: Request, res: Response) => {
   const searchString = req.query.searchString;
   const response = await axiosTMDBAPIInstance.get(`/search/movie?query=${searchString}&region=US`);

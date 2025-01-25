@@ -3,6 +3,6 @@ import express from 'express';
 
 const router = express.Router();
 
-router.put('/api/profiles/:profileId/episodes/watchstatus', updateEpisodeWatchStatus);
+router.put('/api/v1/profiles/:profileId/episodes/watchstatus', updateEpisodeWatchStatus);
 
 export default router;

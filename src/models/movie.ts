@@ -77,17 +77,17 @@ class Movie {
   }
 
   async saveGenre(movie_id: number, genre_id: number) {
-    const query = 'INSERT IGNORE into movie_genres (movie_id, genre_id) VALUES (?,?)';
+    const query = 'INSERT IGNORE INTO movie_genres (movie_id, genre_id) VALUES (?,?)';
     await pool.execute(query, [movie_id, genre_id]);
   }
 
   async saveStreamingService(movie_id: number, streaming_service_id: number) {
-    const query = 'INSERT IGNORE into movie_services (movie_id, streaming_service_id) VALUES (?, ?)';
+    const query = 'INSERT IGNORE INTO movie_services (movie_id, streaming_service_id) VALUES (?, ?)';
     await pool.execute(query, [movie_id, streaming_service_id]);
   }
 
   async saveFavorite(profile_id: string) {
-    const query = 'INSERT into movie_watch_status (profile_id, movie_id) VALUES (?,?)';
+    const query = 'INSERT IGNORE INTO movie_watch_status (profile_id, movie_id) VALUES (?,?)';
     await pool.execute(query, [Number(profile_id), this.id]);
   }
 

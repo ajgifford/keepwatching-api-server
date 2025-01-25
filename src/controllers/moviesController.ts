@@ -6,7 +6,7 @@ import { buildTMDBImagePath } from '../utils/imageUtility';
 import { getUSWatchProviders } from '../utils/wacthProvidersUtility';
 import { Request, Response } from 'express';
 
-// GET /api/profiles/${profileId}/movies
+// GET /api/v1/profiles/${profileId}/movies
 export const getMovies = async (req: Request, res: Response) => {
   const { profileId } = req.params;
   try {
@@ -17,7 +17,7 @@ export const getMovies = async (req: Request, res: Response) => {
   }
 };
 
-// POST /api/profiles/${profileId}/movies/favorites
+// POST /api/v1/profiles/${profileId}/movies/favorites
 export const addFavorite = async (req: Request, res: Response) => {
   const { profileId } = req.params;
 
@@ -52,7 +52,7 @@ export const addFavorite = async (req: Request, res: Response) => {
   }
 };
 
-// DELETE /api/profiles/${profileId}/movies/favorites/${movieId}
+// DELETE /api/v1/profiles/${profileId}/movies/favorites/${movieId}
 export const removeFavorite = async (req: Request, res: Response) => {
   const { profileId, movieId } = req.params;
   try {
@@ -68,7 +68,7 @@ export const removeFavorite = async (req: Request, res: Response) => {
   }
 };
 
-// PUT /api/profiles/${profileId}/movies/watchstatus
+// PUT /api/v1/profiles/${profileId}/movies/watchstatus
 export const updateMovieWatchStatus = async (req: Request, res: Response) => {
   const { profileId } = req.params;
   try {

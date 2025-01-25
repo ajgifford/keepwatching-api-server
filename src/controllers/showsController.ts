@@ -8,7 +8,7 @@ import { buildTMDBImagePath } from '../utils/imageUtility';
 import { getUSWatchProviders } from '../utils/wacthProvidersUtility';
 import { Request, Response } from 'express';
 
-// GET /api/profiles/${profileId}/shows
+// GET /api/v1/profiles/${profileId}/shows
 export const getShows = async (req: Request, res: Response) => {
   const { profileId } = req.params;
   try {
@@ -19,7 +19,7 @@ export const getShows = async (req: Request, res: Response) => {
   }
 };
 
-// GET /api/profiles/${profileId}/shows/${showId}/seasons
+// GET /api/v1/profiles/${profileId}/shows/${showId}/seasons
 export const getShowDetails = async (req: Request, res: Response) => {
   const { profileId, showId } = req.params;
   try {
@@ -30,7 +30,7 @@ export const getShowDetails = async (req: Request, res: Response) => {
   }
 };
 
-// GET /api/profiles/${profileId}/shows/nextWatch
+// GET /api/v1/profiles/${profileId}/shows/nextWatch
 export const getNextWatchForProfile = async (req: Request, res: Response) => {
   const { profileId } = req.params;
   try {
@@ -41,7 +41,7 @@ export const getNextWatchForProfile = async (req: Request, res: Response) => {
   }
 };
 
-// POST /api/profiles/${profileId}/shows/favorites
+// POST /api/v1/profiles/${profileId}/shows/favorites
 export const addFavorite = async (req: Request, res: Response) => {
   const { profileId } = req.params;
   try {
@@ -106,7 +106,7 @@ const fetchSeasonsAndEpisodes = async (show: any, show_id: number, profileId: st
       responseSeason.episode_count,
     );
     await season.save();
-    await season.saveFavorite(profileId);
+    await season.saveFavorite(Number(profileId));
 
     const response = await axiosTMDBAPIInstance.get(`/tv/${show.id}/season/${season.season_number}`);
     const responseData = response.data;
@@ -125,12 +125,12 @@ const fetchSeasonsAndEpisodes = async (show: any, show_id: number, profileId: st
         buildTMDBImagePath(responseEpisode.still_path),
       );
       await episode.save();
-      await episode.saveFavorite(profileId);
+      await episode.saveFavorite(Number(profileId));
     });
   });
 };
 
-// DELETE /api/profiles/${profileId}/shows/favorites/${showId}
+// DELETE /api/v1/profiles/${profileId}/shows/favorites/${showId}
 export const removeFavorite = async (req: Request, res: Response) => {
   const { profileId, showId } = req.params;
   try {
@@ -146,7 +146,7 @@ export const removeFavorite = async (req: Request, res: Response) => {
   }
 };
 
-// PUT /api/profiles/${profileId}/shows/watchstatus
+// PUT /api/v1/profiles/${profileId}/shows/watchstatus
 export const updateShowWatchStatus = async (req: Request, res: Response) => {
   const { profileId } = req.params;
   try {
