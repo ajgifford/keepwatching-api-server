@@ -20,6 +20,7 @@ import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { Express, NextFunction, Request, Response } from 'express';
+import rateLimit from 'express-rate-limit';
 import fs from 'fs';
 import helmet from 'helmet';
 import https from 'https';
@@ -49,12 +50,18 @@ declare global {
 
 function ensureSecure(req: Request, res: Response, next: NextFunction) {
   if (req.secure) {
-    // Request is already secure (HTTPS)
     return next();
   }
-  // Redirect to HTTPS version of the URL
   res.redirect('https://' + req.hostname + req.originalUrl);
 }
+
+const limiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 100,
+  message: 'Too many requests, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // Middleware
 app.use(
@@ -66,6 +73,7 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(responseInterceptor);
+app.use(limiter);
 app.use(authRouter);
 app.use(accountRouter);
 app.use(searchRouter);
