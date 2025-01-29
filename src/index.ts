@@ -4,6 +4,7 @@ import { initScheduledJobs } from './controllers/changesController';
 import { cliLogger, httpLogger } from './logger/logger';
 import { ErrorMessages } from './logger/loggerModel';
 import { authenticate } from './middleware/authMiddleware';
+import { authenticateUser } from './middleware/authMiddleware';
 import { errorHandler } from './middleware/errorMiddleware';
 import responseInterceptor from './middleware/loggerMiddleware';
 import accountRouter from './routes/accountRouter';
@@ -21,6 +22,7 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { Express, NextFunction, Request, Response } from 'express';
 import rateLimit from 'express-rate-limit';
+import admin from 'firebase-admin';
 import fs from 'fs';
 import helmet from 'helmet';
 import https from 'https';
@@ -34,16 +36,10 @@ const app: Express = express();
 const port = process.env.PORT || 3000;
 export const __basedir = path.resolve(__dirname, '..');
 
-interface AccountBasicInfo {
-  id: number;
-  name: string;
-  email: string;
-}
-
 declare global {
   namespace Express {
     interface Request {
-      account?: AccountBasicInfo | null;
+      user?: admin.auth.DecodedIdToken;
     }
   }
 }
@@ -73,19 +69,22 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(responseInterceptor);
-app.use(limiter);
-app.use(authRouter);
-app.use(accountRouter);
-app.use(searchRouter);
-app.use(discoverRouter);
-app.use(showsRouter);
-app.use(seasonsRouter);
-app.use(epiosdesRouter);
-app.use(moviesRouter);
-app.use(fileRouter);
 app.use(cookieParser());
 app.use('/uploads', express.static('uploads'));
 app.use(ensureSecure);
+app.use(limiter);
+
+app.use(authRouter);
+
+app.use(authenticateUser, accountRouter);
+app.use(authenticateUser, searchRouter);
+app.use(authenticateUser, discoverRouter);
+app.use(authenticateUser, showsRouter);
+app.use(authenticateUser, seasonsRouter);
+app.use(authenticateUser, epiosdesRouter);
+app.use(authenticateUser, moviesRouter);
+app.use(authenticateUser, fileRouter);
+
 app.use(errorHandler);
 
 app.get('/', (req: Request, res: Response) => {

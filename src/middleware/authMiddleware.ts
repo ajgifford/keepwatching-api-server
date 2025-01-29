@@ -1,38 +1,26 @@
-import Account from '../models/account';
-import { AuthenticationError } from './errorMiddleware';
 import { NextFunction, Request, Response } from 'express';
-import asyncHandler from 'express-async-handler';
-import jwt, { JwtPayload } from 'jsonwebtoken';
+import admin from 'firebase-admin';
 
-const authenticate = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  console.log('Middleware auth', req.cookies);
-  try {
-    let token = req.cookies.jwt;
-
-    if (!token) {
-      throw new AuthenticationError('Token not found');
-    }
-
-    const jwtSecret = process.env.JWT_SECRET || '';
-    const decoded = jwt.verify(token, jwtSecret) as JwtPayload;
-
-    if (!decoded || !decoded.accountId) {
-      throw new AuthenticationError('AccountId not found');
-    }
-
-    const account = await Account.findById(decoded.accountId);
-
-    if (!account) {
-      throw new AuthenticationError('Account not found');
-    }
-
-    req.account = { id: account.account_id!, name: account.account_name, email: account.email };
-    next();
-  } catch (e) {
-    console.log(e);
-    res.status(401);
-    throw new AuthenticationError('Invalid token');
-  }
+const serviceAccount: object = require('../../certs/keepwatching-service-account.json');
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
 });
 
-export { authenticate };
+export const authenticateUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      res.status(401).json({ error: 'Authorization header missing or malformed' });
+      return;
+    }
+
+    const idToken = authHeader.split(' ')[1];
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    req.user = decodedToken;
+    next();
+  } catch (error) {
+    console.error('Error authenticating user:', error);
+    res.status(401).json({ error: 'Unauthorized' });
+  }
+};
