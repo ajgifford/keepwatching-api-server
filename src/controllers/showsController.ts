@@ -6,10 +6,10 @@ import { axiosTMDBAPIInstance } from '../utils/axiosInstance';
 import { getEpisodeToAirId, getInProduction, getUSNetwork, getUSRating } from '../utils/contentUtility';
 import { buildTMDBImagePath } from '../utils/imageUtility';
 import { getUSWatchProviders } from '../utils/wacthProvidersUtility';
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 
 // GET /api/v1/profiles/${profileId}/shows
-export const getShows = async (req: Request, res: Response) => {
+export async function getShows(req: Request, res: Response) {
   const { profileId } = req.params;
   try {
     const results = await Show.getAllShowsForProfile(profileId);
@@ -17,10 +17,10 @@ export const getShows = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ message: 'Unexpected error while getting shows', error: error });
   }
-};
+}
 
 // GET /api/v1/profiles/${profileId}/shows/${showId}/seasons
-export const getShowDetails = async (req: Request, res: Response) => {
+export async function getShowDetails(req: Request, res: Response) {
   const { profileId, showId } = req.params;
   try {
     const show = await Show.getShowWithSeasonsForProfile(profileId, showId);
@@ -28,10 +28,10 @@ export const getShowDetails = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ message: 'Unexpected error while getting seasons', error: error });
   }
-};
+}
 
 // GET /api/v1/profiles/${profileId}/shows/nextWatch
-export const getNextWatchForProfile = async (req: Request, res: Response) => {
+export async function getNextWatchForProfile(req: Request, res: Response) {
   const { profileId } = req.params;
   try {
     const shows = await Show.getNextWatchForProfile(profileId);
@@ -39,30 +39,31 @@ export const getNextWatchForProfile = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ message: 'Unexpected error while getting the next watches for a profile', error: error });
   }
-};
+}
 
 // POST /api/v1/profiles/${profileId}/shows/favorites
-export const addFavorite = async (req: Request, res: Response) => {
+export async function addFavorite(req: Request, res: Response, next: NextFunction) {
   const { profileId } = req.params;
   try {
     const show_id = req.body.id;
     const existingShowToFavorite = await Show.findByTMDBId(show_id);
     if (existingShowToFavorite) {
-      return favoriteExistingShowForNewProfile(existingShowToFavorite, profileId, res);
+      await favoriteExistingShowForNewProfile(existingShowToFavorite, profileId, res);
+      return;
     }
-    favoriteNewShow(show_id, profileId, res);
+    await favoriteNewShow(show_id, profileId, res);
   } catch (error) {
-    res.status(500).json({ message: 'Unexpected error while adding a favorite', error: error });
+    next(error);
   }
-};
+}
 
-const favoriteExistingShowForNewProfile = async (showToFavorite: Show, profileId: string, res: Response) => {
+async function favoriteExistingShowForNewProfile(showToFavorite: Show, profileId: string, res: Response) {
   await showToFavorite.saveFavorite(profileId, true);
   const show = await Show.getShowForProfile(profileId, showToFavorite.id!);
   res.status(200).json({ message: `Successfully saved ${showToFavorite.title} as a favorite`, result: show });
-};
+}
 
-const favoriteNewShow = async (show_id: number, profileId: string, res: Response) => {
+async function favoriteNewShow(show_id: number, profileId: string, res: Response) {
   const response = await axiosTMDBAPIInstance.get(`/tv/${show_id}?append_to_response=content_ratings,watch/providers`);
   const responseShow = response.data;
   const newShowToFavorite = new Show(
@@ -86,14 +87,17 @@ const favoriteNewShow = async (show_id: number, profileId: string, res: Response
     getEpisodeToAirId(responseShow.next_episode_to_air),
     getUSNetwork(responseShow.networks),
   );
-  await newShowToFavorite.save();
+  const isSaved = await newShowToFavorite.save();
+  if (!isSaved) {
+    throw new BadRequestError('Failed to save the show as a favorite');
+  }
   await newShowToFavorite.saveFavorite(profileId, false);
   const show = await Show.getShowForProfile(profileId, newShowToFavorite.id!);
   res.status(200).json({ message: `Successfully saved ${newShowToFavorite.title} as a favorite`, result: show });
   fetchSeasonsAndEpisodes(responseShow, newShowToFavorite.id!, profileId);
-};
+}
 
-const fetchSeasonsAndEpisodes = async (show: any, show_id: number, profileId: string) => {
+async function fetchSeasonsAndEpisodes(show: any, show_id: number, profileId: string) {
   show.seasons.map(async (responseSeason: any) => {
     const season = new Season(
       show_id,
@@ -128,10 +132,10 @@ const fetchSeasonsAndEpisodes = async (show: any, show_id: number, profileId: st
       await episode.saveFavorite(Number(profileId));
     });
   });
-};
+}
 
 // DELETE /api/v1/profiles/${profileId}/shows/favorites/${showId}
-export const removeFavorite = async (req: Request, res: Response) => {
+export async function removeFavorite(req: Request, res: Response) {
   const { profileId, showId } = req.params;
   try {
     const showToRemove = await Show.findById(Number(showId));
@@ -144,10 +148,10 @@ export const removeFavorite = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ message: 'Unexpected error while removing a favorite', error: error });
   }
-};
+}
 
 // PUT /api/v1/profiles/${profileId}/shows/watchstatus
-export const updateShowWatchStatus = async (req: Request, res: Response) => {
+export async function updateShowWatchStatus(req: Request, res: Response) {
   const { profileId } = req.params;
   try {
     const show_id = req.body.show_id;
@@ -164,4 +168,4 @@ export const updateShowWatchStatus = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ message: 'Unexpected error while updating a show watch status', error: error });
   }
-};
+}

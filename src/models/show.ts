@@ -1,3 +1,4 @@
+import { cliLogger, httpLogger } from '../logger/logger';
 import pool from '../utils/db';
 import { ContentUpdates } from './content';
 import Season from './season';
@@ -19,9 +20,9 @@ class Show {
   status?: string;
   type?: string;
   in_production?: 0 | 1;
-  last_air_date?: string;
-  last_episode_to_air?: number;
-  next_episode_to_air?: number | null;
+  last_air_date?: string | null = null;
+  last_episode_to_air?: number | null = null;
+  next_episode_to_air?: number | null = null;
   network?: string | null;
 
   constructor(
@@ -40,7 +41,7 @@ class Show {
     status?: string,
     type?: string,
     in_production?: 0 | 1,
-    last_air_date?: string,
+    last_air_date?: string | null,
     last_episode_to_air?: number | null,
     next_episode_to_air?: number | null,
     network?: string | null,
@@ -67,29 +68,34 @@ class Show {
   }
 
   async save() {
-    const query =
-      'INSERT INTO shows (tmdb_id, title, description, release_date, image, user_rating, content_rating, season_count, episode_count, status, type, in_production, last_air_date, last_episode_to_air, next_episode_to_air, network) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
-    const [result] = await pool.execute(query, [
-      this.tmdb_id,
-      this.title,
-      this.description,
-      this.release_date,
-      this.image,
-      this.user_rating,
-      this.content_rating,
-      this.season_count,
-      this.episode_count,
-      this.status,
-      this.type,
-      this.in_production,
-      this.last_air_date,
-      this.last_episode_to_air,
-      this.next_episode_to_air,
-      this.network,
-    ]);
-    this.id = (result as any).insertId;
-    this.genreIds?.map((genre_id) => this.saveGenre(this.id!, genre_id));
+    try {
+      const query =
+        'INSERT INTO shows (tmdb_id, title, description, release_date, image, user_rating, content_rating, season_count, episode_count, status, type, in_production, last_air_date, last_episode_to_air, next_episode_to_air, network) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
+      const [result] = await pool.execute(query, [
+        this.tmdb_id,
+        this.title,
+        this.description,
+        this.release_date,
+        this.image,
+        this.user_rating,
+        this.content_rating,
+        this.season_count,
+        this.episode_count,
+        this.status,
+        this.type,
+        this.in_production,
+        this.last_air_date,
+        this.last_episode_to_air,
+        this.next_episode_to_air,
+        this.network,
+      ]);
+      this.id = (result as any).insertId;
+    } catch (error) {
+      return false;
+    }
     this.streaming_services?.map((streaming_service_id) => this.saveStreamingService(this.id!, streaming_service_id));
+    this.genreIds?.map((genre_id) => this.saveGenre(this.id!, genre_id));
+    return true;
   }
 
   async update() {

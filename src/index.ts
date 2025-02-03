@@ -3,7 +3,6 @@ import 'dotenv/config';
 import { initScheduledJobs } from './controllers/changesController';
 import { cliLogger, httpLogger } from './logger/logger';
 import { ErrorMessages } from './logger/loggerModel';
-import { authenticate } from './middleware/authMiddleware';
 import { authenticateUser } from './middleware/authMiddleware';
 import { errorHandler } from './middleware/errorMiddleware';
 import responseInterceptor from './middleware/loggerMiddleware';
