@@ -2,12 +2,11 @@ import { BadRequestError } from '../middleware/errorMiddleware';
 import Movie from '../models/movie';
 import { axiosTMDBAPIInstance } from '../utils/axiosInstance';
 import { getUSMPARating } from '../utils/contentUtility';
-import { buildTMDBImagePath } from '../utils/imageUtility';
 import { getUSWatchProviders } from '../utils/wacthProvidersUtility';
 import { Request, Response } from 'express';
 
 // GET /api/v1/profiles/${profileId}/movies
-export const getMovies = async (req: Request, res: Response) => {
+export async function getMovies(req: Request, res: Response) {
   const { profileId } = req.params;
   try {
     const results = await Movie.getAllMoviesForProfile(profileId);
@@ -15,10 +14,10 @@ export const getMovies = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ message: 'Unexpected error while getting movies', error: error });
   }
-};
+}
 
 // POST /api/v1/profiles/${profileId}/movies/favorites
-export const addFavorite = async (req: Request, res: Response) => {
+export async function addFavorite(req: Request, res: Response) {
   const { profileId } = req.params;
 
   try {
@@ -35,7 +34,8 @@ export const addFavorite = async (req: Request, res: Response) => {
         responseMovie.overview,
         responseMovie.release_date,
         responseMovie.runtime,
-        buildTMDBImagePath(responseMovie.poster_path),
+        responseMovie.poster_path,
+        responseMovie.backdrop_path,
         responseMovie.vote_average,
         getUSMPARating(responseMovie.release_dates),
         undefined,
@@ -50,10 +50,10 @@ export const addFavorite = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ message: 'Unexpected error while adding a favorite', error: error });
   }
-};
+}
 
 // DELETE /api/v1/profiles/${profileId}/movies/favorites/${movieId}
-export const removeFavorite = async (req: Request, res: Response) => {
+export async function removeFavorite(req: Request, res: Response) {
   const { profileId, movieId } = req.params;
   try {
     const movieToRemove = await Movie.findById(Number(movieId));
@@ -66,10 +66,10 @@ export const removeFavorite = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ message: 'Unexpected error while removing a favorite', error: error });
   }
-};
+}
 
 // PUT /api/v1/profiles/${profileId}/movies/watchstatus
-export const updateMovieWatchStatus = async (req: Request, res: Response) => {
+export async function updateMovieWatchStatus(req: Request, res: Response) {
   const { profileId } = req.params;
   try {
     const movie_id = req.body.movie_id;
@@ -83,4 +83,4 @@ export const updateMovieWatchStatus = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ message: 'Unexpected error while updating a watch status', error: error });
   }
-};
+}

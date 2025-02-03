@@ -9,7 +9,8 @@ class Movie {
   description: string;
   release_date: string;
   runtime: number;
-  image: string;
+  poster_image: string;
+  backdrop_image: string;
   user_rating: number;
   mpa_rating: string;
   streaming_services?: number[];
@@ -21,7 +22,8 @@ class Movie {
     description: string,
     release_date: string,
     runtime: number,
-    image: string,
+    poster_image: string,
+    backdrop_image: string,
     user_rating: number,
     mpa_rating: string,
     id?: number,
@@ -33,7 +35,8 @@ class Movie {
     this.description = description;
     this.release_date = release_date;
     this.runtime = runtime;
-    this.image = image;
+    this.poster_image = poster_image;
+    this.backdrop_image = backdrop_image;
     this.user_rating = user_rating;
     this.mpa_rating = mpa_rating;
     if (id) this.id = id;
@@ -43,14 +46,15 @@ class Movie {
 
   async save() {
     const query =
-      'INSERT into movies (tmdb_id, title, description, release_date, runtime, image, user_rating, mpa_rating) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
+      'INSERT into movies (tmdb_id, title, description, release_date, runtime, poster_image, backdrop_image, user_rating, mpa_rating) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
     const [result] = await pool.execute(query, [
       this.tmdb_id,
       this.title,
       this.description,
       this.release_date,
       this.runtime,
-      this.image,
+      this.poster_image,
+      this.backdrop_image,
       this.user_rating,
       this.mpa_rating,
     ]);
@@ -61,13 +65,14 @@ class Movie {
 
   async update() {
     const query =
-      'UPDATE movies SET title = ?, description = ?, release_date = ?, runtime = ?, image = ?, user_rating = ?, mpa_rating = ? WHERE tmdb_id = ?';
+      'UPDATE movies SET title = ?, description = ?, release_date = ?, runtime = ?, poster_image = ?, backdrop_image = ?, user_rating = ?, mpa_rating = ? WHERE tmdb_id = ?';
     await pool.execute(query, [
       this.title,
       this.description,
       this.release_date,
       this.runtime,
-      this.image,
+      this.poster_image,
+      this.backdrop_image,
       this.user_rating,
       this.mpa_rating,
       this.tmdb_id,
@@ -119,7 +124,8 @@ class Movie {
       movie.description,
       movie.release_date,
       movie.runtime,
-      movie.image,
+      movie.poster_image,
+      movie.backdrop_image,
       movie.user_rating,
       movie.mpa_rating,
       movie.id,

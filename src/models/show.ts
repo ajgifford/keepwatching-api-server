@@ -10,7 +10,8 @@ class Show {
   title: string;
   description: string;
   release_date: string;
-  image: string;
+  poster_image: string;
+  backdrop_image: string;
   user_rating: number;
   content_rating: string;
   streaming_services?: number[];
@@ -30,7 +31,8 @@ class Show {
     title: string,
     description: string,
     release_date: string,
-    image: string,
+    poster_image: string,
+    backdrop_image: string,
     user_rating: number,
     content_rating: string,
     id?: number,
@@ -50,7 +52,8 @@ class Show {
     this.title = title;
     this.description = description;
     this.release_date = release_date;
-    this.image = image;
+    this.poster_image = poster_image;
+    this.backdrop_image = backdrop_image;
     this.user_rating = user_rating;
     this.content_rating = content_rating;
     if (id) this.id = id;
@@ -70,13 +73,14 @@ class Show {
   async save() {
     try {
       const query =
-        'INSERT INTO shows (tmdb_id, title, description, release_date, image, user_rating, content_rating, season_count, episode_count, status, type, in_production, last_air_date, last_episode_to_air, next_episode_to_air, network) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
+        'INSERT INTO shows (tmdb_id, title, description, release_date, poster_image, backdrop_image, user_rating, content_rating, season_count, episode_count, status, type, in_production, last_air_date, last_episode_to_air, next_episode_to_air, network) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
       const [result] = await pool.execute(query, [
         this.tmdb_id,
         this.title,
         this.description,
         this.release_date,
-        this.image,
+        this.poster_image,
+        this.backdrop_image,
         this.user_rating,
         this.content_rating,
         this.season_count,
@@ -100,12 +104,13 @@ class Show {
 
   async update() {
     const query =
-      'UPDATE shows SET title = ?, description = ?, release_date = ?, image = ?, user_rating = ?, content_rating = ?, season_count = ?, episode_count = ?, status = ?, type = ?, in_production = ?, last_air_date = ?, last_episode_to_air = ?, next_episode_to_air = ?, network = ? WHERE tmdb_id = ?';
+      'UPDATE shows SET title = ?, description = ?, release_date = ?, poster_image = ?, backdrop_image = ?, user_rating = ?, content_rating = ?, season_count = ?, episode_count = ?, status = ?, type = ?, in_production = ?, last_air_date = ?, last_episode_to_air = ?, next_episode_to_air = ?, network = ? WHERE tmdb_id = ?';
     await pool.execute(query, [
       this.title,
       this.description,
       this.release_date,
-      this.image,
+      this.poster_image,
+      this.backdrop_image,
       this.user_rating,
       this.content_rating,
       this.season_count,
@@ -170,7 +175,8 @@ class Show {
       show.title,
       show.description,
       show.release_date,
-      show.image,
+      show.poster_image,
+      show.backdrop_image,
       show.user_rating,
       show.content_rating,
       show.id,
@@ -192,7 +198,8 @@ class Show {
       show.title,
       show.description,
       show.release_date,
-      show.image,
+      show.poster_image,
+      show.backdrop_image,
       show.user_rating,
       show.content_rating,
       show.id,

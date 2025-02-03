@@ -12,7 +12,7 @@ class Episode {
   readonly overview: string;
   readonly air_date: string;
   readonly runtime: number;
-  readonly image: string;
+  readonly still_image: string;
 
   constructor(
     tmdb_id: number,
@@ -25,7 +25,7 @@ class Episode {
     overview: string,
     air_date: string,
     runtime: number,
-    image: string,
+    still_image: string,
     id?: number,
   ) {
     this.tmdb_id = tmdb_id;
@@ -38,13 +38,13 @@ class Episode {
     this.overview = overview;
     this.air_date = air_date;
     this.runtime = runtime;
-    this.image = image;
+    this.still_image = still_image;
     if (id) this.id = id;
   }
 
   async save() {
     const query =
-      'INSERT into episodes (tmdb_id, season_id, show_id, episode_number, episode_type, season_number, title, overview, air_date, runtime, image) VALUES (?,?,?,?,?,?,?,?,?,?,?)';
+      'INSERT into episodes (tmdb_id, season_id, show_id, episode_number, episode_type, season_number, title, overview, air_date, runtime, still_image) VALUES (?,?,?,?,?,?,?,?,?,?,?)';
     const [result] = await pool.execute(query, [
       this.tmdb_id,
       this.season_id,
@@ -56,14 +56,14 @@ class Episode {
       this.overview,
       this.air_date,
       this.runtime,
-      this.image,
+      this.still_image,
     ]);
     this.id = (result as any).insertId;
   }
 
   async update() {
     const query =
-      'INSERT into episodes (tmdb_id, season_id, show_id, episode_number, episode_type, season_number, title, overview, air_date, runtime, image) VALUES (?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id), episode_number = ?, episode_type = ?, season_number = ?, title = ?, overview = ?, air_date = ?, runtime = ?, image = ?';
+      'INSERT into episodes (tmdb_id, season_id, show_id, episode_number, episode_type, season_number, title, overview, air_date, runtime, still_image) VALUES (?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id), episode_number = ?, episode_type = ?, season_number = ?, title = ?, overview = ?, air_date = ?, runtime = ?, still_image = ?';
     const [result] = await pool.execute(query, [
       //Insert Values
       this.tmdb_id,
@@ -76,7 +76,7 @@ class Episode {
       this.overview,
       this.air_date,
       this.runtime,
-      this.image,
+      this.still_image,
       //Update Values
       this.episode_number,
       this.episode_type,
@@ -85,7 +85,7 @@ class Episode {
       this.overview,
       this.air_date,
       this.runtime,
-      this.image,
+      this.still_image,
     ]);
     this.id = (result as any).insertId;
   }

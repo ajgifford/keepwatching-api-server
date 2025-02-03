@@ -4,7 +4,6 @@ import Season from '../models/season';
 import Show from '../models/show';
 import { axiosTMDBAPIInstance } from '../utils/axiosInstance';
 import { getEpisodeToAirId, getInProduction, getUSNetwork, getUSRating } from '../utils/contentUtility';
-import { buildTMDBImagePath } from '../utils/imageUtility';
 import { getUSWatchProviders } from '../utils/wacthProvidersUtility';
 import { NextFunction, Request, Response } from 'express';
 
@@ -71,7 +70,8 @@ async function favoriteNewShow(show_id: number, profileId: string, res: Response
     responseShow.name,
     responseShow.overview,
     responseShow.first_air_date,
-    buildTMDBImagePath(responseShow.poster_path),
+    responseShow.poster_path,
+    responseShow.backdrop_path,
     responseShow.vote_average,
     getUSRating(responseShow.content_ratings),
     undefined,
@@ -106,7 +106,7 @@ async function fetchSeasonsAndEpisodes(show: any, show_id: number, profileId: st
       responseSeason.overview,
       responseSeason.season_number,
       responseSeason.air_date,
-      buildTMDBImagePath(responseSeason.poster_path),
+      responseSeason.poster_path,
       responseSeason.episode_count,
     );
     await season.save();
@@ -126,7 +126,7 @@ async function fetchSeasonsAndEpisodes(show: any, show_id: number, profileId: st
         responseEpisode.overview,
         responseEpisode.air_date,
         responseEpisode.runtime,
-        buildTMDBImagePath(responseEpisode.still_path),
+        responseEpisode.still_path,
       );
       await episode.save();
       await episode.saveFavorite(Number(profileId));
