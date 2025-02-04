@@ -37,7 +37,7 @@ class Profile {
   async delete(id: number) {
     const query = 'DELETE FROM profiles WHERE profile_id = ?';
     const [result] = await pool.execute(query, [id]);
-    return (result as any).affectedRows === 0;
+    return (result as any).affectedRows > 0;
   }
 
   static async findById(id: number): Promise<Profile | null> {
