@@ -56,7 +56,7 @@ export const editAccount = asyncHandler(async (req: Request, res: Response) => {
     const updatedAccount = await account.editAccount(account_name, Number(default_profile_id));
     if (updatedAccount) {
       res.status(200).send({
-        message: `Updated the account ${id}`,
+        message: `Updated account ${id}`,
         result: {
           id: updatedAccount.account_id,
           name: updatedAccount.account_name,
@@ -70,6 +70,32 @@ export const editAccount = asyncHandler(async (req: Request, res: Response) => {
     }
   } else {
     throw new NotFoundError('Failed to find the account for an update');
+  }
+});
+
+// PUT /api/v1/accounts/${id}/email
+export const editEmail = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { new_email } = req.body;
+  const account = await Account.findById(Number(id));
+  if (account) {
+    const updatedAccount = await account.editEmail(new_email);
+    if (updatedAccount) {
+      res.status(200).send({
+        message: `Updated email for account ${id}`,
+        result: {
+          id: updatedAccount.account_id,
+          name: updatedAccount.account_name,
+          email: updatedAccount.email,
+          image: getAccountImage(updatedAccount),
+          default_profile_id: updatedAccount.default_profile_id,
+        },
+      });
+    } else {
+      throw new BadRequestError('Failed to update account email');
+    }
+  } else {
+    throw new NotFoundError('Failed to find the account to update the email');
   }
 });
 

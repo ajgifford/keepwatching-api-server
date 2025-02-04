@@ -56,6 +56,13 @@ class Account implements IAccount {
     return new Account(account_name, this.email, this.uid, this.image, this.account_id, default_profile_id);
   }
 
+  async editEmail(new_email: string) {
+    const query = 'UPDATE accounts SET email = ? WHERE account_id = ?';
+    const [result] = await pool.execute(query, [new_email, this.account_id]);
+    if ((result as any).affectedRows === 0) return null;
+    return new Account(this.account_name, new_email, this.uid, this.image, this.account_id, this.default_profile_id);
+  }
+
   static async findByUID(uid: string): Promise<Account | null> {
     const query = `SELECT * FROM accounts WHERE uid = ?`;
     const [rows] = await pool.execute(query, [uid]);
