@@ -33,15 +33,23 @@ export function buildLocalImageURL(image: string, folder: string) {
 export function getAccountImage(account: Account) {
   if (account.image) {
     return buildLocalImageURL(account.image, 'accounts');
-  } else {
-    return buildDefaultImagePath(account.account_name);
   }
+  return buildDefaultImagePath(account.account_name);
+}
+
+export function getPhotoForGoogleAccount(name: string, photoURL: string, account: Account) {
+  if (account.image) {
+    return buildLocalImageURL(account.image, 'accounts');
+  }
+  if (photoURL) {
+    return photoURL;
+  }
+  return buildDefaultImagePath(name);
 }
 
 export function getProfileImage(profile: Profile) {
   if (profile.image) {
     return buildLocalImageURL(profile.image, 'profiles');
-  } else {
-    return buildDefaultImagePath(profile.name);
   }
+  return buildDefaultImagePath(profile.name);
 }

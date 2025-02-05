@@ -40,6 +40,8 @@ class Account implements IAccount {
     const profileQuery = 'INSERT INTO profiles (account_id, name) VALUES (?,?)';
     const [profileResult] = await pool.execute(profileQuery, [this.account_id, this.account_name]);
     this.default_profile_id = (profileResult as any).insertId;
+    const defaultQuery = 'UPDATE accounts SET default_profile_id = ? WHERE account_id = ?';
+    await pool.execute(defaultQuery, [this.default_profile_id, this.account_id]);
   }
 
   async updateAccountImage(image_path: string) {
