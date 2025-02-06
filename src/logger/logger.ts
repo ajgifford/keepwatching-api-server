@@ -1,4 +1,6 @@
 import { randomBytes } from 'crypto';
+import fs from 'fs';
+import path from 'path';
 import winston from 'winston';
 import { format, transports } from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
@@ -7,6 +9,11 @@ const { combine, timestamp, json, printf, label, colorize } = format;
 const timestampFormat: string = 'MMM-DD-YYYY HH:mm:ss';
 const generateLogId = (): string => randomBytes(16).toString('hex');
 const appVersion = process.env.npm_package_version;
+
+const logDirectory = path.resolve(process.env.LOG_DIR || 'logs');
+if (!fs.existsSync(logDirectory)) {
+  fs.mkdirSync(logDirectory, { recursive: true });
+}
 
 export const httpLogger = winston.createLogger({
   format: combine(
@@ -31,9 +38,9 @@ export const httpLogger = winston.createLogger({
   ),
   defaultMeta: { service: 'keepwatching' },
   transports: [
-    new transports.File({ filename: 'logs/keepwatching-error.log', level: 'error' }),
+    new transports.File({ filename: path.join(logDirectory, 'keepwatching-error.log'), level: 'error' }),
     new DailyRotateFile({
-      filename: 'logs/rotating-logs-%DATE%.log',
+      filename: path.join(logDirectory, 'rotating-logs-%DATE%.log'),
       datePattern: 'MMMM-DD-YYYY',
       zippedArchive: false,
       maxSize: '20m',

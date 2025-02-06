@@ -36,6 +36,7 @@ export const __basedir = path.resolve(__dirname, '..');
 const app: Express = express();
 const port = process.env.PORT || 3000;
 export const UPLOADS_DIR = process.env.UPLOADS_DIR || path.join(__basedir, '/uploads');
+const LOG_DIRECTORY = path.resolve(process.env.LOG_DIR || 'logs');
 
 declare global {
   namespace Express {
@@ -125,6 +126,7 @@ const startServer = async () => {
     server.listen(port, () => {
       cliLogger.info(`Server is running on https://localhost:${port} 🚀🚀🚀`);
       cliLogger.info(`Serving uploads from: ${UPLOADS_DIR}`);
+      cliLogger.info(`Writing logs to: ${LOG_DIRECTORY}`);
     });
   } catch (error) {
     cliLogger.error('Error starting the server! ❌');
