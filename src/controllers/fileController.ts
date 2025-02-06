@@ -1,7 +1,7 @@
-import { __basedir } from '..';
-import { cliLogger, httpLogger } from '../logger/logger';
+import { UPLOADS_DIR } from '..';
+import { httpLogger } from '../logger/logger';
 import { BadRequestError } from '../middleware/errorMiddleware';
-import uploadFileMiddleware from '../middleware/upload';
+import uploadFileMiddleware from '../middleware/uploadMiddleware';
 import Account from '../models/account';
 import Profile from '../models/profile';
 import { getAccountImage, getProfileImage } from '../utils/imageUtility';
@@ -33,7 +33,7 @@ export const uploadAccountImage = asyncHandler(async (req: Request, res: Respons
               default_profile_id: account.default_profile_id,
             },
           });
-          const filePath = __basedir + '/uploads/accounts/' + account.image;
+          const filePath = UPLOADS_DIR + '/accounts/' + account.image;
           fs.unlink(filePath, (err) => {
             if (err) {
               if (err.code === 'ENOENT') {
@@ -79,7 +79,7 @@ export const uploadProfileImage = asyncHandler(async (req: Request, res: Respons
               image: getProfileImage(updatedProfile),
             },
           });
-          const filePath = __basedir + '/uploads/profiles/' + profile.image;
+          const filePath = UPLOADS_DIR + '/profiles/' + profile.image;
           fs.unlink(filePath, (err) => {
             if (err) {
               if (err.code === 'ENOENT') {

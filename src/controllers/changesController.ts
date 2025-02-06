@@ -31,17 +31,22 @@ const supportedChangesSets = [
 ];
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+let notifyUpdateCallback: (() => void) | null = null;
 
-export function initScheduledJobs() {
+export function initScheduledJobs(notifyUpdate: () => void) {
+  notifyUpdateCallback = notifyUpdate;
+
   const showsJob = CronJob.schedule('0 2 * * *', () => {
     cliLogger.info('Starting the show change job');
     updateShows();
+    if (notifyUpdateCallback) notifyUpdateCallback();
     cliLogger.info(`Ending the show change job`);
   });
 
   const moviesJob = CronJob.schedule('0 1 7,14,21,28 * *', () => {
     cliLogger.info('Starting the movie change job');
     updateMovies();
+    if (notifyUpdateCallback) notifyUpdateCallback();
     cliLogger.info(`Ending the movie change job`);
   });
 
@@ -83,7 +88,8 @@ async function checkForMovieChanges(content: ContentUpdates) {
         movieDetails.overview,
         movieDetails.release_date,
         movieDetails.runtime,
-        buildTMDBImagePath(movieDetails.poster_path),
+        movieDetails.poster_path,
+        movieDetails.backdrop_path,
         movieDetails.vote_average,
         getUSMPARating(movieDetails.release_dates),
         content.id,
@@ -130,7 +136,8 @@ async function checkForShowChanges(content: ContentUpdates) {
         showDetails.name,
         showDetails.overview,
         showDetails.first_air_date,
-        buildTMDBImagePath(showDetails.poster_path),
+        showDetails.poster_path,
+        showDetails.backdrop_path,
         showDetails.vote_average,
         getUSRating(showDetails.content_ratings),
         content.id,

@@ -26,14 +26,16 @@ import fs from 'fs';
 import helmet from 'helmet';
 import https from 'https';
 import path from 'path';
+import { Server } from 'socket.io';
 
 const privateKey = fs.readFileSync('certs/server.key', 'utf8');
 const certificate = fs.readFileSync('certs/server.crt', 'utf8');
 const credentials = { key: privateKey, cert: certificate };
+export const __basedir = path.resolve(__dirname, '..');
 
 const app: Express = express();
 const port = process.env.PORT || 3000;
-export const __basedir = path.resolve(__dirname, '..');
+export const UPLOADS_DIR = process.env.UPLOADS_DIR || path.join(__basedir, '/uploads');
 
 declare global {
   namespace Express {
@@ -69,11 +71,15 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(responseInterceptor);
 app.use(cookieParser());
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(UPLOADS_DIR));
 app.use(ensureSecure);
 app.use(limiter);
 
 app.use(authRouter);
+app.post('/trigger-update', (req, res) => {
+  io.emit('globalUpdate', { message: 'Manual update triggered!' });
+  res.json({ success: true, message: 'Update event emitted.' });
+});
 
 app.use(authenticateUser, accountRouter);
 app.use(authenticateUser, searchRouter);
@@ -91,16 +97,34 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 const server = https.createServer(credentials, app);
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST'],
+  },
+});
+
+io.on('connection', (socket) => {
+  cliLogger.info(`Client connected: ${socket.id}`);
+
+  socket.on('disconnect', () => {
+    cliLogger.info(`Client disconnected: ${socket.id}`);
+  });
+});
+
 const startServer = async () => {
   try {
     cliLogger.info('Fetching initial data from the database...');
     await loadStreamingService();
     cliLogger.info('Data fetched and cached successfully.');
 
-    initScheduledJobs();
+    initScheduledJobs(() => {
+      io.emit('globalUpdate', { message: 'New updates available!' });
+    });
 
     server.listen(port, () => {
       cliLogger.info(`Server is running on https://localhost:${port} 🚀🚀🚀`);
+      cliLogger.info(`Serving uploads from: ${UPLOADS_DIR}`);
     });
   } catch (error) {
     cliLogger.error('Error starting the server! ❌');

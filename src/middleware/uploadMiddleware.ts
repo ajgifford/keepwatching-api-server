@@ -1,8 +1,16 @@
 import { __basedir } from '..';
 import { buildAccountImageName } from '../utils/imageUtility';
 import { Request } from 'express';
+import fs from 'fs';
 import multer, { StorageEngine } from 'multer';
+import path from 'path';
 import util from 'util';
+
+export const UPLOADS_DIR = process.env.UPLOADS_DIR || path.join(__basedir, '/uploads');
+
+if (!fs.existsSync(UPLOADS_DIR)) {
+  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+}
 
 const maxSize: number = 2 * 1024 * 1024;
 
@@ -10,11 +18,11 @@ const storage: StorageEngine = multer.diskStorage({
   destination: (req: Request, file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
     let destinationPath;
     if (req.path.startsWith('/api/v1/upload/accounts/')) {
-      destinationPath = __basedir + '/uploads/accounts';
+      destinationPath = UPLOADS_DIR + '/accounts';
     } else if (req.path.startsWith('/api/v1/upload/profiles/')) {
-      destinationPath = __basedir + '/uploads/profiles';
+      destinationPath = UPLOADS_DIR + '/profiles';
     } else {
-      destinationPath = __basedir + '/uploads'; // Fallback directory
+      destinationPath = UPLOADS_DIR;
     }
     cb(null, destinationPath);
   },
