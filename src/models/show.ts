@@ -131,12 +131,12 @@ class Show {
   }
 
   async saveGenre(show_id: number, genre_id: number) {
-    const query = 'INSERT IGNORE INTO tv_show_genres (show_id, genre_id) VALUES (?,?)';
+    const query = 'INSERT IGNORE INTO show_genres (show_id, genre_id) VALUES (?,?)';
     await pool.execute(query, [show_id, genre_id]);
   }
 
   async saveStreamingService(show_id: number, streaming_service_id: number) {
-    const query = 'INSERT IGNORE INTO tv_show_services (show_id, streaming_service_id) VALUES (?, ?)';
+    const query = 'INSERT IGNORE INTO show_services (show_id, streaming_service_id) VALUES (?, ?)';
     await pool.execute(query, [show_id, streaming_service_id]);
   }
 
