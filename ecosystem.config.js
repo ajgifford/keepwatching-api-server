@@ -9,6 +9,9 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
       },
+      env_production: {
+        NODE_ENV: 'production',
+      },
     },
     {
       name: 'keepwatching-server-dev',
@@ -18,6 +21,9 @@ module.exports = {
       watch: ['src'],
       ignore_watch: ['node_modules', 'dist'],
       env: {
+        NODE_ENV: 'development',
+      },
+      env_development: {
         NODE_ENV: 'development',
       },
     },
