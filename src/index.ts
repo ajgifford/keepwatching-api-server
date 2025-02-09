@@ -102,14 +102,32 @@ const io = new Server(server, {
   cors: {
     origin: '*',
     methods: ['GET', 'POST'],
+    credentials: true,
   },
 });
 
+io.use(async (socket, next) => {
+  try {
+    const token = socket.handshake.auth?.token;
+    if (!token) {
+      return next(new Error('Authentication error: No token provided'));
+    }
+
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    socket.data.userId = decodedToken.uid;
+    socket.data.email = decodedToken.email;
+    next();
+  } catch (error) {
+    console.error('WebSocket Auth Failed:', error);
+    next(new Error('Authentication error'));
+  }
+});
+
 io.on('connection', (socket) => {
-  cliLogger.info(`Client connected: ${socket.id}`);
+  cliLogger.info(`Client connected: ${socket.data.email} - ${socket.data.userId}`);
 
   socket.on('disconnect', () => {
-    cliLogger.info(`Client disconnected: ${socket.id}`);
+    cliLogger.info(`Client disconnected: ${socket.data.email} - ${socket.data.userId}`);
   });
 });
 
