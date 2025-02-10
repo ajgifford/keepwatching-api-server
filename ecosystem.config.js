@@ -8,10 +8,13 @@ module.exports = {
       watch: false,
       env: {
         NODE_ENV: 'production',
+        PORT: 3033
       },
       env_production: {
         NODE_ENV: 'production',
+        PORT: 3033
       },
+      group: "cert-access"
     },
     {
       name: 'keepwatching-server-dev',
