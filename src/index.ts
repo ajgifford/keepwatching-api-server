@@ -28,9 +28,13 @@ import https from 'https';
 import path from 'path';
 import { Server } from 'socket.io';
 
-const privateKey = fs.readFileSync('certs/server.key', 'utf8');
-const certificate = fs.readFileSync('certs/server.crt', 'utf8');
-const credentials = { key: privateKey, cert: certificate };
+const KEY_PATH = process.env.CERT_KEY_PATH || 'certs/server.key';
+const CERT_PATH = process.env.CERT_PATH || 'certs/server.crt';
+
+const credentials = {
+  key: fs.readFileSync(KEY_PATH),
+  cert: fs.readFileSync(CERT_PATH),
+};
 export const __basedir = path.resolve(__dirname, '..');
 
 const app: Express = express();
@@ -67,6 +71,18 @@ app.use(
     crossOriginEmbedderPolicy: false,
   }),
 );
+
+// Security middleware to ensure only local connections
+app.use((req: Request, res: Response, next: NextFunction): void => {
+  const allowedHosts = ['127.0.0.1', 'localhost', 'keepwatching.giffordfamilydev.us'];
+  const host = req.hostname;
+  if (!allowedHosts.includes(host)) {
+    res.status(403).send('Access Denied');
+    return;
+  }
+  next();
+}) as express.RequestHandler;
+
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
