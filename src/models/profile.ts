@@ -1,5 +1,4 @@
 import pool from '../utils/db';
-import { buildLocalImageURL, getProfileImage } from '../utils/imageUtility';
 
 class Profile {
   account_id: number;

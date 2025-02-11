@@ -26,20 +26,20 @@ export function buildProfileImageName(id: string, mimetype: string) {
   return `profileImage_${id}_${Date.now()}.${extension}`;
 }
 
-export function buildLocalImageURL(image: string, folder: string) {
-  return `https://localhost:${process.env.PORT}/uploads/${folder}/${image}`;
+export function buildUploadedImageURL(image: string, folder: string) {
+  return `${process.env.KW_HOST}/uploads/${folder}/${image}`;
 }
 
 export function getAccountImage(account: Account) {
   if (account.image) {
-    return buildLocalImageURL(account.image, 'accounts');
+    return buildUploadedImageURL(account.image, 'accounts');
   }
   return buildDefaultImagePath(account.account_name);
 }
 
 export function getPhotoForGoogleAccount(name: string, photoURL: string, account: Account) {
   if (account.image) {
-    return buildLocalImageURL(account.image, 'accounts');
+    return buildUploadedImageURL(account.image, 'accounts');
   }
   if (photoURL) {
     return photoURL;
@@ -49,7 +49,7 @@ export function getPhotoForGoogleAccount(name: string, photoURL: string, account
 
 export function getProfileImage(profile: Profile) {
   if (profile.image) {
-    return buildLocalImageURL(profile.image, 'profiles');
+    return buildUploadedImageURL(profile.image, 'profiles');
   }
   return buildDefaultImagePath(profile.name);
 }
