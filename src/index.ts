@@ -35,11 +35,11 @@ const credentials = {
   key: fs.readFileSync(KEY_PATH),
   cert: fs.readFileSync(CERT_PATH),
 };
-export const __basedir = path.resolve(__dirname, '..');
 
 const app: Express = express();
 const port = process.env.PORT || 3000;
-export const UPLOADS_DIR = process.env.UPLOADS_DIR || path.join(__basedir, '/uploads');
+const DEFAULT_UPLOADS_DIR = path.join(process.cwd(), 'uploads');
+export const UPLOADS_DIR = process.env.UPLOADS_DIR || DEFAULT_UPLOADS_DIR;
 const LOG_DIRECTORY = path.resolve(process.env.LOG_DIR || 'logs');
 
 declare global {

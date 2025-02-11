@@ -1,4 +1,3 @@
-import { __basedir } from '..';
 import { buildAccountImageName } from '../utils/imageUtility';
 import { Request } from 'express';
 import fs from 'fs';
@@ -6,7 +5,8 @@ import multer, { StorageEngine } from 'multer';
 import path from 'path';
 import util from 'util';
 
-export const UPLOADS_DIR = process.env.UPLOADS_DIR || path.join(__basedir, '/uploads');
+const DEFAULT_UPLOADS_DIR = path.join(process.cwd(), 'uploads');
+export const UPLOADS_DIR = process.env.UPLOADS_DIR || DEFAULT_UPLOADS_DIR;
 
 if (!fs.existsSync(UPLOADS_DIR)) {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
