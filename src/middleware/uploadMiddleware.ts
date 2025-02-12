@@ -1,4 +1,4 @@
-import { buildAccountImageName } from '../utils/imageUtility';
+import { buildAccountImageName, buildProfileImageName } from '../utils/imageUtility';
 import { Request } from 'express';
 import fs from 'fs';
 import multer, { StorageEngine } from 'multer';
@@ -28,7 +28,11 @@ const storage: StorageEngine = multer.diskStorage({
   },
   filename: (req: Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
     const { id } = req.params;
-    cb(null, buildAccountImageName(id, file.mimetype));
+    let fileName = buildAccountImageName(id, file.mimetype);
+    if (req.path.startsWith('/api/v1/upload/profiles/')) {
+      fileName = buildProfileImageName(id, file.mimetype);
+    }
+    cb(null, fileName);
   },
 });
 
