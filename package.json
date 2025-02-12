@@ -46,6 +46,11 @@
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.18.0"
   },
+  "resolutions": {
+    "esbuild": "0.25.0",
+    "node-fetch": "2.7.0",
+    "whatwg-url": "14.1.1"
+  },
   "scripts": {
     "build": "npx tsc",
     "start": "node dist/index.js",
