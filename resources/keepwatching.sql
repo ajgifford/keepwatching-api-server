@@ -244,7 +244,7 @@ SELECT
 	ne.title as next_episode_title,
 	ne.air_date as next_episode_air_date,
 	ne.episode_number as next_episode_number,
-	ne.season_number as next_epsiode_season
+	ne.season_number as next_episode_season
 FROM 
     profiles p
 JOIN 
