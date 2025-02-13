@@ -163,7 +163,7 @@ class Movie {
 
   static async getUpcomingMovieReleasesForProfile(profile_id: string) {
     const query =
-      'SELECT movie_id from profile_movies WHERE profile_id = ? AND release_date BETWEEN CURRENT_DATE() AND DATE_ADD(CURRENT_DATE(), INTERVAL 60 DAY) ORDER BY release_date LIMIT 6';
+      'SELECT movie_id from profile_movies WHERE profile_id = ? AND release_date BETWEEN DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY) AND DATE_ADD(CURRENT_DATE(), INTERVAL 60 DAY) ORDER BY release_date LIMIT 6';
     const [rows] = await pool.execute(query, [Number(profile_id)]);
     return rows;
   }
