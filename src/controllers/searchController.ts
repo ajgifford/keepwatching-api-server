@@ -1,6 +1,5 @@
 import { axiosTMDBAPIInstance } from '../utils/axiosInstance';
 import { generateGenreArrayFromIds } from '../utils/genreUtility';
-import { buildTMDBImagePath } from '../utils/imageUtility';
 import { Request, Response } from 'express';
 
 // GET /api/v1/search/shows
@@ -16,7 +15,7 @@ export const searchShows = async (req: Request, res: Response) => {
       genres: generateGenreArrayFromIds(result.genre_ids),
       premiered: result.first_air_date,
       summary: result.overview,
-      image: buildTMDBImagePath(result.poster_path),
+      image: result.poster_path,
       rating: result.vote_average,
     };
   });

@@ -7,7 +7,6 @@ import Season from '../models/season';
 import Show from '../models/show';
 import { axiosTMDBAPIInstance } from '../utils/axiosInstance';
 import { getEpisodeToAirId, getInProduction, getUSMPARating, getUSNetwork, getUSRating } from '../utils/contentUtility';
-import { buildTMDBImagePath } from '../utils/imageUtility';
 import { getUSWatchProviders } from '../utils/wacthProvidersUtility';
 import CronJob from 'node-cron';
 
@@ -182,7 +181,7 @@ function processSeasonChanges(changes: ChangeItem[], responseShow: any, content:
         responseShowSeason.overview,
         responseShowSeason.season_number,
         responseShowSeason.air_date,
-        buildTMDBImagePath(responseShowSeason.poster_path),
+        responseShowSeason.poster_path,
         responseShowSeason.episode_count,
       );
       await seasonToUpdate.update();
@@ -207,7 +206,7 @@ function processSeasonChanges(changes: ChangeItem[], responseShow: any, content:
             responseEpisode.overview,
             responseEpisode.air_date,
             responseEpisode.runtime,
-            buildTMDBImagePath(responseEpisode.still_path),
+            responseEpisode.still_path,
           );
           await episodeToUpdate.update();
           profileIds.forEach((id) => episodeToUpdate.saveFavorite(id));
