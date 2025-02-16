@@ -36,7 +36,7 @@ export const searchMovies = async (req: Request, res: Response) => {
       genres: generateGenreArrayFromIds(result.genre_ids),
       premiered: result.release_date,
       summary: result.overview,
-      image: buildTMDBImagePath(result.poster_path),
+      image: result.poster_path,
       rating: result.vote_average,
     };
   });
