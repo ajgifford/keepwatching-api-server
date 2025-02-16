@@ -343,7 +343,7 @@ WHERE
 GROUP BY 
     p.profile_id, s.id, e.id
 ORDER BY 
-    e.air_date;
+    e.air_date, s.title, e.season_number, e.episode_number;
 	
 
 -- Reference Data
