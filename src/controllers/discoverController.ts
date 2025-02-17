@@ -1,15 +1,59 @@
+import { BadRequestError } from '../middleware/errorMiddleware';
 import { axiosStreamingAPIInstance } from '../utils/axiosInstance';
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
+import NodeCache from 'node-cache';
+import { z } from 'zod';
+
+const validServices = ['netflix', 'disney', 'hbo', 'apple', 'prime'];
+const validTypes = ['movie', 'series'];
+
+const DiscoverQuerySchema = z.object({
+  showType: z.enum(['movie', 'series'], {
+    errorMap: () => ({ message: 'Show type must be either "movie" or "series"' }),
+  }),
+  service: z.enum(['netflix', 'disney', 'hbo', 'apple', 'prime'], {
+    errorMap: () => ({ message: 'Invalid streaming service provided' }),
+  }),
+});
+
+type DiscoverQuery = z.infer<typeof DiscoverQuerySchema>;
+const cache = new NodeCache({ stdTTL: 300 });
+
+export const validateDiscoverQuery = (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = DiscoverQuerySchema.safeParse(req.query);
+
+    if (!result.success) {
+      const errorMessage = result.error.issues.map((issue) => issue.message).join(', ');
+
+      next(new BadRequestError(errorMessage));
+      return;
+    }
+
+    req.query = result.data;
+    next();
+  } catch (error) {
+    next(new BadRequestError('Invalid request parameters'));
+  }
+};
 
 // GET /api/v1/discover/top
-export const discoverTopShows = async (req: Request, res: Response) => {
-  const showType = req.query.showType as string;
-  const service = req.query.service as string;
+export const discoverTopShows = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  const { showType, service } = req.query as DiscoverQuery;
+
+  const cacheKey = `discover_${showType}_${service}`;
+  const cachedData = cache.get(cacheKey);
+
+  if (cachedData) {
+    res.status(200).json({ message: `Found top ${showType} for ${service}`, results: cachedData });
+    return;
+  }
+
   const config = {
     params: {
       country: 'us',
-      show_type: `${showType}`,
-      service: `${service}`,
+      show_type: showType,
+      service: service,
     },
   };
   try {
@@ -26,6 +70,7 @@ export const discoverTopShows = async (req: Request, res: Response) => {
         rating: result.rating,
       };
     });
+    cache.set(cacheKey, searchResult);
     res.status(200).json({ message: `Found top ${showType} for ${service}`, results: searchResult });
   } catch (error) {
     res.status(500).json({ message: 'Unexpected error while discovering top content', error: error });
