@@ -1,5 +1,5 @@
 import axios from 'axios';
-import axiosRetry from 'axios-retry/dist/cjs';
+import axiosRetry from 'axios-retry';
 
 const axiosStreamingAPIInstance = axios.create({
   baseURL: 'https://streaming-availability.p.rapidapi.com',
