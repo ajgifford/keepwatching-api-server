@@ -93,11 +93,6 @@ app.use(ensureSecure);
 app.use(limiter);
 
 app.use(authRouter);
-app.post('/trigger-update', (req, res) => {
-  io.emit('globalUpdate', { message: 'Manual update triggered!' });
-  res.json({ success: true, message: 'Update event emitted.' });
-});
-
 app.use(authenticateUser, accountRouter);
 app.use(authenticateUser, searchRouter);
 app.use(authenticateUser, discoverRouter);
@@ -147,15 +142,21 @@ io.on('connection', (socket) => {
   });
 });
 
+function notifyOnShowsUpdate() {
+  io.emit('showsUpdate', { message: 'Show updates made!' });
+}
+
+function notifyOnMoviesUpdate() {
+  io.emit('moviesUpdate', { message: 'Movie updates made!' });
+}
+
 const startServer = async () => {
   try {
     cliLogger.info('Fetching initial data from the database...');
     await loadStreamingService();
     cliLogger.info('Data fetched and cached successfully.');
 
-    initScheduledJobs(() => {
-      io.emit('globalUpdate', { message: 'New updates available!' });
-    });
+    initScheduledJobs(notifyOnShowsUpdate, notifyOnMoviesUpdate);
 
     server.listen(port, () => {
       cliLogger.info(`Server is running on https://localhost:${port} 🚀🚀🚀`);

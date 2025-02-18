@@ -30,22 +30,24 @@ const supportedChangesSets = [
 ];
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-let notifyUpdateCallback: (() => void) | null = null;
+let showUpdatesCallback: (() => void) | null = null;
+let movieUpdatesCallback: (() => void) | null = null;
 
-export function initScheduledJobs(notifyUpdate: () => void) {
-  notifyUpdateCallback = notifyUpdate;
+export function initScheduledJobs(notifyShowUpdates: () => void, notifyMovieUpdates: () => void) {
+  showUpdatesCallback = notifyShowUpdates;
+  movieUpdatesCallback = notifyMovieUpdates;
 
-  const showsJob = CronJob.schedule('0 2 * * *', () => {
+  const showsJob = CronJob.schedule('0 2 * * *', async () => {
     cliLogger.info('Starting the show change job');
-    updateShows();
-    if (notifyUpdateCallback) notifyUpdateCallback();
+    await updateShows();
+    if (showUpdatesCallback) showUpdatesCallback();
     cliLogger.info(`Ending the show change job`);
   });
 
-  const moviesJob = CronJob.schedule('0 1 7,14,21,28 * *', () => {
+  const moviesJob = CronJob.schedule('0 1 7,14,21,28 * *', async () => {
     cliLogger.info('Starting the movie change job');
-    updateMovies();
-    if (notifyUpdateCallback) notifyUpdateCallback();
+    await updateMovies();
+    if (movieUpdatesCallback) movieUpdatesCallback();
     cliLogger.info(`Ending the movie change job`);
   });
 
