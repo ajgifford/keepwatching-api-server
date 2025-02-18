@@ -63,12 +63,10 @@ async function favoriteExistingShowForNewProfile(showToFavorite: Show, profileId
   await showToFavorite.saveFavorite(profileId, true);
   const show = await Show.getShowForProfile(profileId, showToFavorite.id!);
   const nextWatches = await Show.getNextWatchForProfile(profileId);
-  res
-    .status(200)
-    .json({
-      message: `Successfully saved ${showToFavorite.title} as a favorite`,
-      result: { favoritedShow: show, nextWatchEpisodes: nextWatches },
-    });
+  res.status(200).json({
+    message: `Successfully saved ${showToFavorite.title} as a favorite`,
+    result: { favoritedShow: show, nextWatchEpisodes: nextWatches },
+  });
 }
 
 async function favoriteNewShow(show_id: number, profileId: string, res: Response) {
@@ -167,10 +165,14 @@ export async function removeFavorite(req: Request, res: Response) {
   try {
     const showToRemove = await Show.findById(Number(showId));
     if (showToRemove) {
-      showToRemove.removeFavorite(profileId);
-      res.status(200).json({ message: 'Successfully removed the show from favorites', result: showToRemove });
+      await showToRemove.removeFavorite(profileId);
+      const nextWatches = await Show.getNextWatchForProfile(profileId);
+      res.status(200).json({
+        message: 'Successfully removed the show from favorites',
+        result: { removedShow: showToRemove, nextWatchEpisodes: nextWatches },
+      });
     } else {
-      throw new BadRequestError('Failed to remove the show as a favorite');
+      throw new BadRequestError('The show requested to remove is not a favorite');
     }
   } catch (error) {
     res.status(500).json({ message: 'Unexpected error while removing a favorite', error: error });

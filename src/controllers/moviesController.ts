@@ -63,15 +63,13 @@ export async function removeFavorite(req: Request, res: Response) {
   try {
     const movieToRemove = await Movie.findById(Number(movieId));
     if (movieToRemove) {
-      movieToRemove.removeFavorite(profileId);
+      await movieToRemove.removeFavorite(profileId);
       const recentMovies = await Movie.getRecentMovieReleasesForProfile(profileId);
       const upcomingMovies = await Movie.getUpcomingMovieReleasesForProfile(profileId);
-      res
-        .status(200)
-        .json({
-          message: 'Successfully removed the movie from favorites',
-          result: { removedMovie: movieToRemove, recentMovies: recentMovies, upcomingMovies: upcomingMovies },
-        });
+      res.status(200).json({
+        message: 'Successfully removed the movie from favorites',
+        result: { removedMovie: movieToRemove, recentMovies: recentMovies, upcomingMovies: upcomingMovies },
+      });
     } else {
       throw new BadRequestError('The movie requested to be removed is not a favorite');
     }
