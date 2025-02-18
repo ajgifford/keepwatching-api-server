@@ -84,3 +84,22 @@ export async function updateMovieWatchStatus(req: Request, res: Response) {
     res.status(500).json({ message: 'Unexpected error while updating a watch status', error: error });
   }
 }
+
+// GET /api/v1/profiles/${profileId}/movies/recentUpcoming
+export async function getRecentUpcomingForProfile(req: Request, res: Response) {
+  const { profileId } = req.params;
+  try {
+    const recentMovies = await Movie.getRecentMovieReleasesForProfile(profileId);
+    const upcomingMovies = await Movie.getUpcomingMovieReleasesForProfile(profileId);
+    res
+      .status(200)
+      .json({
+        message: 'Successfully retrieved recent & upcoming movies for a profile',
+        results: { recent: recentMovies, upcoming: upcomingMovies },
+      });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: 'Unexpected error while getting recent & upcoming movies for a profile', error: error });
+  }
+}
