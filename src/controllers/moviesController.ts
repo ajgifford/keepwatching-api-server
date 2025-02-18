@@ -46,9 +46,14 @@ export async function addFavorite(req: Request, res: Response) {
     }
     await movieToFavorite.saveFavorite(profileId);
     const newMovie = await Movie.getMovieForProfile(profileId, movieToFavorite.id!);
-    res.status(200).json({ message: `Successfully saved ${movieToFavorite.title} as a favorite`, result: newMovie });
+    const recentMovies = await Movie.getRecentMovieReleasesForProfile(profileId);
+    const upcomingMovies = await Movie.getUpcomingMovieReleasesForProfile(profileId);
+    res.status(200).json({
+      message: `Successfully saved ${movieToFavorite.title} as a favorite`,
+      result: { favoritedMovie: newMovie, recentMovies: recentMovies, upcomingMovies: upcomingMovies },
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Unexpected error while adding a favorite', error: error });
+    res.status(500).json({ message: 'Unexpected error while adding a movie favorite', error: error });
   }
 }
 
@@ -59,9 +64,16 @@ export async function removeFavorite(req: Request, res: Response) {
     const movieToRemove = await Movie.findById(Number(movieId));
     if (movieToRemove) {
       movieToRemove.removeFavorite(profileId);
-      res.status(200).json({ message: 'Successfully removed the movie from favorites', result: movieToRemove });
+      const recentMovies = await Movie.getRecentMovieReleasesForProfile(profileId);
+      const upcomingMovies = await Movie.getUpcomingMovieReleasesForProfile(profileId);
+      res
+        .status(200)
+        .json({
+          message: 'Successfully removed the movie from favorites',
+          result: { removedMovie: movieToRemove, recentMovies: recentMovies, upcomingMovies: upcomingMovies },
+        });
     } else {
-      throw new BadRequestError('Failed to remove the movie as a favorite');
+      throw new BadRequestError('The movie requested to be removed is not a favorite');
     }
   } catch (error) {
     res.status(500).json({ message: 'Unexpected error while removing a favorite', error: error });
@@ -91,12 +103,10 @@ export async function getRecentUpcomingForProfile(req: Request, res: Response) {
   try {
     const recentMovies = await Movie.getRecentMovieReleasesForProfile(profileId);
     const upcomingMovies = await Movie.getUpcomingMovieReleasesForProfile(profileId);
-    res
-      .status(200)
-      .json({
-        message: 'Successfully retrieved recent & upcoming movies for a profile',
-        results: { recent: recentMovies, upcoming: upcomingMovies },
-      });
+    res.status(200).json({
+      message: 'Successfully retrieved recent & upcoming movies for a profile',
+      results: { recent: recentMovies, upcoming: upcomingMovies },
+    });
   } catch (error) {
     res
       .status(500)
