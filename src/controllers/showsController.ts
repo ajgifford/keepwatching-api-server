@@ -62,7 +62,13 @@ export async function addFavorite(req: Request, res: Response, next: NextFunctio
 async function favoriteExistingShowForNewProfile(showToFavorite: Show, profileId: string, res: Response) {
   await showToFavorite.saveFavorite(profileId, true);
   const show = await Show.getShowForProfile(profileId, showToFavorite.id!);
-  res.status(200).json({ message: `Successfully saved ${showToFavorite.title} as a favorite`, result: show });
+  const nextWatches = await Show.getNextWatchForProfile(profileId);
+  res
+    .status(200)
+    .json({
+      message: `Successfully saved ${showToFavorite.title} as a favorite`,
+      result: { favoritedShow: show, nextWatchEpisodes: nextWatches },
+    });
 }
 
 async function favoriteNewShow(show_id: number, profileId: string, res: Response) {
@@ -96,7 +102,9 @@ async function favoriteNewShow(show_id: number, profileId: string, res: Response
   }
   await newShowToFavorite.saveFavorite(profileId, false);
   const show = await Show.getShowForProfile(profileId, newShowToFavorite.id!);
-  res.status(200).json({ message: `Successfully saved ${newShowToFavorite.title} as a favorite`, result: show });
+  res
+    .status(200)
+    .json({ message: `Successfully saved ${newShowToFavorite.title} as a favorite`, result: { favoritedShow: show } });
   fetchSeasonsAndEpisodes(responseShow, newShowToFavorite.id!, profileId);
 }
 
