@@ -1,4 +1,7 @@
+import { io } from '../index';
+import { cliLogger } from '../logger/logger';
 import { BadRequestError } from '../middleware/errorMiddleware';
+import Account from '../models/account';
 import Episode from '../models/episode';
 import Season from '../models/season';
 import Show from '../models/show';
@@ -98,40 +101,56 @@ async function favoriteNewShow(show_id: number, profileId: string, res: Response
 }
 
 async function fetchSeasonsAndEpisodes(show: any, show_id: number, profileId: string) {
-  show.seasons.map(async (responseSeason: any) => {
-    const season = new Season(
-      show_id,
-      responseSeason.id,
-      responseSeason.name,
-      responseSeason.overview,
-      responseSeason.season_number,
-      responseSeason.air_date,
-      responseSeason.poster_path,
-      responseSeason.episode_count,
-    );
-    await season.save();
-    await season.saveFavorite(Number(profileId));
-
-    const response = await axiosTMDBAPIInstance.get(`/tv/${show.id}/season/${season.season_number}`);
-    const responseData = response.data;
-    responseData.episodes.forEach(async (responseEpisode: any) => {
-      const episode = new Episode(
-        responseEpisode.id,
+  try {
+    for (const responseSeason of show.seasons) {
+      const season = new Season(
         show_id,
-        season.id!,
-        responseEpisode.episode_number,
-        responseEpisode.episode_type,
-        responseEpisode.season_number,
-        responseEpisode.name,
-        responseEpisode.overview,
-        responseEpisode.air_date,
-        responseEpisode.runtime,
-        responseEpisode.still_path,
+        responseSeason.id,
+        responseSeason.name,
+        responseSeason.overview,
+        responseSeason.season_number,
+        responseSeason.air_date,
+        responseSeason.poster_path,
+        responseSeason.episode_count,
       );
-      await episode.save();
-      await episode.saveFavorite(Number(profileId));
-    });
-  });
+      await season.save();
+      await season.saveFavorite(Number(profileId));
+
+      const response = await axiosTMDBAPIInstance.get(`/tv/${show.id}/season/${season.season_number}`);
+      const responseData = response.data;
+
+      for (const responseEpisode of responseData.episodes) {
+        const episode = new Episode(
+          responseEpisode.id,
+          show_id,
+          season.id!,
+          responseEpisode.episode_number,
+          responseEpisode.episode_type,
+          responseEpisode.season_number,
+          responseEpisode.name,
+          responseEpisode.overview,
+          responseEpisode.air_date,
+          responseEpisode.runtime,
+          responseEpisode.still_path,
+        );
+        await episode.save();
+        await episode.saveFavorite(Number(profileId));
+      }
+    }
+
+    const account_id = await Account.findAccountIdByProfileId(profileId);
+    const loadedShow = await Show.getShowForProfile(profileId, show_id);
+    const sockets = Array.from(io.sockets.sockets.values());
+    const userSocket = sockets.find((socket) => socket.data.accountId === account_id);
+    if (userSocket) {
+      userSocket.emit('updateShowFavorite', {
+        message: 'Show data has been fully loaded',
+        show: loadedShow,
+      });
+    }
+  } catch (error) {
+    cliLogger.error('Error fetching seasons and episodes:', error);
+  }
 }
 
 // DELETE /api/v1/profiles/${profileId}/shows/favorites/${showId}

@@ -112,6 +112,15 @@ class Account implements IAccount {
       account.default_profile_id,
     );
   }
+
+  static async findAccountIdByProfileId(profile_id: string): Promise<number | null> {
+    const query = `SELECT * FROM profiles where profile_id = ?`;
+    const [rows] = await pool.execute(query, [profile_id]);
+    const profiles = rows as any[];
+    if (profiles.length === 0) return null;
+    const profile = profiles[0];
+    return profile.account_id;
+  }
 }
 
 export default Account;

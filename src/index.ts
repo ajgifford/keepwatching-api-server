@@ -109,7 +109,7 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 const server = https.createServer(credentials, app);
-const io = new Server(server, {
+export const io = new Server(server, {
   cors: {
     origin: '*',
     methods: ['GET', 'POST'],
@@ -123,10 +123,15 @@ io.use(async (socket, next) => {
     if (!token) {
       return next(new Error('Authentication error: No token provided'));
     }
+    const account_id = socket.handshake.auth?.account_id;
+    if (!account_id) {
+      return next(new Error('Authentication error: No account id provided'));
+    }
 
     const decodedToken = await admin.auth().verifyIdToken(token);
     socket.data.userId = decodedToken.uid;
     socket.data.email = decodedToken.email;
+    socket.data.accountId = account_id;
     next();
   } catch (error) {
     console.error('WebSocket Auth Failed:', error);

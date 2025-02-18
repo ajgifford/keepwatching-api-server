@@ -246,7 +246,7 @@ class Show {
     const query = 'SELECT * FROM profile_shows where profile_id = ? AND show_id = ?';
     const [rows] = await pool.execute(query, [Number(profile_id), show_id]);
     const shows = rows as any[];
-    return shows[0];
+    return this.transformRow(shows[0]);
   }
 
   static async getShowWithSeasonsForProfile(profile_id: string, show_id: string) {
