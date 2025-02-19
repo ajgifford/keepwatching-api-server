@@ -8,6 +8,23 @@ This document describes the endpoints available for searching movies and TV show
 
 All endpoints are prefixed with `/api/v1/search`
 
+## Authentication
+
+All endpoints require authentication using a Bearer token in the Authorization header:
+
+```
+Authorization: Bearer <your_access_token>
+```
+
+Requests without valid authentication will receive a 401 Unauthorized response:
+
+```json
+{
+  "message": "Authentication required",
+  "error": "No valid authentication token provided"
+}
+```
+
 ## Endpoints
 
 ### Search TV Shows

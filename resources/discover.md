@@ -12,6 +12,23 @@ Retrieves top-rated shows or movies from various streaming services.
 GET /api/v1/discover/top
 ```
 
+### Authentication
+
+Requires authentication using a Bearer token in the Authorization header:
+
+```
+Authorization: Bearer <your_access_token>
+```
+
+Requests without valid authentication will receive a 401 Unauthorized response:
+
+```json
+{
+  "message": "Authentication required",
+  "error": "No valid authentication token provided"
+}
+```
+
 ### Query Parameters
 
 | Parameter | Type   | Required | Description                                       |

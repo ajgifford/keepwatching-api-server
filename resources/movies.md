@@ -2,7 +2,22 @@
 
 # Movies API Documentation
 
-[Previous sections on Authentication and Rate Limiting remain the same]
+## Authentication
+
+All endpoints require authentication using a Bearer token in the Authorization header:
+
+```
+Authorization: Bearer <your_access_token>
+```
+
+Requests without valid authentication will receive a 401 Unauthorized response:
+
+```json
+{
+  "message": "Authentication required",
+  "error": "No valid authentication token provided"
+}
+```
 
 ## Data Structures
 
