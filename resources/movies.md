@@ -201,7 +201,8 @@ Updates the watch status of a movie for a specific profile.
 
 ### Get Recent and Upcoming Movies
 
-Retrieves both recent and upcoming movie releases for a specific profile.
+Retrieves both recent and upcoming movie releases for a specific profile. Recent movies returns up to six (6) movies
+released within the last 60 days. Upcoming movies returns up to six (6) movies set to be released in the next 60 days.
 
 **Endpoint:** `GET /profiles/{profileId}/movies/recentUpcoming`
 
