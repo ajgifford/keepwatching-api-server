@@ -88,7 +88,7 @@ export async function updateMovieWatchStatus(req: Request, res: Response) {
     if (success) {
       res.status(200).json({ message: 'Successfully updated the watch status' });
     } else {
-      res.status(400).json({ message: 'No status was updated' });
+      throw new BadRequestError('The watch status for the requested movie was not updated');
     }
   } catch (error) {
     res.status(500).json({ message: 'Unexpected error while updating a watch status', error: error });
