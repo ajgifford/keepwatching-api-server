@@ -1,6 +1,6 @@
 import pool from '../utils/db';
 import { ContentUpdates } from './content';
-import { QueryResult, RowDataPacket } from 'mysql2';
+import { RowDataPacket } from 'mysql2';
 
 class Movie {
   id?: number;

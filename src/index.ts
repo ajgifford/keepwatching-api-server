@@ -12,6 +12,7 @@ import discoverRouter from './routes/discoverRouter';
 import epiosdesRouter from './routes/episodesRouter';
 import fileRouter from './routes/fileRouter';
 import moviesRouter from './routes/moviesRouter';
+import notificationsRouter from './routes/notificationsRouter';
 import searchRouter from './routes/searchRouter';
 import seasonsRouter from './routes/seasonsRouter';
 import showsRouter from './routes/showsRouter';
@@ -101,6 +102,7 @@ app.use(authenticateUser, seasonsRouter);
 app.use(authenticateUser, epiosdesRouter);
 app.use(authenticateUser, moviesRouter);
 app.use(authenticateUser, fileRouter);
+app.use(authenticateUser, notificationsRouter);
 
 app.use(errorHandler);
 
