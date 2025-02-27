@@ -40,9 +40,9 @@ export const httpLogger = winston.createLogger({
   transports: [
     new transports.File({ filename: path.join(logDirectory, 'keepwatching-error.log'), level: 'error' }),
     new DailyRotateFile({
-      filename: path.join(logDirectory, 'rotating-logs-%DATE%.log'),
+      filename: path.join(logDirectory, 'keepwatching-%DATE%.log'),
       datePattern: 'MMMM-DD-YYYY',
-      zippedArchive: false,
+      zippedArchive: true,
       maxSize: '20m',
       maxFiles: '14d',
     }),
@@ -53,7 +53,6 @@ export const cliLogger = winston.createLogger({
   format: combine(
     label({ label: appVersion }),
     timestamp({ format: timestampFormat }),
-    colorize({ level: true }),
     printf(({ level, message, label, timestamp }) => `[${timestamp}] ${level} (${label}): ${message}`),
   ),
   transports: [new winston.transports.Console()],

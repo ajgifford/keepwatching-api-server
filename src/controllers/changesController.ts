@@ -78,7 +78,6 @@ async function checkForMovieChanges(content: ContentUpdates) {
     const changes: Change[] = changesResponse.data.changes;
     const supportedChanges = changes.filter((item) => supportedChangesSets.includes(item.key));
     if (supportedChanges.length > 0) {
-      httpLogger.info(`Movie has changes, updating >>> ${content.title}`);
       const movieDetailsResponse = await axiosTMDBAPIInstance.get(
         `/movie/${content.tmdb_id}?append_to_response=release_dates%2Cwatch%2Fproviders&language=en-US`,
       );
@@ -127,7 +126,6 @@ async function checkForShowChanges(content: ContentUpdates) {
     const changes: Change[] = changesResponse.data.changes;
     const supportedChanges = changes.filter((item) => supportedChangesSets.includes(item.key));
     if (supportedChanges.length > 0) {
-      httpLogger.info(`Show has changes, updating >>> ${content.title}`);
       const showDetailsResponse = await axiosTMDBAPIInstance.get(
         `/tv/${content.tmdb_id}?append_to_response=content_ratings,watch/providers`,
       );
@@ -171,7 +169,6 @@ async function checkForShowChanges(content: ContentUpdates) {
 function processSeasonChanges(changes: ChangeItem[], responseShow: any, content: ContentUpdates, profileIds: number[]) {
   const uniqueSeasonIds = filterSeasonChanges(changes);
   const responseShowSeasons = responseShow.seasons;
-  httpLogger.info(`Show has changes to season(s), updating >>> ${uniqueSeasonIds}`);
   uniqueSeasonIds.forEach(async (season_id) => {
     await sleep(500);
     const responseShowSeason = responseShowSeasons.find((season: { id: number }) => season.id === season_id);
@@ -191,7 +188,6 @@ function processSeasonChanges(changes: ChangeItem[], responseShow: any, content:
 
       const seasonHasEpisodeChanges = await checkSeasonForEpisodeChanges(season_id);
       if (seasonHasEpisodeChanges) {
-        httpLogger.info(`Season has episode changes, updating >>> ${seasonToUpdate.season_number}`);
         const response = await axiosTMDBAPIInstance.get(
           `/tv/${content.tmdb_id}/season/${seasonToUpdate.season_number}`,
         );

@@ -166,12 +166,12 @@ const startServer = async () => {
     initScheduledJobs(notifyOnShowsUpdate, notifyOnMoviesUpdate);
 
     server.listen(port, () => {
-      cliLogger.info(`Server is running on https://localhost:${port} 🚀🚀🚀`);
+      cliLogger.info(`Server is running on https://localhost:${port}`);
       cliLogger.info(`Serving uploads from: ${UPLOADS_DIR}`);
       cliLogger.info(`Writing logs to: ${LOG_DIRECTORY}`);
     });
   } catch (error) {
-    cliLogger.error('Error starting the server! ❌');
+    cliLogger.error('Error starting the server!');
     httpLogger.error(ErrorMessages.AppStartupFail, { error });
     process.exit(1);
   }
