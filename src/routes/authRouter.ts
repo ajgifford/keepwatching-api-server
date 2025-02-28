@@ -1,5 +1,5 @@
 import { googleLogin, login, register } from '../controllers/authController';
-import { validateEmail, validateName, validateUID } from '../middleware/validationMiddleware';
+import { validateEmail, validateName, validateUID } from '../middleware/accountValidationMiddleware';
 import express from 'express';
 
 const router = express.Router();

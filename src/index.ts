@@ -6,7 +6,6 @@ import { ErrorMessages } from './logger/loggerModel';
 import { authenticateUser } from './middleware/authMiddleware';
 import { errorHandler } from './middleware/errorMiddleware';
 import responseInterceptor from './middleware/loggerMiddleware';
-import { SearchParams } from './middleware/searchValidationMiddleware';
 import accountRouter from './routes/accountRouter';
 import authRouter from './routes/authRouter';
 import discoverRouter from './routes/discoverRouter';
@@ -48,7 +47,6 @@ declare global {
   namespace Express {
     interface Request {
       user?: admin.auth.DecodedIdToken;
-      validatedSearchParams?: SearchParams;
     }
   }
 }

@@ -1,27 +1,17 @@
 import { cliLogger } from '../logger/logger';
+import { SearchParams } from '../schema/searchSchema';
 import { axiosTMDBAPIInstance } from '../utils/axiosInstance';
 import { generateGenreArrayFromIds } from '../utils/genreUtility';
 import { Request, Response } from 'express';
 import NodeCache from 'node-cache';
-import { z } from 'zod';
-
-const searchParamsSchema = z.object({
-  searchString: z.string().min(1).max(100).trim(),
-  year: z
-    .string()
-    .regex(/^\d{4}$/)
-    .optional(),
-  page: z.string().regex(/^\d+$/).transform(Number).optional(),
-});
 
 const cache = new NodeCache({ stdTTL: 300 });
 
 // GET /api/v1/search/shows
 export const searchShows = async (req: Request, res: Response): Promise<void> => {
-  const { searchString, year, page = '1' } = req.validatedSearchParams!;
-  const pageNum = parseInt(page, 10);
+  const { searchString, year, page = 1 } = req.query as unknown as SearchParams;
 
-  const cacheKey = `show_search_${searchString}_${year}_${pageNum}`;
+  const cacheKey = `show_search_${searchString}_${year}_${page}`;
   const cachedData = cache.get(cacheKey);
 
   if (cachedData) {
@@ -33,7 +23,7 @@ export const searchShows = async (req: Request, res: Response): Promise<void> =>
     const response = await axiosTMDBAPIInstance.get('/search/tv', {
       params: {
         query: searchString,
-        pageNum,
+        page,
         first_air_date_year: year,
         include_adult: false,
         language: req.headers['accept-language'] || 'en-US',
@@ -57,7 +47,7 @@ export const searchShows = async (req: Request, res: Response): Promise<void> =>
       results: searchResult,
       total_pages: response.data.total_pages,
       total_results: response.data.total_results,
-      current_page: pageNum,
+      current_page: page,
     };
 
     cache.set(cacheKey, responseData);
@@ -73,10 +63,9 @@ export const searchShows = async (req: Request, res: Response): Promise<void> =>
 
 // GET /api/v1/search/movies
 export const searchMovies = async (req: Request, res: Response) => {
-  const { searchString, year, page = '1' } = req.validatedSearchParams!;
-  const pageNum = parseInt(page, 10);
+  const { searchString, year, page = 1 } = req.query as unknown as SearchParams;
 
-  const cacheKey = `movie_search_${searchString}_${year}_${pageNum}`;
+  const cacheKey = `movie_search_${searchString}_${year}_${page}`;
   const cachedData = cache.get(cacheKey);
 
   if (cachedData) {
@@ -88,7 +77,7 @@ export const searchMovies = async (req: Request, res: Response) => {
     const response = await axiosTMDBAPIInstance.get('/search/movie', {
       params: {
         query: searchString,
-        pageNum,
+        page,
         primary_release_year: year,
         include_adult: false,
         region: 'US',
@@ -113,7 +102,7 @@ export const searchMovies = async (req: Request, res: Response) => {
       results: searchResult,
       total_pages: response.data.total_pages,
       total_results: response.data.total_results,
-      current_page: pageNum,
+      current_page: page,
     };
 
     cache.set(cacheKey, responseData);

@@ -1,41 +1,11 @@
-import { BadRequestError } from '../middleware/errorMiddleware';
+import { DiscoverQuery } from '../schema/discoverSchema';
+import { DiscoverContentItem, DiscoverResponse } from '../types/discoverTypes';
 import { axiosStreamingAPIInstance } from '../utils/axiosInstance';
+import { AxiosError } from 'axios';
 import { NextFunction, Request, Response } from 'express';
 import NodeCache from 'node-cache';
-import { z } from 'zod';
 
-const validServices = ['netflix', 'disney', 'hbo', 'apple', 'prime'];
-const validTypes = ['movie', 'series'];
-
-const DiscoverQuerySchema = z.object({
-  showType: z.enum(['movie', 'series'], {
-    errorMap: () => ({ message: 'Show type must be either "movie" or "series"' }),
-  }),
-  service: z.enum(['netflix', 'disney', 'hbo', 'apple', 'prime'], {
-    errorMap: () => ({ message: 'Invalid streaming service provided' }),
-  }),
-});
-
-type DiscoverQuery = z.infer<typeof DiscoverQuerySchema>;
 const cache = new NodeCache({ stdTTL: 300 });
-
-export const validateDiscoverQuery = (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const result = DiscoverQuerySchema.safeParse(req.query);
-
-    if (!result.success) {
-      const errorMessage = result.error.issues.map((issue) => issue.message).join(', ');
-
-      next(new BadRequestError(errorMessage));
-      return;
-    }
-
-    req.query = result.data;
-    next();
-  } catch (error) {
-    next(new BadRequestError('Invalid request parameters'));
-  }
-};
 
 // GET /api/v1/discover/top
 export const discoverTopShows = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -58,9 +28,9 @@ export const discoverTopShows = async (req: Request, res: Response, next: NextFu
   };
   try {
     const response = await axiosStreamingAPIInstance.get('/shows/top', config);
-    const results: any[] = response.data;
-    const searchResult = results.map((result) => {
-      return {
+    const apiResults: any[] = response.data;
+    const contentItems: DiscoverContentItem[] = apiResults.map((result): DiscoverContentItem => {
+      const baseItem = {
         id: stripPrefix(result.tmdbId),
         title: result.title,
         genres: result.genres.map((genre: { name: any }) => genre.name),
@@ -69,10 +39,36 @@ export const discoverTopShows = async (req: Request, res: Response, next: NextFu
         image: result.imageSet.verticalPoster.w240,
         rating: result.rating,
       };
+      return baseItem;
     });
-    cache.set(cacheKey, searchResult);
-    res.status(200).json({ message: `Found top ${showType} for ${service}`, results: searchResult });
+
+    const discoverResponse: DiscoverResponse = {
+      results: contentItems,
+      provider: service,
+      total_results: contentItems.length,
+    };
+
+    cache.set(cacheKey, discoverResponse);
+
+    res.status(200).json({ message: `Found top ${showType} for ${service}`, discoverResponse });
   } catch (error) {
+    if (error instanceof AxiosError && error.response) {
+      if (error.response) {
+        const status = error.response.status;
+        if (status === 429) {
+          res.status(429).json({
+            message: 'Rate limit exceeded on streaming API',
+            retryAfter: error.response.headers['retry-after'] || 60,
+          });
+          return;
+        }
+        res.status(status).json({
+          message: `Streaming API error: ${error.response.data.message || 'Unknown error'}`,
+          error: error.message,
+        });
+        return;
+      }
+    }
     res.status(500).json({ message: 'Unexpected error while discovering top content', error: error });
   }
 };
