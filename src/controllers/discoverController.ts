@@ -15,7 +15,7 @@ export const discoverTopShows = async (req: Request, res: Response, next: NextFu
   const cachedData = cache.get(cacheKey);
 
   if (cachedData) {
-    res.status(200).json({ message: `Found top ${showType} for ${service}`, results: cachedData });
+    res.status(200).json(cachedData);
     return;
   }
 
