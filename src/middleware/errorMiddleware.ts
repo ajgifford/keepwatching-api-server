@@ -1,34 +1,100 @@
+import { AxiosError } from 'axios';
 import { NextFunction, Request, Response } from 'express';
+import { v4 as uuidv4 } from 'uuid';
 
-export function errorHandler(err: Error, req: Request, res: Response, next: NextFunction): void {
-  if (err instanceof AuthenticationError) {
-    res.status(401).json({ message: 'Unauthorized: ' + err.message });
-  } else if (err instanceof BadRequestError) {
-    res.status(400).json({ message: err.message || 'Request failed' });
-  } else if (err instanceof NotFoundError) {
-    res.status(401).json({ message: err.message || 'Item not found' });
+export const errorHandler = (error: Error, req: Request, res: Response, next: NextFunction): void => {
+  const requestId = uuidv4();
+
+  if (error instanceof CustomError) {
+    res.status(error.statusCode).json({
+      status: 'error',
+      requestId,
+      error: {
+        code: error.errorCode,
+        message: error.message,
+      },
+    });
+  } else if (error instanceof AxiosError && error.response) {
+    const status = error.response.status;
+    if (status === 429) {
+      res.status(429).json({
+        message: 'Rate limit exceeded on external API',
+        retryAfter: error.response.headers['retry-after'] || 60,
+      });
+      return;
+    }
+    res.status(status).json({
+      message: `External API error: ${error.response.data.message || 'Unknown error'}`,
+      error: error.message,
+    });
+    return;
   } else {
-    res.status(500).json({ message: err.message || 'Internal Server Error' });
+    res.status(500).json({
+      status: 'error',
+      requestId,
+      error: {
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'An unexpected error occurred',
+      },
+    });
+  }
+};
+
+export class CustomError extends Error {
+  constructor(
+    public message: string,
+    public statusCode: number,
+    public errorCode: string,
+  ) {
+    super(message);
+    Object.setPrototypeOf(this, CustomError.prototype);
   }
 }
 
-export class AuthenticationError extends Error {
+export class AuthenticationError extends CustomError {
   constructor(message: string) {
-    super(message);
-    this.name = 'AuthenticationError';
+    super(message, 401, 'UNAUTHORIZED');
   }
 }
 
-export class BadRequestError extends Error {
+export class BadRequestError extends CustomError {
   constructor(message: string) {
-    super(message);
-    this.name = 'BadRequestError';
+    super(message, 400, 'BAD_REQUEST');
   }
 }
 
-export class NotFoundError extends Error {
+export class UnauthorizedError extends CustomError {
   constructor(message: string) {
-    super(message);
-    this.name = 'NotFoundError';
+    super(message, 401, 'UNAUTHORIZED');
+  }
+}
+
+export class ForbiddenError extends CustomError {
+  constructor(message: string) {
+    super(message, 403, 'FORBIDDEN');
+  }
+}
+
+export class NotFoundError extends CustomError {
+  constructor(message: string) {
+    super(message, 404, 'NOT_FOUND');
+  }
+}
+
+export class ConflictError extends CustomError {
+  constructor(message: string) {
+    super(message, 409, 'CONFLICT');
+  }
+}
+
+export class NoAffectedRowsError extends CustomError {
+  constructor(message: string) {
+    super(message, 400, 'NO_AFFECTED_ROWS');
+  }
+}
+
+export class DatabaseError extends CustomError {
+  constructor(message: string, originalError: any) {
+    super(message, 500, 'DATABASE_ERROR');
   }
 }
