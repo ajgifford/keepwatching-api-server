@@ -1,5 +1,5 @@
-import { DiscoverQuery } from '../schema/discoverSchema';
-import { DiscoverContentItem, DiscoverResponse } from '../types/discoverTypes';
+import { DiscoverTopQuery } from '../schema/discoverSchema';
+import { DiscoverAndSearchResponse, DiscoverAndSearchResult } from '../types/discoverAndSearchTypes';
 import { axiosStreamingAPIInstance } from '../utils/axiosInstance';
 import { AxiosError } from 'axios';
 import { NextFunction, Request, Response } from 'express';
@@ -9,7 +9,7 @@ const cache = new NodeCache({ stdTTL: 300 });
 
 // GET /api/v1/discover/top
 export const discoverTopShows = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  const { showType, service } = req.query as DiscoverQuery;
+  const { showType, service } = req.query as DiscoverTopQuery;
 
   const cacheKey = `discover_${showType}_${service}`;
   const cachedData = cache.get(cacheKey);
@@ -29,7 +29,7 @@ export const discoverTopShows = async (req: Request, res: Response, next: NextFu
   try {
     const response = await axiosStreamingAPIInstance.get('/shows/top', config);
     const apiResults: any[] = response.data;
-    const contentItems: DiscoverContentItem[] = apiResults.map((result): DiscoverContentItem => {
+    const contentItems: DiscoverAndSearchResult[] = apiResults.map((result): DiscoverAndSearchResult => {
       const baseItem = {
         id: stripPrefix(result.tmdbId),
         title: result.title,
@@ -42,15 +42,14 @@ export const discoverTopShows = async (req: Request, res: Response, next: NextFu
       return baseItem;
     });
 
-    const discoverResponse: DiscoverResponse = {
+    const discoverResponse: DiscoverAndSearchResponse = {
+      message: `Found top ${showType} for ${service}`,
       results: contentItems,
-      provider: service,
       total_results: contentItems.length,
     };
 
     cache.set(cacheKey, discoverResponse);
-
-    res.status(200).json({ message: `Found top ${showType} for ${service}`, discoverResponse });
+    res.status(200).json(discoverResponse);
   } catch (error) {
     if (error instanceof AxiosError && error.response) {
       if (error.response) {
