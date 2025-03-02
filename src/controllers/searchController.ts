@@ -95,6 +95,7 @@ export const searchMovies = async (req: Request, res: Response) => {
         summary: result.overview,
         image: result.poster_path,
         rating: result.vote_average,
+        popularity: result.popularity,
       };
     });
 
