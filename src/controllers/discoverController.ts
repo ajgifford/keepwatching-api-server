@@ -2,6 +2,7 @@ import { DiscoverTopQuery, DiscoverTrendingQuery } from '../schema/discoverSchem
 import { DiscoverAndSearchResponse, DiscoverAndSearchResult } from '../types/discoverAndSearchTypes';
 import { axiosStreamingAPIInstance, axiosTMDBAPIInstance } from '../utils/axiosInstance';
 import { generateGenreArrayFromIds } from '../utils/genreUtility';
+import { buildTMDBImagePath } from '../utils/imageUtility';
 import { NextFunction, Request, Response } from 'express';
 import NodeCache from 'node-cache';
 
@@ -88,7 +89,7 @@ export const discoverTrendingContent = async (req: Request, res: Response, next:
         genres: generateGenreArrayFromIds(result.genre_ids),
         premiered: getTMDBPremieredDate(showType, result),
         summary: result.overview,
-        image: result.poster_path,
+        image: buildTMDBImagePath(result.poster_path),
         rating: result.vote_average,
         popularity: result.popularity,
       };
