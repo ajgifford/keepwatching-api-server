@@ -1,3 +1,4 @@
+import { cliLogger } from '../logger/logger';
 import { DiscoverTopQuery, DiscoverTrendingQuery } from '../schema/discoverSchema';
 import { DiscoverAndSearchResponse, DiscoverAndSearchResult } from '../types/discoverAndSearchTypes';
 import { axiosStreamingAPIInstance, axiosTMDBAPIInstance } from '../utils/axiosInstance';
@@ -61,7 +62,7 @@ export const discoverTopContent = async (req: Request, res: Response, next: Next
 export const discoverTrendingContent = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const { showType, page } = req.query as DiscoverTrendingQuery;
 
-  const cacheKey = `discover_trending_${showType}`;
+  const cacheKey = `discover_trending_${showType}_${page}`;
   const cachedData = cache.get<DiscoverAndSearchResponse>(cacheKey);
 
   if (cachedData) {
@@ -73,7 +74,7 @@ export const discoverTrendingContent = async (req: Request, res: Response, next:
     const mediaType = showType === 'movie' ? 'movie' : 'tv';
     const tmdbResponse = await axiosTMDBAPIInstance.get(`/trending/${mediaType}/week`, {
       params: {
-        page,
+        page: page,
         language: 'en-US',
       },
     });
