@@ -45,6 +45,8 @@ export const discoverTopContent = async (req: Request, res: Response, next: Next
       message: `Found top ${showType} for ${service}`,
       results: contentItems,
       total_results: contentItems.length,
+      total_pages: 1,
+      current_page: 1,
     };
 
     cache.set(cacheKey, discoverResponse);

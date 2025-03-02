@@ -14,5 +14,5 @@ export interface DiscoverAndSearchResponse {
   results: DiscoverAndSearchResult[];
   total_results?: number;
   total_pages?: number;
-  current_page?: string;
+  current_page?: number | string;
 }
