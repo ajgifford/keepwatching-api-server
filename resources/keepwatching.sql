@@ -313,8 +313,7 @@ JOIN
 GROUP BY
 	p.profile_id, e.id, ws.status;
 	
-
-CREATE VIEW profile_next_watch AS
+CREATE VIEW profile_upcoming_episodes AS
 SELECT 
     p.profile_id,
 	s.id as show_id,
@@ -344,7 +343,91 @@ GROUP BY
     p.profile_id, s.id, e.id
 ORDER BY 
     e.air_date, s.title, e.season_number, e.episode_number;
+
+CREATE VIEW profile_recent_episodes AS
+SELECT 
+    p.profile_id,
+	s.id as show_id,
+    s.title AS show_name,
+    GROUP_CONCAT(ss.name ORDER BY ss.name SEPARATOR ', ') AS streaming_services,
+	s.network,
+    e.title AS episode_title,
+    e.air_date,
+    e.episode_number,
+    e.season_number,
+    e.still_image AS episode_still_image
+FROM 
+    profiles p
+JOIN 
+    show_watch_status ws ON p.profile_id = ws.profile_id
+JOIN 
+    shows s ON ws.show_id = s.id
+JOIN 
+    episodes e ON s.id = e.show_id
+JOIN 
+    show_services tss ON s.id = tss.show_id
+JOIN 
+    streaming_services ss ON tss.streaming_service_id = ss.id
+WHERE 
+    e.air_date BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY) AND CURRENT_DATE()
+GROUP BY 
+    p.profile_id, s.id, e.id
+ORDER BY 
+    e.air_date, s.title, e.season_number, e.episode_number;
 	
+CREATE VIEW profile_recent_shows_with_unwatched AS
+SELECT DISTINCT
+  s.id AS show_id,
+  s.title AS show_title,
+  s.poster_image,
+  p.profile_id,
+  MAX(ews.updated_at) AS last_watched_date
+FROM shows s
+JOIN seasons seas ON s.id = seas.show_id
+JOIN episodes e ON seas.id = e.season_id
+JOIN episode_watch_status ews ON e.id = ews.episode_id
+JOIN profiles p ON ews.profile_id = p.profile_id
+WHERE ews.status = 'watched'
+AND EXISTS (
+  SELECT 1 FROM episodes e2
+  JOIN seasons seas2 ON e2.season_id = seas2.id
+  LEFT JOIN episode_watch_status ews2 ON e2.id = ews2.episode_id AND ews2.profile_id = p.profile_id
+  WHERE seas2.show_id = s.id
+  AND (ews2.status IS NULL OR ews2.status != 'watched')
+  AND e2.air_date IS NOT NULL
+  AND e2.air_date <= CURDATE()
+)
+GROUP BY s.id, s.title, s.poster_image, p.profile_id;
+
+CREATE VIEW profile_next_unwatched_episodes AS
+SELECT
+  e.id AS episode_id,
+  e.title AS episode_title,
+  e.overview,
+  e.episode_number,
+  e.season_number,
+  e.still_image as episode_still_image,
+  e.air_date,
+  s.id AS show_id,
+  s.title AS show_name,
+  s.poster_image,
+  s.network,
+  GROUP_CONCAT(ss.name ORDER BY ss.name SEPARATOR ', ') AS streaming_services,
+  sws.profile_id,
+  ROW_NUMBER() OVER (
+    PARTITION BY s.id, sws.profile_id 
+    ORDER BY e.season_number ASC, e.episode_number ASC
+  ) AS episode_rank
+FROM episodes e
+JOIN shows s ON e.show_id = s.id
+JOIN show_watch_status sws ON s.id = sws.show_id
+JOIN show_services tss ON s.id = tss.show_id
+JOIN streaming_services ss ON tss.streaming_service_id = ss.id
+LEFT JOIN episode_watch_status ews ON e.id = ews.episode_id AND ews.profile_id = sws.profile_id
+WHERE (ews.status IS NULL OR ews.status != 'watched')
+AND e.air_date IS NOT NULL
+AND e.air_date <= CURDATE()
+GROUP BY e.id, sws.profile_id;
 
 -- Reference Data
 

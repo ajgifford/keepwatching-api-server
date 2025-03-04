@@ -4,6 +4,22 @@ import { ContentUpdates } from './content';
 import Season from './season';
 import { RowDataPacket } from 'mysql2';
 
+interface NextEpisode {
+  episode_id: number;
+  episode_title: string;
+  overview: string;
+  episode_number: number;
+  season_number: number;
+  episode_still_image: string;
+  air_date: string;
+  show_id: number;
+  show_name: string;
+  poster_image: string;
+  network: string;
+  streaming_services: string;
+  profile_id: number;
+}
+
 class Show {
   id?: number;
   tmdb_id: number;
@@ -140,27 +156,27 @@ class Show {
     await pool.execute(query, [show_id, streaming_service_id]);
   }
 
-  async saveFavorite(profile_id: string, save_children: boolean) {
+  async saveFavorite(profileId: string, save_children: boolean) {
     const query = 'INSERT IGNORE INTO show_watch_status (profile_id, show_id) VALUES (?,?)';
-    await pool.execute(query, [Number(profile_id), this.id]);
+    await pool.execute(query, [Number(profileId), this.id]);
     if (save_children) {
       const seasonQuery = 'SELECT id FROM seasons WHERE show_id = ?';
       const [rows] = await pool.execute(seasonQuery, [this.id]);
       const season_ids = rows as any[];
       season_ids.forEach((id) => {
-        Season.saveFavoriteWithEpisodes(profile_id, id.id);
+        Season.saveFavoriteWithEpisodes(profileId, id.id);
       });
     }
   }
 
-  async removeFavorite(profile_id: string) {
+  async removeFavorite(profileId: string) {
     const query = 'DELETE FROM show_watch_status WHERE profile_id = ? AND show_id = ?';
-    await pool.execute(query, [profile_id, this.id]);
+    await pool.execute(query, [profileId, this.id]);
     const seasonQuery = 'SELECT id FROM seasons WHERE show_id = ?';
     const [rows] = await pool.execute(seasonQuery, [this.id]);
     const season_ids = rows as any[];
     season_ids.forEach((id) => {
-      Season.removeFavorite(profile_id, id.id);
+      Season.removeFavorite(profileId, id.id);
     });
   }
 
@@ -210,59 +226,91 @@ class Show {
     );
   }
 
-  static async updateWatchStatus(profile_id: string, show_id: number, status: string): Promise<boolean> {
+  static async updateWatchStatus(profileId: string, show_id: number, status: string): Promise<boolean> {
     const showQuery = 'UPDATE show_watch_status SET status = ? WHERE profile_id = ? AND show_id = ?';
-    const [showResult] = await pool.execute(showQuery, [status, profile_id, show_id]);
+    const [showResult] = await pool.execute(showQuery, [status, profileId, show_id]);
     if ((showResult as any).affectedRows === 0) return false;
     return true;
   }
 
-  static async updateAllWatchStatuses(profile_id: string, show_id: number, status: string): Promise<boolean> {
+  static async updateAllWatchStatuses(profileId: string, show_id: number, status: string): Promise<boolean> {
     //update show
     const showQuery = 'UPDATE show_watch_status SET status = ? WHERE profile_id = ? AND show_id = ?';
-    const [showResult] = await pool.execute(showQuery, [status, profile_id, show_id]);
+    const [showResult] = await pool.execute(showQuery, [status, profileId, show_id]);
     if ((showResult as any).affectedRows === 0) return false;
     //update seasons (for show)
     const seasonsQuery =
       'UPDATE season_watch_status SET status = ? WHERE profile_id = ? AND season_id IN (SELECT id FROM seasons WHERE show_id = ?)';
-    const [seasonsResult] = await pool.execute(seasonsQuery, [status, profile_id, show_id]);
+    const [seasonsResult] = await pool.execute(seasonsQuery, [status, profileId, show_id]);
     if ((seasonsResult as any).affectedRows === 0) return false;
     //update episodes (for seasons/show)
     const episodesQuery =
       'UPDATE episode_watch_status SET status = ? WHERE profile_id = ? AND episode_id IN (SELECT id FROM episodes WHERE season_id IN (SELECT id FROM seasons WHERE show_id = ?))';
-    const [episodesResult] = await pool.execute(episodesQuery, [status, profile_id, show_id]);
+    const [episodesResult] = await pool.execute(episodesQuery, [status, profileId, show_id]);
     if ((episodesResult as any).affectedRows === 0) return false;
     return true;
   }
 
-  static async getAllShowsForProfile(profile_id: string) {
+  static async getAllShowsForProfile(profileId: string) {
     const query = 'SELECT * FROM profile_shows where profile_id = ?';
-    const [rows] = await pool.execute<RowDataPacket[]>(query, [Number(profile_id)]);
+    const [rows] = await pool.execute<RowDataPacket[]>(query, [Number(profileId)]);
     const transformedRows = rows.map(this.transformRow);
     return transformedRows;
   }
 
-  static async getShowForProfile(profile_id: string, show_id: number) {
+  static async getShowForProfile(profileId: string, show_id: number) {
     const query = 'SELECT * FROM profile_shows where profile_id = ? AND show_id = ?';
-    const [rows] = await pool.execute(query, [Number(profile_id), show_id]);
+    const [rows] = await pool.execute(query, [Number(profileId), show_id]);
     const shows = rows as any[];
     return this.transformRow(shows[0]);
   }
 
-  static async getShowWithSeasonsForProfile(profile_id: string, show_id: string) {
+  static async getShowWithSeasonsForProfile(profileId: string, show_id: string) {
     const query = 'SELECT * FROM profile_shows where profile_id = ? AND show_id = ?';
-    const [rows] = await pool.execute<RowDataPacket[]>(query, [Number(profile_id), Number(show_id)]);
+    const [rows] = await pool.execute<RowDataPacket[]>(query, [Number(profileId), Number(show_id)]);
     const transformedRows = rows.map(this.transformRow);
     const show = transformedRows[0];
-    const seasons = await Season.getSeasonsForShow(profile_id, show_id);
+    const seasons = await Season.getSeasonsForShow(profileId, show_id);
     show.seasons = seasons;
     return show;
   }
 
-  static async getNextWatchForProfile(profile_id: string) {
-    const query = 'SELECT * from profile_next_watch where profile_id = ? LIMIT 8';
-    const [rows] = await pool.execute(query, [Number(profile_id)]);
+  static async getUpcomingEpisodesForProfile(profileId: string) {
+    const query = 'SELECT * from profile_upcoming_episodes where profile_id = ? LIMIT 6';
+    const [rows] = await pool.execute(query, [Number(profileId)]);
     return rows;
+  }
+
+  static async getRecentEpisodesForProfile(profileId: string) {
+    const query = 'SELECT * from profile_recent_episodes where profile_id = ? LIMIT 6';
+    const [rows] = await pool.execute(query, [Number(profileId)]);
+    return rows;
+  }
+
+  static async getNextUnwatchedEpisodesForProfile(profileId: string) {
+    const recentShowsQuery = `SELECT * FROM profile_recent_shows_with_unwatched WHERE profile_id = ? ORDER BY last_watched_date DESC LIMIT 5`;
+    const [recentShows] = await pool.execute<RowDataPacket[]>(recentShowsQuery, [profileId]);
+
+    if (recentShows.length === 0) {
+      return [];
+    }
+
+    const results = await Promise.all(
+      recentShows.map(async (show) => {
+        const nextEpisodesQuery = `SELECT * FROM profile_next_unwatched_episodes WHERE profile_id = ? AND show_id = ? AND episode_rank <= 3 ORDER BY season_number ASC, episode_number ASC`;
+        const [episodes] = await pool.execute<RowDataPacket[]>(nextEpisodesQuery, [profileId, show.show_id]);
+
+        return {
+          show_id: show.show_id,
+          show_title: show.show_title,
+          poster_image: show.poster_image,
+          last_watched: show.last_watched_date,
+          episodes: episodes as NextEpisode[],
+        };
+      }),
+    );
+
+    return results;
   }
 
   static async getShowsForUpdates(): Promise<ContentUpdates[]> {

@@ -26,20 +26,24 @@ export const getProfile = asyncHandler(async (req: Request, res: Response) => {
   const { id, profileId } = req.params;
   const profile = await Profile.findById(Number(profileId));
   if (profile) {
-    const showResults = await Show.getAllShowsForProfile(profileId);
-    const nextWatchResults = await Show.getNextWatchForProfile(profileId);
-    const movieResults = await Movie.getAllMoviesForProfile(profileId);
-    const recentMovieResuls = await Movie.getRecentMovieReleasesForProfile(profileId);
-    const upcomingMovieResults = await Movie.getUpcomingMovieReleasesForProfile(profileId);
+    const shows = await Show.getAllShowsForProfile(profileId);
+    const upcomingEpisodes = await Show.getUpcomingEpisodesForProfile(profileId);
+    const recentEpisodes = await Show.getRecentEpisodesForProfile(profileId);
+    const nextUnwatchedEpisodes = await Show.getNextUnwatchedEpisodesForProfile(profileId);
+    const movies = await Movie.getAllMoviesForProfile(profileId);
+    const recentMovies = await Movie.getRecentMovieReleasesForProfile(profileId);
+    const upcomingMovies = await Movie.getUpcomingMovieReleasesForProfile(profileId);
     res.status(200).json({
       message: `Retrieved profile with id: ${profileId}`,
       results: {
         profile: { id: profile.id, name: profile.name, image: getProfileImage(profile) },
-        shows: showResults,
-        nextWatch: nextWatchResults,
-        movies: movieResults,
-        recentMovies: recentMovieResuls,
-        upcomingMovies: upcomingMovieResults,
+        shows: shows,
+        recentEpisodes: recentEpisodes,
+        upcomingEpisodes: upcomingEpisodes,
+        nextUnwatchedEpisodes: nextUnwatchedEpisodes,
+        movies: movies,
+        recentMovies: recentMovies,
+        upcomingMovies: upcomingMovies,
       },
     });
   } else {

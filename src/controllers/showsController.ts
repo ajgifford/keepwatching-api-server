@@ -32,14 +32,23 @@ export async function getShowDetails(req: Request, res: Response) {
   }
 }
 
-// GET /api/v1/profiles/${profileId}/shows/nextWatch
-export async function getNextWatchForProfile(req: Request, res: Response) {
+// GET /api/v1/profiles/${profileId}/episodes
+export async function getProfileEpisodes(req: Request, res: Response) {
   const { profileId } = req.params;
   try {
-    const shows = await Show.getNextWatchForProfile(profileId);
-    res.status(200).json({ message: 'Successfully retrieved the next watches for a profile', results: shows });
+    const upcomingEpisodes = await Show.getUpcomingEpisodesForProfile(profileId);
+    const recentEpisodes = await Show.getRecentEpisodesForProfile(profileId);
+    const nextUnwatchedEpisodes = await Show.getNextUnwatchedEpisodesForProfile(profileId);
+    res.status(200).json({
+      message: 'Successfully retrieved the episodes for a profile',
+      results: {
+        upcomingEpisodes: upcomingEpisodes,
+        recentEpisodes: recentEpisodes,
+        nextUnwatchedEpisodes: nextUnwatchedEpisodes,
+      },
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Unexpected error while getting the next watches for a profile', error: error });
+    res.status(500).json({ message: 'Unexpected error while getting the episodes for a profile', error: error });
   }
 }
 
@@ -62,10 +71,11 @@ export async function addFavorite(req: Request, res: Response, next: NextFunctio
 async function favoriteExistingShowForNewProfile(showToFavorite: Show, profileId: string, res: Response) {
   await showToFavorite.saveFavorite(profileId, true);
   const show = await Show.getShowForProfile(profileId, showToFavorite.id!);
-  const nextWatches = await Show.getNextWatchForProfile(profileId);
+  const upcomingEpisodes = await Show.getUpcomingEpisodesForProfile(profileId);
+  const recentEpisodes = await Show.getRecentEpisodesForProfile(profileId);
   res.status(200).json({
     message: `Successfully saved ${showToFavorite.title} as a favorite`,
-    result: { favoritedShow: show, nextWatchEpisodes: nextWatches },
+    result: { favoritedShow: show, upcomingEpisodes: upcomingEpisodes, recentEpisodes: recentEpisodes },
   });
 }
 
@@ -166,10 +176,17 @@ export async function removeFavorite(req: Request, res: Response) {
     const showToRemove = await Show.findById(Number(showId));
     if (showToRemove) {
       await showToRemove.removeFavorite(profileId);
-      const nextWatches = await Show.getNextWatchForProfile(profileId);
+      const upcomingEpisodes = await Show.getUpcomingEpisodesForProfile(profileId);
+      const recentEpisodes = await Show.getRecentEpisodesForProfile(profileId);
+      const nextUnwatchedEpisodes = await Show.getNextUnwatchedEpisodesForProfile(profileId);
       res.status(200).json({
         message: 'Successfully removed the show from favorites',
-        result: { removedShow: showToRemove, nextWatchEpisodes: nextWatches },
+        result: {
+          removedShow: showToRemove,
+          upcomingEpisodes: upcomingEpisodes,
+          recentEpisodes: recentEpisodes,
+          nextUnwatchedEpisodes: nextUnwatchedEpisodes,
+        },
       });
     } else {
       throw new BadRequestError('The show requested to remove is not a favorite');
