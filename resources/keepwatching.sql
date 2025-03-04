@@ -181,6 +181,22 @@ CREATE TABLE movie_watch_status (
 	FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE CASCADE
 );
 
+CREATE TABLE notifications (
+    notification_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    message TEXT NOT NULL,
+    start_date DATETIME NOT NULL,
+    end_date DATETIME NOT NULL
+);
+
+CREATE TABLE account_notifications (
+	notification_id BIGINT,
+	account_id INT,
+	dismissed TINYINT(1),
+	PRIMARY KEY (notification_id, account_id),
+	FOREIGN KEY (notification_id) REFERENCES notifications(notification_id) ON DELETE CASCADE,
+	FOREIGN KEY (account_id) REFERENCES accounts(account_id) ON DELETE CASCADE
+);
+
 -- Views
 
 CREATE VIEW profile_movies AS
@@ -369,7 +385,7 @@ JOIN
 JOIN 
     streaming_services ss ON tss.streaming_service_id = ss.id
 WHERE 
-    e.air_date BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY) AND CURRENT_DATE()
+    e.air_date BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY) AND DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)
 GROUP BY 
     p.profile_id, s.id, e.id
 ORDER BY 

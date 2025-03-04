@@ -282,7 +282,7 @@ class Show {
   }
 
   static async getRecentEpisodesForProfile(profileId: string) {
-    const query = 'SELECT * from profile_recent_episodes where profile_id = ? LIMIT 6';
+    const query = 'SELECT * from profile_recent_episodes where profile_id = ? ORDER BY air_date DESC LIMIT 6';
     const [rows] = await pool.execute(query, [Number(profileId)]);
     return rows;
   }
