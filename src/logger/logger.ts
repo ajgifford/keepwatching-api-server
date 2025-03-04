@@ -42,7 +42,7 @@ export const httpLogger = winston.createLogger({
     new DailyRotateFile({
       filename: path.join(logDirectory, 'keepwatching-%DATE%.log'),
       datePattern: 'MMMM-DD-YYYY',
-      zippedArchive: true,
+      zippedArchive: false,
       maxSize: '20m',
       maxFiles: '14d',
     }),
