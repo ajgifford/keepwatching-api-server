@@ -36,7 +36,7 @@ export const updateNextEpisodeWatchStatus = async (req: Request, res: Response) 
       const nextUnwatchedEpisodes = await Show.getNextUnwatchedEpisodesForProfile(profileId);
       res.status(200).json({
         message: 'Successfully updated the episode watch status',
-        results: { nextUnwatchedEpisodes: nextUnwatchedEpisodes },
+        result: { nextUnwatchedEpisodes: nextUnwatchedEpisodes },
       });
     } else {
       res.status(400).json({ message: 'No status was updated' });
