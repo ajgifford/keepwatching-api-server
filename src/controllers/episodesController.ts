@@ -20,7 +20,7 @@ export const updateEpisodeWatchStatus = async (req: Request, res: Response) => {
   }
 };
 
-// PUT /api/v1/profiles/${profileId}/episodes/watchstatus
+// PUT /api/v1/profiles/${profileId}/episodes/nextWatchstatus
 export const updateNextEpisodeWatchStatus = async (req: Request, res: Response) => {
   const { profileId } = req.params;
   try {
