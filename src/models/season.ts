@@ -1,5 +1,6 @@
 import pool from '../utils/db';
 import Episode from './episode';
+import { RowDataPacket } from 'mysql2';
 
 class Season {
   id?: number;
@@ -107,6 +108,30 @@ class Season {
     const [seasonResult] = await pool.execute(seasonQuery, [status, profile_id, season_id]);
     if ((seasonResult as any).affectedRows === 0) return false;
     return true;
+  }
+
+  static async updateWatchStatusByEpisode(profileId: string, seasonId: number) {
+    const episodesQuery = 'SELECT id FROM episodes WHERE season_id = ?';
+    const [episodeRows] = await pool.execute<RowDataPacket[]>(episodesQuery, [seasonId]);
+    const episodeIds = episodeRows.map((row) => row.id);
+
+    const placeholders = episodeIds.map(() => '?').join(',');
+    const episodeWatchStatusQuery = `SELECT * FROM episode_watch_status WHERE profile_id = ? AND episode_id IN (${placeholders})`;
+
+    const [watchStatusRows] = await pool.execute<RowDataPacket[]>(episodeWatchStatusQuery, [profileId, ...episodeIds]);
+
+    let seasonStatus: 'WATCHED' | 'NOT_WATCHED' | 'WATCHING';
+
+    seasonStatus = watchStatusRows[0].status;
+    for (let i = 1; i < watchStatusRows.length; i++) {
+      if (watchStatusRows[i].status !== seasonStatus) {
+        seasonStatus = 'WATCHING';
+        break;
+      }
+    }
+
+    const updateSeasonStatusQuery = 'UPDATE season_watch_status SET status = ? WHERE profile_id = ? AND season_id = ?';
+    await pool.execute(updateSeasonStatusQuery, [seasonStatus, profileId, seasonId]);
   }
 
   static async updateAllWatchStatuses(profile_id: string, season_id: number, status: string): Promise<boolean> {

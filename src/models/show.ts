@@ -14,6 +14,7 @@ interface NextEpisode {
   air_date: string;
   show_id: number;
   show_name: string;
+  season_id: number;
   poster_image: string;
   network: string;
   streaming_services: string;
@@ -233,6 +234,37 @@ class Show {
     return true;
   }
 
+  static async updateWatchStatusBySeason(profileId: string, showId: number) {
+    const seasonsQuery = 'SELECT id FROM seasons WHERE show_id = ?';
+    const [seasonRows] = await pool.execute<RowDataPacket[]>(seasonsQuery, [showId]);
+    const seasonIds = seasonRows.map((row) => row.id);
+
+    const placeholders = seasonIds.map(() => '?').join(',');
+    const seasonWatchStatusQuery = `SELECT * FROM season_watch_status WHERE profile_id = ? AND season_id IN (${placeholders})`;
+
+    const [watchStatusRows] = await pool.execute<RowDataPacket[]>(seasonWatchStatusQuery, [profileId, ...seasonIds]);
+
+    let showStatus: 'WATCHED' | 'NOT_WATCHED' | 'WATCHING';
+
+    const firstStatus = watchStatusRows[0].status;
+    if (firstStatus === 'WATCHING') {
+      showStatus = 'WATCHING';
+    } else {
+      let allMatch = true;
+      for (let i = 1; i < watchStatusRows.length; i++) {
+        const currentStatus = watchStatusRows[i].status;
+        if (currentStatus === 'WATCHING' || currentStatus !== firstStatus) {
+          allMatch = false;
+          break;
+        }
+      }
+      showStatus = allMatch ? firstStatus : 'WATCHING';
+    }
+
+    const updateShowStatusQuery = 'UPDATE show_watch_status SET status = ? WHERE profile_id = ? AND show_id = ?';
+    await pool.execute(updateShowStatusQuery, [showStatus, profileId, showId]);
+  }
+
   static async updateAllWatchStatuses(profileId: string, show_id: number, status: string): Promise<boolean> {
     //update show
     const showQuery = 'UPDATE show_watch_status SET status = ? WHERE profile_id = ? AND show_id = ?';
@@ -288,7 +320,7 @@ class Show {
   }
 
   static async getNextUnwatchedEpisodesForProfile(profileId: string) {
-    const recentShowsQuery = `SELECT * FROM profile_recent_shows_with_unwatched WHERE profile_id = ? ORDER BY last_watched_date DESC LIMIT 5`;
+    const recentShowsQuery = `SELECT * FROM profile_recent_shows_with_unwatched WHERE profile_id = ? ORDER BY last_watched_date DESC LIMIT 6`;
     const [recentShows] = await pool.execute<RowDataPacket[]>(recentShowsQuery, [profileId]);
 
     if (recentShows.length === 0) {
@@ -297,7 +329,7 @@ class Show {
 
     const results = await Promise.all(
       recentShows.map(async (show) => {
-        const nextEpisodesQuery = `SELECT * FROM profile_next_unwatched_episodes WHERE profile_id = ? AND show_id = ? AND episode_rank <= 3 ORDER BY season_number ASC, episode_number ASC`;
+        const nextEpisodesQuery = `SELECT * FROM profile_next_unwatched_episodes WHERE profile_id = ? AND show_id = ? AND episode_rank <= 2 ORDER BY season_number ASC, episode_number ASC`;
         const [episodes] = await pool.execute<RowDataPacket[]>(nextEpisodesQuery, [profileId, show.show_id]);
 
         return {

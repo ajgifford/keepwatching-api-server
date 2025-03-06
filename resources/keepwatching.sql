@@ -426,6 +426,7 @@ SELECT
   e.air_date,
   s.id AS show_id,
   s.title AS show_name,
+  e.season_id,
   s.poster_image,
   s.network,
   GROUP_CONCAT(ss.name ORDER BY ss.name SEPARATOR ', ') AS streaming_services,
