@@ -9,6 +9,18 @@ export const discoverTopQuerySchema = z.object({
   }),
 });
 
+export const discoverChangesQuerySchema = z.object({
+  showType: z.enum(['movie', 'series'], {
+    errorMap: () => ({ message: 'Show type must be either "movie" or "series"' }),
+  }),
+  service: z.enum(['netflix', 'disney', 'hbo', 'apple', 'prime'], {
+    errorMap: () => ({ message: 'Invalid streaming service provided' }),
+  }),
+  changeType: z.enum(['new', 'upcoming', 'expiring'], {
+    errorMap: () => ({ message: 'Change type must be either "new", "upcoming" or "expiring"' }),
+  }),
+});
+
 export const discoverTrendingQuerySchema = z.object({
   showType: z.enum(['movie', 'series'], {
     errorMap: () => ({ message: 'Show type must be either "movie" or "series"' }),
@@ -21,5 +33,6 @@ export const discoverSimilarContentSchema = z.object({
 });
 
 export type DiscoverTopQuery = z.infer<typeof discoverTopQuerySchema>;
+export type DiscoverChangesQuery = z.infer<typeof discoverChangesQuerySchema>;
 export type DiscoverTrendingQuery = z.infer<typeof discoverTrendingQuerySchema>;
 export type SimilarContentParams = z.infer<typeof discoverSimilarContentSchema>;

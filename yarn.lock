@@ -3284,6 +3284,11 @@ stream-shift@^1.0.2:
   resolved "https://registry.yarnpkg.com/stream-shift/-/stream-shift-1.0.3.tgz#85b8fab4d71010fc3ba8772e8046cc49b8a3864b"
   integrity sha512-76ORR0DO1o1hlKwTbi/DM3EXWGf3ZJYO8cXX5RJwnul2DEg2oyoZyjLNoQM8WsvZiFKCRfC1O0J7iCvie3RZmQ==
 
+streaming-availability@^4.4.0:
+  version "4.4.0"
+  resolved "https://registry.yarnpkg.com/streaming-availability/-/streaming-availability-4.4.0.tgz#bff4b60145b8f03ae3f589e8ab7d376778cc4c10"
+  integrity sha512-SRrbCJSQXmN3lhmpE0UB3L25BosLEOvf1abjNaBgFh94slyZGttZcytlUPmWE5hj/3tJ2Ahlwx46QDwakjw1ZA==
+
 streamsearch@^1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/streamsearch/-/streamsearch-1.1.0.tgz#404dd1e2247ca94af554e841a8ef0eaa238da764"

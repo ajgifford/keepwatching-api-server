@@ -1,13 +1,18 @@
-import { cliLogger } from '../logger/logger';
-import { DiscoverTopQuery, DiscoverTrendingQuery } from '../schema/discoverSchema';
+import { DiscoverChangesQuery, DiscoverTopQuery, DiscoverTrendingQuery } from '../schema/discoverSchema';
 import { DiscoverAndSearchResponse, DiscoverAndSearchResult } from '../types/discoverAndSearchTypes';
-import { axiosStreamingAPIInstance, axiosTMDBAPIInstance } from '../utils/axiosInstance';
+import { axiosTMDBAPIInstance } from '../utils/axiosInstance';
 import { generateGenreArrayFromIds } from '../utils/genreUtility';
 import { buildTMDBImagePath } from '../utils/imageUtility';
 import { NextFunction, Request, Response } from 'express';
 import NodeCache from 'node-cache';
+import * as streamingAvailability from 'streaming-availability';
 
 const cache = new NodeCache({ stdTTL: 300 });
+const client = new streamingAvailability.Client(
+  new streamingAvailability.Configuration({
+    apiKey: `${process.env.STREAMING_API_KEY}`,
+  }),
+);
 
 // GET /api/v1/discover/top
 export const discoverTopContent = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -21,17 +26,13 @@ export const discoverTopContent = async (req: Request, res: Response, next: Next
     return;
   }
 
-  const config = {
-    params: {
-      country: 'us',
-      show_type: showType,
-      service: service,
-    },
-  };
   try {
-    const response = await axiosStreamingAPIInstance.get('/shows/top', config);
-    const apiResults: any[] = response.data;
-    const contentItems: DiscoverAndSearchResult[] = apiResults.map((result): DiscoverAndSearchResult => {
+    const data = await client.showsApi.getTopShows({
+      country: 'us',
+      service: service,
+      showType: showType,
+    });
+    const contentItems: DiscoverAndSearchResult[] = data.map((result): DiscoverAndSearchResult => {
       return {
         id: stripPrefix(result.tmdbId),
         title: result.title,
@@ -45,6 +46,62 @@ export const discoverTopContent = async (req: Request, res: Response, next: Next
 
     const discoverResponse: DiscoverAndSearchResponse = {
       message: `Found top ${showType} for ${service}`,
+      results: contentItems,
+      total_results: contentItems.length,
+      total_pages: 1,
+      current_page: 1,
+    };
+
+    cache.set(cacheKey, discoverResponse);
+    res.status(200).json(discoverResponse);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET /api/v1/discover/changes
+export const discoverChangesContent = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  const { showType, service, changeType } = req.query as DiscoverChangesQuery;
+
+  const cacheKey = `discover_changes_${showType}_${service}_${changeType}`;
+  const cachedData = cache.get<DiscoverAndSearchResponse>(cacheKey);
+
+  if (cachedData) {
+    res.status(200).json(cachedData);
+    return;
+  }
+
+  try {
+    const data = await client.changesApi.getChanges({
+      changeType: changeType,
+      itemType: 'show',
+      country: 'us',
+      catalogs: [service],
+      showType: showType,
+      orderDirection: 'asc',
+      includeUnknownDates: false,
+    });
+
+    const showsData = data.shows || {};
+    const showIds = Object.keys(showsData);
+    const contentItems: DiscoverAndSearchResult[] = [];
+    for (const id of showIds) {
+      const show = showsData[id];
+      if (!show || !show.title) continue;
+
+      contentItems.push({
+        id: stripPrefix(show.tmdbId),
+        title: show.title,
+        genres: (show.genres || []).map((genre: { name: string }) => genre.name),
+        premiered: getStreamingPremieredDate(showType, show),
+        summary: show.overview || '',
+        image: show.imageSet?.verticalPoster?.w240 || '',
+        rating: show.rating || 0,
+      });
+    }
+
+    const discoverResponse: DiscoverAndSearchResponse = {
+      message: `Found ${changeType} ${showType} for ${service}`,
       results: contentItems,
       total_results: contentItems.length,
       total_pages: 1,
