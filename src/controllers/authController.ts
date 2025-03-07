@@ -1,29 +1,24 @@
-import { AuthenticationError, BadRequestError } from '../middleware/errorMiddleware';
+import { httpLogger } from '../logger/logger';
+import { AuthenticationError, BadRequestError, ConflictError } from '../middleware/errorMiddleware';
 import Account from '../models/account';
 import { getAccountImage, getPhotoForGoogleAccount } from '../utils/imageUtility';
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
-import { validationResult } from 'express-validator';
+import { z } from 'zod';
 
 // POST /api/v1/accounts
-export const register = asyncHandler(async (req: Request, res: Response) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    res.status(400).json({ errors: errors.array() });
-    return;
-  }
+export const register = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { name, email, uid } = req.body;
 
-  const { name, email, uid } = req.body;
-  const accountExists = await Account.findByEmail(email);
+    const accountExists = await Account.findByEmail(email);
+    if (accountExists) {
+      throw new ConflictError('An account with this email already exists');
+    }
 
-  if (accountExists) {
-    res.status(409).json({ message: 'An account with this email already exists' });
-  }
+    const account = new Account(name, email, uid);
+    await account.register();
 
-  const account = new Account(name, email, uid);
-  await account.register();
-
-  if (account) {
     res.status(201).json({
       message: 'Account registered successfully',
       result: {
@@ -35,23 +30,28 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
         default_profile_id: account.default_profile_id,
       },
     });
-  } else {
-    throw new BadRequestError('An error occured while creating the account');
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const errorMessage = error.errors.map((err) => `${err.path.join('.')}: ${err.message}`).join(', ');
+      return next(new BadRequestError(errorMessage));
+    }
+
+    next(error);
   }
 });
 
 // POST /api/v1/login
-export const login = asyncHandler(async (req: Request, res: Response) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    res.status(400).json({ errors: errors.array() });
-    return;
-  }
+export const login = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { uid } = req.body;
 
-  const { uid } = req.body;
-  const account = await Account.findByUID(uid);
+    const account = await Account.findByUID(uid);
+    if (!account) {
+      throw new AuthenticationError('Account not found');
+    }
 
-  if (account) {
+    httpLogger.info(`User logged in: ${account.email}`, { userId: account.uid });
+
     res.status(201).json({
       message: 'Login successful',
       result: {
@@ -63,39 +63,44 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
         default_profile_id: account.default_profile_id,
       },
     });
-  } else {
-    throw new AuthenticationError('Account not found');
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const errorMessage = error.errors.map((err) => `${err.path.join('.')}: ${err.message}`).join(', ');
+      return next(new BadRequestError(errorMessage));
+    }
+
+    next(error);
   }
 });
 
 // POST /api/v1/googleLogin
-export const googleLogin = asyncHandler(async (req: Request, res: Response) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    res.status(400).json({ errors: errors.array() });
-    return;
-  }
-  const { name, email, uid, photoURL } = req.body;
-  const account = await Account.findByUID(uid);
+export const googleLogin = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { name, email, uid, photoURL } = req.body;
 
-  if (account) {
-    res.status(201).json({
-      message: 'Login successful',
-      result: {
-        id: account.account_id,
-        name: account.account_name,
-        uid: account.uid,
-        email: account.email,
-        image: getPhotoForGoogleAccount(name, photoURL, account),
-        default_profile_id: account.default_profile_id,
-      },
-    });
-    return;
-  }
+    const account = await Account.findByUID(uid);
+    if (account) {
+      httpLogger.info(`User logged in via Google: ${account.email}`, { userId: account.uid });
 
-  const newAccount = new Account(name, email, uid);
-  await newAccount.register();
-  if (newAccount) {
+      res.status(201).json({
+        message: 'Login successful',
+        result: {
+          id: account.account_id,
+          name: account.account_name,
+          uid: account.uid,
+          email: account.email,
+          image: getPhotoForGoogleAccount(name, photoURL, account),
+          default_profile_id: account.default_profile_id,
+        },
+      });
+      return;
+    }
+
+    const newAccount = new Account(name, email, uid);
+    await newAccount.register();
+
+    httpLogger.info(`New user registered via Google: ${email}`, { userId: uid });
+
     res.status(201).json({
       message: 'Account registered successfully',
       result: {
@@ -107,7 +112,12 @@ export const googleLogin = asyncHandler(async (req: Request, res: Response) => {
         default_profile_id: newAccount.default_profile_id,
       },
     });
-  } else {
-    throw new BadRequestError('An error occured while creating the account');
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const errorMessage = error.errors.map((err) => `${err.path.join('.')}: ${err.message}`).join(', ');
+      return next(new BadRequestError(errorMessage));
+    }
+
+    next(error);
   }
 });
