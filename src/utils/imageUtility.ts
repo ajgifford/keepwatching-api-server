@@ -37,7 +37,7 @@ export function getAccountImage(account: Account) {
   return buildDefaultImagePath(account.account_name);
 }
 
-export function getPhotoForGoogleAccount(name: string, photoURL: string, account: Account) {
+export function getPhotoForGoogleAccount(name: string, photoURL: string | undefined, account: Account) {
   if (account.image) {
     return buildUploadedImageURL(account.image, 'accounts');
   }

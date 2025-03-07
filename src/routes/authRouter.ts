@@ -1,11 +1,12 @@
 import { googleLogin, login, register } from '../controllers/authController';
-import { validateEmail, validateName, validateUID } from '../middleware/accountValidationMiddleware';
+import { validateSchema } from '../middleware/validationMiddleware';
+import { accountSchema, googleLoginSchema, loginSchema } from '../schema/accountSchema';
 import express from 'express';
 
 const router = express.Router();
 
-router.post('/api/v1/accounts', validateName, validateUID, validateEmail, register);
-router.post('/api/v1/login', validateUID, login);
-router.post('/api/v1/googleLogin', validateName, validateUID, googleLogin);
+router.post('/api/v1/accounts', validateSchema(accountSchema), register);
+router.post('/api/v1/login', validateSchema(loginSchema), login);
+router.post('/api/v1/googleLogin', validateSchema(googleLoginSchema), googleLogin);
 
 export default router;

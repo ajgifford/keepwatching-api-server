@@ -1,15 +1,15 @@
 import { httpLogger } from '../logger/logger';
-import { AuthenticationError, BadRequestError, ConflictError } from '../middleware/errorMiddleware';
+import { AuthenticationError, ConflictError } from '../middleware/errorMiddleware';
 import Account from '../models/account';
+import { AccountParams, GoogleLoginParams, LoginParams } from '../schema/accountSchema';
 import { getAccountImage, getPhotoForGoogleAccount } from '../utils/imageUtility';
 import { NextFunction, Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
-import { z } from 'zod';
 
 // POST /api/v1/accounts
 export const register = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { name, email, uid } = req.body;
+    const { name, email, uid }: AccountParams = req.body;
 
     const accountExists = await Account.findByEmail(email);
     if (accountExists) {
@@ -31,11 +31,6 @@ export const register = asyncHandler(async (req: Request, res: Response, next: N
       },
     });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      const errorMessage = error.errors.map((err) => `${err.path.join('.')}: ${err.message}`).join(', ');
-      return next(new BadRequestError(errorMessage));
-    }
-
     next(error);
   }
 });
@@ -43,7 +38,7 @@ export const register = asyncHandler(async (req: Request, res: Response, next: N
 // POST /api/v1/login
 export const login = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { uid } = req.body;
+    const { uid }: LoginParams = req.body;
 
     const account = await Account.findByUID(uid);
     if (!account) {
@@ -64,11 +59,6 @@ export const login = asyncHandler(async (req: Request, res: Response, next: Next
       },
     });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      const errorMessage = error.errors.map((err) => `${err.path.join('.')}: ${err.message}`).join(', ');
-      return next(new BadRequestError(errorMessage));
-    }
-
     next(error);
   }
 });
@@ -76,7 +66,7 @@ export const login = asyncHandler(async (req: Request, res: Response, next: Next
 // POST /api/v1/googleLogin
 export const googleLogin = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { name, email, uid, photoURL } = req.body;
+    const { name, email, uid, photoURL }: GoogleLoginParams = req.body;
 
     const account = await Account.findByUID(uid);
     if (account) {
@@ -113,11 +103,6 @@ export const googleLogin = asyncHandler(async (req: Request, res: Response, next
       },
     });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      const errorMessage = error.errors.map((err) => `${err.path.join('.')}: ${err.message}`).join(', ');
-      return next(new BadRequestError(errorMessage));
-    }
-
     next(error);
   }
 });
