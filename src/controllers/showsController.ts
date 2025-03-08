@@ -7,7 +7,7 @@ import Season from '../models/season';
 import Show from '../models/show';
 import { axiosTMDBAPIInstance } from '../utils/axiosInstance';
 import { getEpisodeToAirId, getInProduction, getUSNetwork, getUSRating } from '../utils/contentUtility';
-import { getUSWatchProviders } from '../utils/wacthProvidersUtility';
+import { getUSWatchProviders } from '../utils/watchProvidersUtility';
 import { NextFunction, Request, Response } from 'express';
 
 // GET /api/v1/profiles/${profileId}/shows

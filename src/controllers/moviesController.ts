@@ -2,7 +2,7 @@ import { BadRequestError } from '../middleware/errorMiddleware';
 import Movie from '../models/movie';
 import { axiosTMDBAPIInstance } from '../utils/axiosInstance';
 import { getUSMPARating } from '../utils/contentUtility';
-import { getUSWatchProviders } from '../utils/wacthProvidersUtility';
+import { getUSWatchProviders } from '../utils/watchProvidersUtility';
 import { Request, Response } from 'express';
 
 // GET /api/v1/profiles/${profileId}/movies

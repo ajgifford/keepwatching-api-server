@@ -1,5 +1,5 @@
 import { DatabaseError } from '../middleware/errorMiddleware';
-import pool from '../utils/db';
+import { getDbPool } from '../utils/db';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 
 export interface IAccount {
@@ -43,6 +43,7 @@ class Account implements IAccount {
   async register(): Promise<void> {
     try {
       const query = `INSERT INTO accounts (account_name, email, uid) VALUES (?, ?, ?)`;
+      const pool = getDbPool();
       const [result] = await pool.execute<ResultSetHeader>(query, [this.account_name, this.email, this.uid]);
       this.account_id = (result as any).insertId;
 
@@ -67,6 +68,7 @@ class Account implements IAccount {
   async updateAccountImage(image_path: string): Promise<Account | null> {
     try {
       const query = 'UPDATE accounts SET image = ? WHERE account_id = ?';
+      const pool = getDbPool();
       const [result] = await pool.execute<ResultSetHeader>(query, [image_path, this.account_id]);
 
       if ((result as any).affectedRows === 0) return null;
@@ -88,6 +90,7 @@ class Account implements IAccount {
   async editAccount(account_name: string, default_profile_id: number): Promise<Account | null> {
     try {
       const query = 'UPDATE accounts SET account_name = ?, default_profile_id = ? WHERE account_id = ?';
+      const pool = getDbPool();
       const [result] = await pool.execute<ResultSetHeader>(query, [account_name, default_profile_id, this.account_id]);
 
       if ((result as any).affectedRows === 0) return null;
@@ -108,6 +111,7 @@ class Account implements IAccount {
   static async findByUID(uid: string): Promise<Account | null> {
     try {
       const query = `SELECT * FROM accounts WHERE uid = ?`;
+      const pool = getDbPool();
       const [rows] = await pool.execute<RowDataPacket[]>(query, [uid]);
 
       if (rows.length === 0) return null;
@@ -137,6 +141,7 @@ class Account implements IAccount {
   static async findByEmail(email: string): Promise<Account | null> {
     try {
       const query = `SELECT * FROM accounts WHERE email = ?`;
+      const pool = getDbPool();
       const [rows] = await pool.execute<RowDataPacket[]>(query, [email]);
 
       if (rows.length === 0) return null;
@@ -166,6 +171,7 @@ class Account implements IAccount {
   static async findById(id: number): Promise<Account | null> {
     try {
       const query = `SELECT * FROM accounts WHERE account_id = ?`;
+      const pool = getDbPool();
       const [rows] = await pool.execute<RowDataPacket[]>(query, [id]);
 
       if (rows.length === 0) return null;
@@ -194,6 +200,7 @@ class Account implements IAccount {
   static async findAccountIdByProfileId(profile_id: string): Promise<number | null> {
     try {
       const query = `SELECT * FROM profiles where profile_id = ?`;
+      const pool = getDbPool();
       const [rows] = await pool.execute<RowDataPacket[]>(query, [profile_id]);
 
       if (rows.length === 0) return null;

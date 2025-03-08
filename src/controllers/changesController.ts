@@ -7,7 +7,7 @@ import Season from '../models/season';
 import Show from '../models/show';
 import { axiosTMDBAPIInstance } from '../utils/axiosInstance';
 import { getEpisodeToAirId, getInProduction, getUSMPARating, getUSNetwork, getUSRating } from '../utils/contentUtility';
-import { getUSWatchProviders } from '../utils/wacthProvidersUtility';
+import { getUSWatchProviders } from '../utils/watchProvidersUtility';
 import CronJob from 'node-cron';
 
 const supportedChangesSets = [

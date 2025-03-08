@@ -1,10 +1,10 @@
 import { ContentDetails } from '../models/content';
 import pool from './db';
 
-let cachedStreaminServiceIds: number[] = [];
-export const getCachedStreamingServiceIds = (): number[] => cachedStreaminServiceIds;
+let cachedStreamingServiceIds: number[] = [];
+export const getCachedStreamingServiceIds = (): number[] => cachedStreamingServiceIds;
 export const setCachedStreamingServiceIds = (data: number[]): void => {
-  cachedStreaminServiceIds = data;
+  cachedStreamingServiceIds = data;
 };
 
 export function getUSWatchProviders(content: ContentDetails, defaultProvider: number): number[] {
@@ -14,7 +14,7 @@ export function getUSWatchProviders(content: ContentDetails, defaultProvider: nu
     const streaming_service_ids: number[] = [];
     usWatchProvider.flatrate.forEach((item) => {
       const id = item.provider_id;
-      if (cachedStreaminServiceIds.includes(id)) {
+      if (cachedStreamingServiceIds.includes(id)) {
         streaming_service_ids.push(item.provider_id);
       }
     });
