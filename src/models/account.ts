@@ -1,5 +1,5 @@
-import { DatabaseError } from '../middleware/errorMiddleware';
-import { getDbPool } from '../utils/db';
+import { DatabaseError } from '@middleware/errorMiddleware';
+import { getDbPool } from '@utils/db';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 
 export interface IAccount {
@@ -45,11 +45,11 @@ class Account implements IAccount {
       const query = `INSERT INTO accounts (account_name, email, uid) VALUES (?, ?, ?)`;
       const pool = getDbPool();
       const [result] = await pool.execute<ResultSetHeader>(query, [this.account_name, this.email, this.uid]);
-      this.account_id = (result as any).insertId;
+      this.account_id = result.insertId;
 
       const profileQuery = 'INSERT INTO profiles (account_id, name) VALUES (?,?)';
       const [profileResult] = await pool.execute<ResultSetHeader>(profileQuery, [this.account_id, this.account_name]);
-      this.default_profile_id = (profileResult as any).insertId;
+      this.default_profile_id = profileResult.insertId;
 
       const defaultQuery = 'UPDATE accounts SET default_profile_id = ? WHERE account_id = ?';
       await pool.execute(defaultQuery, [this.default_profile_id, this.account_id]);
@@ -71,7 +71,7 @@ class Account implements IAccount {
       const pool = getDbPool();
       const [result] = await pool.execute<ResultSetHeader>(query, [image_path, this.account_id]);
 
-      if ((result as any).affectedRows === 0) return null;
+      if (result.affectedRows === 0) return null;
 
       return new Account(this.account_name, this.email, this.uid, image_path, this.account_id, this.default_profile_id);
     } catch (error) {
@@ -93,7 +93,7 @@ class Account implements IAccount {
       const pool = getDbPool();
       const [result] = await pool.execute<ResultSetHeader>(query, [account_name, default_profile_id, this.account_id]);
 
-      if ((result as any).affectedRows === 0) return null;
+      if (result.affectedRows === 0) return null;
 
       return new Account(account_name, this.email, this.uid, this.image, this.account_id, default_profile_id);
     } catch (error) {
