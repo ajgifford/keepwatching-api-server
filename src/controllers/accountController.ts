@@ -160,7 +160,7 @@ export const deleteProfile = asyncHandler(async (req: Request, res: Response, ne
       throw new NotFoundError('Profile not found');
     }
 
-    const deleted = await profile.delete(Number(profileId));
+    const deleted = await profile.delete();
     if (deleted) {
       res.status(204).json({ message: 'Profile deleted successfully' });
     } else {

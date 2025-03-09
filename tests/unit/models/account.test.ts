@@ -1,4 +1,4 @@
-import { CustomError, DatabaseError } from '@middleware/errorMiddleware';
+import { CustomError } from '@middleware/errorMiddleware';
 import Account from '@models/account';
 import { getDbPool } from '@utils/db';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
@@ -39,18 +39,21 @@ describe('Account class', () => {
       expect(account.default_profile_id).toBe(10);
     });
 
-    test('should throw CustomError when registration fails', async () => {
+    test('should throw error when registration fails', async () => {
       const mockError = new Error('DB connection failed');
       mockPool.execute.mockRejectedValueOnce(mockError);
 
       const account = new Account('John Doe', 'john@example.com', 'uid123');
 
-      try {
-        await account.register();
-        fail('Expected register to throw an error');
-      } catch (error) {
-        expect(error).toBeInstanceOf(CustomError);
-      }
+      await expect(account.register()).rejects.toThrow('DB connection failed');
+    });
+
+    test('should throw error with default message when registration fails', async () => {
+      mockPool.execute.mockRejectedValueOnce({});
+
+      const account = new Account('John Doe', 'john@example.com', 'uid123');
+
+      await expect(account.register()).rejects.toThrow('Unknown database error during registration');
     });
   });
 
@@ -78,18 +81,21 @@ describe('Account class', () => {
       expect(updatedAccount).toBeNull();
     });
 
-    test('should throw CustomError when update fails', async () => {
+    test('should throw error when update image fails', async () => {
       const mockError = new Error('DB connection failed');
       mockPool.execute.mockRejectedValueOnce(mockError);
 
       const account = new Account('John Doe', 'john@example.com', 'uid123', undefined, 1, 10);
 
-      try {
-        await account.updateAccountImage('/path/to/image.jpg');
-        fail('Expected updateAccountImage to throw an error');
-      } catch (error) {
-        expect(error).toBeInstanceOf(CustomError);
-      }
+      await expect(account.updateAccountImage('/path/to/image.jpg')).rejects.toThrow('DB connection failed');
+    });
+
+    test('should throw error with default message when update image fails', async () => {
+      mockPool.execute.mockRejectedValueOnce({});
+
+      const account = new Account('John Doe', 'john@example.com', 'uid123');
+
+      await expect(account.updateAccountImage('image')).rejects.toThrow('Unknown database error during image update');
     });
   });
 
@@ -118,18 +124,21 @@ describe('Account class', () => {
       expect(updatedAccount).toBeNull();
     });
 
-    test('should throw CustomError when update fails', async () => {
+    test('should throw error when edit account fails', async () => {
       const mockError = new Error('DB connection failed');
       mockPool.execute.mockRejectedValueOnce(mockError);
 
       const account = new Account('John Doe', 'john@example.com', 'uid123', undefined, 1, 10);
 
-      try {
-        await account.editAccount('Jane Doe', 20);
-        fail('Expected editAccount to throw an error');
-      } catch (error) {
-        expect(error).toBeInstanceOf(CustomError);
-      }
+      await expect(account.editAccount('Jane Doe', 20)).rejects.toThrow('DB connection failed');
+    });
+
+    test('should throw error with default message when edit account fails', async () => {
+      mockPool.execute.mockRejectedValueOnce({});
+
+      const account = new Account('John Doe', 'john@example.com', 'uid123');
+
+      await expect(account.editAccount('Jane Doe', 23)).rejects.toThrow('Unknown database error during account edit');
     });
   });
 
@@ -162,16 +171,17 @@ describe('Account class', () => {
       expect(account).toBeNull();
     });
 
-    test('should throw CustomError when query fails', async () => {
+    test('should throw error when find by UID fails', async () => {
       const mockError = new Error('DB connection failed');
       mockPool.execute.mockRejectedValueOnce(mockError);
 
-      try {
-        await Account.findByUID('uid123');
-        fail('Expected findByUID to throw an error');
-      } catch (error) {
-        expect(error).toBeInstanceOf(CustomError);
-      }
+      await expect(Account.findByUID('uid123')).rejects.toThrow('DB connection failed');
+    });
+
+    test('should throw error with default message when find by UID fails', async () => {
+      mockPool.execute.mockRejectedValueOnce({});
+
+      await expect(Account.findByUID('uid123')).rejects.toThrow('Unknown database error when finding account by UID');
     });
   });
 
@@ -204,16 +214,19 @@ describe('Account class', () => {
       expect(account).toBeNull();
     });
 
-    test('should throw CustomError when query fails', async () => {
+    test('should throw error when find by email fails', async () => {
       const mockError = new Error('DB connection failed');
       mockPool.execute.mockRejectedValueOnce(mockError);
 
-      try {
-        await Account.findByEmail('john@example.com');
-        fail('Expected findByEmail to throw an error');
-      } catch (error) {
-        expect(error).toBeInstanceOf(CustomError);
-      }
+      await expect(Account.findByEmail('john@example.com')).rejects.toThrow('DB connection failed');
+    });
+
+    test('should throw error with default message when find by email fails', async () => {
+      mockPool.execute.mockRejectedValueOnce({});
+
+      await expect(Account.findByEmail('john@example.com')).rejects.toThrow(
+        'Unknown database error when finding account by email',
+      );
     });
   });
 
@@ -246,16 +259,17 @@ describe('Account class', () => {
       expect(account).toBeNull();
     });
 
-    test('should throw CustomError when query fails', async () => {
+    test('should throw error when find by id fails', async () => {
       const mockError = new Error('DB connection failed');
       mockPool.execute.mockRejectedValueOnce(mockError);
 
-      try {
-        await Account.findById(1);
-        fail('Expected findById to throw an error');
-      } catch (error) {
-        expect(error).toBeInstanceOf(CustomError);
-      }
+      await expect(Account.findById(1)).rejects.toThrow('DB connection failed');
+    });
+
+    test('should throw error with default message when find by id fails', async () => {
+      mockPool.execute.mockRejectedValueOnce({});
+
+      await expect(Account.findById(1)).rejects.toThrow('Unknown database error when finding account by ID');
     });
   });
 
@@ -283,16 +297,19 @@ describe('Account class', () => {
       expect(accountId).toBeNull();
     });
 
-    test('should throw CustomError when query fails', async () => {
+    test('should throw error when find by profile id fails', async () => {
       const mockError = new Error('DB connection failed');
       mockPool.execute.mockRejectedValueOnce(mockError);
 
-      try {
-        await Account.findAccountIdByProfileId('5');
-        fail('Expected findAccountIdByProfileId to throw an error');
-      } catch (error) {
-        expect(error).toBeInstanceOf(CustomError);
-      }
+      await expect(Account.findAccountIdByProfileId('5')).rejects.toThrow('DB connection failed');
+    });
+
+    test('should throw error with default message when find by profile id fails', async () => {
+      mockPool.execute.mockRejectedValueOnce({});
+
+      await expect(Account.findAccountIdByProfileId('5')).rejects.toThrow(
+        'Unknown database error when finding account ID by profile ID',
+      );
     });
   });
 });

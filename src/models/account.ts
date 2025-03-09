@@ -97,7 +97,7 @@ class Account implements IAccount {
 
       return new Account(account_name, this.email, this.uid, this.image, this.account_id, default_profile_id);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown database error during account update';
+      const errorMessage = error instanceof Error ? error.message : 'Unknown database error during account edit';
       throw new DatabaseError(errorMessage, error);
     }
   }

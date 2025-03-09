@@ -54,10 +54,10 @@ class Profile {
     }
   }
 
-  async delete(id: number): Promise<boolean> {
+  async delete(): Promise<boolean> {
     try {
       const query = 'DELETE FROM profiles WHERE profile_id = ?';
-      const [result] = await getDbPool().execute<ResultSetHeader>(query, [id]);
+      const [result] = await getDbPool().execute<ResultSetHeader>(query, [this.id]);
 
       return result.affectedRows > 0;
     } catch (error) {
