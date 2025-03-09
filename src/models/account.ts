@@ -61,18 +61,18 @@ class Account implements IAccount {
 
   /**
    * Update account image
-   * @param {string} image_path - Path to the image file
+   * @param {string} imagePath - Path to the image file
    * @returns {Promise<Account | null>} - Updated account or null if update failed
    * @throws {DatabaseError} If there's an error during the database operation
    */
-  async updateAccountImage(image_path: string): Promise<Account | null> {
+  async updateAccountImage(imagePath: string): Promise<Account | null> {
     try {
       const query = 'UPDATE accounts SET image = ? WHERE account_id = ?';
-      const [result] = await getDbPool().execute<ResultSetHeader>(query, [image_path, this.account_id]);
+      const [result] = await getDbPool().execute<ResultSetHeader>(query, [imagePath, this.account_id]);
 
       if (result.affectedRows === 0) return null;
 
-      return new Account(this.account_name, this.email, this.uid, image_path, this.account_id, this.default_profile_id);
+      return new Account(this.account_name, this.email, this.uid, imagePath, this.account_id, this.default_profile_id);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown database error during image update';
       throw new DatabaseError(errorMessage, error);
@@ -81,23 +81,23 @@ class Account implements IAccount {
 
   /**
    * Edit account details
-   * @param {string} account_name - New account name
-   * @param {number} default_profile_id - New default profile ID
+   * @param {string} accountName - New account name
+   * @param {number} defaultProfileId - New default profile ID
    * @returns {Promise<Account | null>} - Updated account or null if update failed
    * @throws {DatabaseError} If there's an error during the database operation
    */
-  async editAccount(account_name: string, default_profile_id: number): Promise<Account | null> {
+  async editAccount(accountName: string, defaultProfileId: number): Promise<Account | null> {
     try {
       const query = 'UPDATE accounts SET account_name = ?, default_profile_id = ? WHERE account_id = ?';
       const [result] = await getDbPool().execute<ResultSetHeader>(query, [
-        account_name,
-        default_profile_id,
+        accountName,
+        defaultProfileId,
         this.account_id,
       ]);
 
       if (result.affectedRows === 0) return null;
 
-      return new Account(account_name, this.email, this.uid, this.image, this.account_id, default_profile_id);
+      return new Account(accountName, this.email, this.uid, this.image, this.account_id, defaultProfileId);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown database error during account edit';
       throw new DatabaseError(errorMessage, error);
@@ -192,14 +192,14 @@ class Account implements IAccount {
 
   /**
    * Find account ID by profile ID
-   * @param {string} profile_id - Profile ID
+   * @param {string} profileId - Profile ID
    * @returns {Promise<number | null>} - Account ID or null if not found
    * @throws {DatabaseError} If there's an error during the database operation
    */
-  static async findAccountIdByProfileId(profile_id: string): Promise<number | null> {
+  static async findAccountIdByProfileId(profileId: string): Promise<number | null> {
     try {
       const query = `SELECT * FROM profiles where profile_id = ?`;
-      const [rows] = await getDbPool().execute<RowDataPacket[]>(query, [profile_id]);
+      const [rows] = await getDbPool().execute<RowDataPacket[]>(query, [profileId]);
 
       if (rows.length === 0) return null;
 

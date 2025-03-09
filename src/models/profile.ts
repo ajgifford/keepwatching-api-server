@@ -68,18 +68,18 @@ class Profile {
 
   /**
    * Updates a profile's image
-   * @param {string} image_path - Path to the new profile image
+   * @param {string} imagePath - Path to the new profile image
    * @returns {Promise<Profile | null>} Updated profile object or null if update failed
    * @throws {DatabaseError} If a database error occurs during the operation
    */
-  async updateProfileImage(image_path: string): Promise<Profile | null> {
+  async updateProfileImage(imagePath: string): Promise<Profile | null> {
     try {
       const query = 'UPDATE profiles SET image = ? WHERE profile_id = ?';
-      const [result] = await getDbPool().execute<ResultSetHeader>(query, [image_path, this.id]);
+      const [result] = await getDbPool().execute<ResultSetHeader>(query, [imagePath, this.id]);
 
       if (result.affectedRows === 0) return null;
 
-      return new Profile(this.account_id, this.name, this.id, image_path);
+      return new Profile(this.account_id, this.name, this.id, imagePath);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown database error updating a profile image';
       throw new DatabaseError(errorMessage, error);
@@ -126,14 +126,14 @@ class Profile {
 
   /**
    * Retrieves all profiles associated with an account
-   * @param {number} account_id - ID of the account to get profiles for
+   * @param {number} accountId - ID of the account to get profiles for
    * @returns {Promise<Profile[]>} Array of profiles belonging to the account
    * @throws {DatabaseError} If a database error occurs during the operation
    */
-  static async getAllByAccountId(account_id: number): Promise<Profile[]> {
+  static async getAllByAccountId(accountId: number): Promise<Profile[]> {
     try {
       const query = `SELECT * FROM profiles WHERE account_id = ?`;
-      const [rows] = await getDbPool().execute<RowDataPacket[]>(query, [account_id]);
+      const [rows] = await getDbPool().execute<RowDataPacket[]>(query, [accountId]);
 
       return rows.map((profile) => new Profile(profile.account_id, profile.name, profile.profile_id, profile.image));
     } catch (error) {

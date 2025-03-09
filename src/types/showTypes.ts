@@ -14,3 +14,18 @@ export interface ProfileEpisode {
   still_image: string;
   watch_status: 'WATCHED' | 'NOT_WATCHED' | 'WATCHING';
 }
+
+export interface ProfileSeason {
+  profile_id: number;
+  season_id: number;
+  show_id: number;
+  tmdb_id: number;
+  name: string;
+  overview: string;
+  season_number: number;
+  release_date: string;
+  poster_image: string;
+  number_of_episodes: number;
+  watch_status: 'WATCHED' | 'NOT_WATCHED' | 'WATCHING';
+  episodes: ProfileEpisode[];
+}

@@ -146,14 +146,14 @@ class Episode {
 
   /**
    * Adds this episode to a user's favorites
-   * @param {number} profile_id - ID of the profile to add this episode to as a favorite
+   * @param {number} profileId - ID of the profile to add this episode to as a favorite
    * @returns {Promise<void>}
    * @throws {DatabaseError} If a database error occurs during the operation
    */
-  async saveFavorite(profile_id: number): Promise<void> {
+  async saveFavorite(profileId: number): Promise<void> {
     try {
       const query = 'INSERT IGNORE INTO episode_watch_status (profile_id, episode_id) VALUES (?,?)';
-      await getDbPool().execute(query, [Number(profile_id), this.id]);
+      await getDbPool().execute(query, [Number(profileId), this.id]);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown database error saving an episode as a favorite';
@@ -163,15 +163,15 @@ class Episode {
 
   /**
    * Adds an episode to a user's favorites
-   * @param {string} profile_id - ID of the profile to add this episode to as a favorite
-   * @param {number} episode_id - ID of the episode to add as a favorite
+   * @param {string} profileId - ID of the profile to add an episode as a favorite
+   * @param {number} episodeId - ID of the episode to add as a favorite
    * @returns {Promise<void>}
    * @throws {DatabaseError} If a database error occurs during the operation
    */
-  static async saveFavorite(profile_id: string, episode_id: number): Promise<void> {
+  static async saveFavorite(profileId: string, episodeId: number): Promise<void> {
     try {
       const query = 'INSERT IGNORE INTO episode_watch_status (profile_id, episode_id) VALUES (?,?)';
-      await getDbPool().execute(query, [Number(profile_id), episode_id]);
+      await getDbPool().execute(query, [Number(profileId), episodeId]);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown database error saving an episode as a favorite';
@@ -181,15 +181,15 @@ class Episode {
 
   /**
    * Removes an episode from a user's favorites
-   * @param {string} profile_id - ID of the profile to remove the episode from favorites
-   * @param {number} episode_id - ID of the episode to remove from favorites
+   * @param {string} profileId - ID of the profile to remove the episode from favorites
+   * @param {number} episodeId - ID of the episode to remove from favorites
    * @returns {Promise<void>}
    * @throws {DatabaseError} If a database error occurs during the operation
    */
-  static async removeFavorite(profile_id: string, episode_id: number): Promise<void> {
+  static async removeFavorite(profileId: string, episodeId: number): Promise<void> {
     try {
       const query = 'DELETE FROM episode_watch_status WHERE profile_id = ? AND episode_id = ?';
-      await getDbPool().execute(query, [Number(profile_id), episode_id]);
+      await getDbPool().execute(query, [Number(profileId), episodeId]);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown database error removing an episode as a favorite';
@@ -199,16 +199,16 @@ class Episode {
 
   /**
    * Updates the watch status of an episode for a specific profile
-   * @param {string} profile_id - ID of the profile to update the watch status for
-   * @param {number} episode_id - ID of the episode to update
+   * @param {string} profileId - ID of the profile to update the watch status for
+   * @param {number} episodeId - ID of the episode to update
    * @param {string} status - New watch status ('WATCHED', 'WATCHING', or 'NOT_WATCHED')
    * @returns {Promise<boolean>} - True if the watch status was updated, false otherwise
    * @throws {DatabaseError} If a database error occurs during the operation
    */
-  static async updateWatchStatus(profile_id: string, episode_id: number, status: string): Promise<boolean> {
+  static async updateWatchStatus(profileId: string, episodeId: number, status: string): Promise<boolean> {
     try {
       const query = 'UPDATE episode_watch_status SET status = ? WHERE profile_id = ? AND episode_id = ?';
-      const [result] = await getDbPool().execute<ResultSetHeader>(query, [status, profile_id, episode_id]);
+      const [result] = await getDbPool().execute<ResultSetHeader>(query, [status, profileId, episodeId]);
 
       // Return true if at least one row was affected (watch status was updated)
       return result.affectedRows > 0;
@@ -221,15 +221,15 @@ class Episode {
 
   /**
    * Gets all episodes for a specific season and profile with watch status
-   * @param {string} profile_id - ID of the profile to get episodes for
-   * @param {number} season_id - ID of the season to get episodes for
+   * @param {string} profileId - ID of the profile to get episodes for
+   * @param {number} seasonId - ID of the season to get episodes for
    * @returns {Promise<ProfileEpisode[]>} - Array of episodes with watch status
    * @throws {DatabaseError} If a database error occurs during the operation
    */
-  static async getEpisodesForSeason(profile_id: string, season_id: number): Promise<ProfileEpisode[]> {
+  static async getEpisodesForSeason(profileId: string, seasonId: number): Promise<ProfileEpisode[]> {
     try {
       const query = 'SELECT * FROM profile_episodes where profile_id = ? and season_id = ? ORDER BY episode_number';
-      const [rows] = await getDbPool().execute<RowDataPacket[]>(query, [Number(profile_id), season_id]);
+      const [rows] = await getDbPool().execute<RowDataPacket[]>(query, [Number(profileId), seasonId]);
       return rows as ProfileEpisode[];
     } catch (error) {
       const errorMessage =
