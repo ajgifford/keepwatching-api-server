@@ -1,11 +1,12 @@
 import { ProfileEpisode, ProfileSeason } from '../types/showTypes';
 import { getDbPool } from '../utils/db';
-import Episode from './episode';
 import { DatabaseError } from '@middleware/errorMiddleware';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 
 /**
- * Represents a TV show season
+ * Represents a TV show season with associated metadata and watch status tracking.
+ * This class provides methods for creating, updating, and managing seasons and their
+ * relationships with shows, episodes, and user profiles.
  * @class Season
  */
 class Season {
@@ -39,7 +40,7 @@ class Season {
    * @param {number} season_number - Season number of this season
    * @param {string} release_date - Original release date of the season
    * @param {string} poster_image - Path to the season's poster image
-   * @param {number} number_of_episode - The number of episodes in the season
+   * @param {number} number_of_episodes - The number of episodes in the season
    * @param {number} [id] - Optional ID for an existing season
    */
   constructor(
@@ -50,7 +51,7 @@ class Season {
     season_number: number,
     release_date: string,
     poster_image: string,
-    number_of_episode: number,
+    number_of_episodes: number,
     id?: number,
   ) {
     this.show_id = show_id;
@@ -60,14 +61,19 @@ class Season {
     this.season_number = season_number;
     this.release_date = release_date;
     this.poster_image = poster_image;
-    this.number_of_episodes = number_of_episode;
+    this.number_of_episodes = number_of_episodes;
     if (id) this.id = id;
   }
 
   /**
    * Saves a new season to the database
-   * @returns {Promise<void>}
-   * @throws {DatabaseError} If a database error occurs during the operation
+   * @returns {Promise<void>} A promise that resolves when the season has been saved
+   * @throws {DatabaseError} If a database error occurs during the operation such as connection failure or constraint violation
+   *
+   * @example
+   * const season = new Season(1, 12345, 'Season 1', 'First season', 1, '2023-01-01', '/path/to/poster.jpg', 10);
+   * await season.save();
+   * console.log(season.id); // The newly assigned database ID
    */
   async save(): Promise<void> {
     try {
@@ -92,8 +98,14 @@ class Season {
 
   /**
    * Updates an existing season or inserts a new one if it doesn't exist
-   * @returns {Promise<void>}
+   * This method performs an "upsert" operation using the MySQL ON DUPLICATE KEY UPDATE syntax
+   *
+   * @returns {Promise<void>} A promise that resolves when the season has been updated
    * @throws {DatabaseError} If a database error occurs during the operation
+   *
+   * @example
+   * const season = new Season(1, 12345, 'Season 1 Updated', 'Updated description', 1, '2023-01-01', '/path/to/new_poster.jpg', 12, 5);
+   * await season.update();
    */
   async update(): Promise<void> {
     try {
@@ -126,9 +138,15 @@ class Season {
 
   /**
    * Adds this season to a user's favorites
+   * This creates an entry in the season_watch_status table to track the user's interest in this season
+   *
    * @param {number} profileId - ID of the profile to add this season to as a favorite
-   * @returns {Promise<void>}
+   * @returns {Promise<void>} A promise that resolves when the favorite has been added
    * @throws {DatabaseError} If a database error occurs during the operation
+   *
+   * @example
+   * const season = new Season(1, 12345, 'Season 1', 'First season', 1, '2023-01-01', '/path/to/poster.jpg', 10, 5);
+   * await season.saveFavorite(123); // Associate with profile ID 123
    */
   async saveFavorite(profileId: number): Promise<void> {
     try {
@@ -142,11 +160,18 @@ class Season {
   }
 
   /**
-   * Adds a season and it's episodes to a user's favorites
-   * @param {number} profileId - ID of the profile to add a season as a favorite
+   * Adds a season and its episodes to a user's favorites
+   * This method uses a transaction to ensure that both the season and all its episodes
+   * are added to the user's favorites consistently
+   *
+   * @param {string} profileId - ID of the profile to add a season as a favorite
    * @param {number} seasonId - ID of the season to add as a favorite
-   * @returns {Promise<void>}
+   * @returns {Promise<void>} A promise that resolves when the season and episodes have been added as favorites
    * @throws {DatabaseError} If a database error occurs during the operation
+   *
+   * @example
+   * // Add season with ID 5 and all its episodes to profile 123's favorites
+   * await Season.saveFavoriteWithEpisodes('123', 5);
    */
   static async saveFavoriteWithEpisodes(profileId: string, seasonId: number): Promise<void> {
     const pool = getDbPool();
@@ -174,10 +199,17 @@ class Season {
 
   /**
    * Removes a season from a user's favorites
+   * This method uses a transaction to ensure that both the season and all its episodes
+   * are removed from the user's favorites consistently
+   *
    * @param {string} profileId - ID of the profile to remove the season from favorites
    * @param {number} seasonId - ID of the season to remove from favorites
-   * @returns {Promise<void>}
+   * @returns {Promise<void>} A promise that resolves when the season and episodes have been removed from favorites
    * @throws {DatabaseError} If a database error occurs during the operation
+   *
+   * @example
+   * // Remove season with ID 5 and all its episodes from profile 123's favorites
+   * await Season.removeFavorite('123', 5);
    */
   static async removeFavorite(profileId: string, seasonId: number): Promise<void> {
     const pool = getDbPool();
@@ -205,11 +237,19 @@ class Season {
 
   /**
    * Updates the watch status of a season for a specific profile
+   *
    * @param {string} profileId - ID of the profile to update the watch status for
    * @param {number} seasonId - ID of the season to update
    * @param {string} status - New watch status ('WATCHED', 'WATCHING', or 'NOT_WATCHED')
-   * @returns {Promise<boolean>} - True if the watch status was updated, false otherwise
+   * @returns {Promise<boolean>} True if the watch status was updated, false if no rows were affected
    * @throws {DatabaseError} If a database error occurs during the operation
+   *
+   * @example
+   * // Mark season 5 as watched for profile 123
+   * const updated = await Season.updateWatchStatus('123', 5, 'WATCHED');
+   * if (updated) {
+   *   console.log('Season status updated successfully');
+   * }
    */
   static async updateWatchStatus(profileId: string, seasonId: number, status: string): Promise<boolean> {
     try {
@@ -226,11 +266,22 @@ class Season {
   }
 
   /**
-   * Updates the watch status of a season for a specific profile based on the status of it's episodes
+   * Updates the watch status of a season for a specific profile based on the status of its episodes.
+   * This method examines all episodes associated with the season and determines the appropriate
+   * season status based on episode statuses.
+   *
+   * - If all episodes have the same status, the season gets that status
+   * - If episodes have mixed statuses, the season is marked as "WATCHING"
+   * - If no episodes exist or no watch status information is available, nothing is updated
+   *
    * @param {string} profileId - ID of the profile to update the watch status for
    * @param {number} seasonId - ID of the season to update
-   * @returns {Promise<void>}
+   * @returns {Promise<void>} A promise that resolves when the update is complete
    * @throws {DatabaseError} If a database error occurs during the operation
+   *
+   * @example
+   * // Update season watch status based on its episodes
+   * await Season.updateWatchStatusByEpisode("123", 456);
    */
   static async updateWatchStatusByEpisode(profileId: string, seasonId: number): Promise<void> {
     try {
@@ -253,12 +304,20 @@ class Season {
   }
 
   /**
-   * Updates the watch status of a season and it's episodes for a specific profile
+   * Updates the watch status of a season and its episodes for a specific profile
+   *
+   * This method uses a transaction to ensure that both the season and all its episodes
+   * are updated consistently to the same watch status
+   *
    * @param {string} profileId - ID of the profile to update the watch status for
    * @param {number} seasonId - ID of the season to update
    * @param {string} status - New watch status ('WATCHED', 'WATCHING', or 'NOT_WATCHED')
-   * @returns {Promise<boolean>} - True if the watch status was updated, false otherwise
+   * @returns {Promise<boolean>} True if the watch status was updated, false if no rows were affected
    * @throws {DatabaseError} If a database error occurs during the operation
+   *
+   * @example
+   * // Mark season 5 and all its episodes as watched for profile 123
+   * const updated = await Season.updateAllWatchStatuses('123', 5, 'WATCHED');
    */
   static async updateAllWatchStatuses(profileId: string, seasonId: number, status: string): Promise<boolean> {
     const pool = getDbPool();
@@ -292,10 +351,19 @@ class Season {
 
   /**
    * Gets all seasons for a specific show and profile with watch status
+   *
+   * This method retrieves all seasons for a show and then loads all episodes for those seasons.
+   * It organizes the data into a hierarchical structure with episodes grouped by season.
+   *
    * @param {string} profileId - ID of the profile to get seasons for
-   * @param {number} showId - ID of the show to get seasons for
-   * @returns {Promise<ProfileSeason[]>} - Array of seasons with watch status
+   * @param {string} showId - ID of the show to get seasons for
+   * @returns {Promise<ProfileSeason[]>} Array of seasons with watch status and their episodes
    * @throws {DatabaseError} If a database error occurs during the operation
+   *
+   * @example
+   * // Get all seasons with episodes for show 10 and profile 123
+   * const seasons = await Season.getSeasonsForShow('123', '10');
+   * console.log(`Found ${seasons.length} seasons with a total of ${seasons.reduce((sum, season) => sum + season.episodes.length, 0)} episodes`);
    */
   static async getSeasonsForShow(profileId: string, showId: string): Promise<ProfileSeason[]> {
     try {
