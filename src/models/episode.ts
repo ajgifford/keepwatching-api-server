@@ -1,4 +1,7 @@
-import pool from '../utils/db';
+import { ProfileEpisode } from '../types/showTypes';
+import { DatabaseError } from '@middleware/errorMiddleware';
+import { getDbPool } from '@utils/db';
+import { ResultSetHeader, RowDataPacket } from 'mysql2';
 
 class Episode {
   id?: number;
@@ -42,80 +45,121 @@ class Episode {
     if (id) this.id = id;
   }
 
-  async save() {
-    const query =
-      'INSERT into episodes (tmdb_id, season_id, show_id, episode_number, episode_type, season_number, title, overview, air_date, runtime, still_image) VALUES (?,?,?,?,?,?,?,?,?,?,?)';
-    const [result] = await pool.execute(query, [
-      this.tmdb_id,
-      this.season_id,
-      this.show_id,
-      this.episode_number,
-      this.episode_type,
-      this.season_number,
-      this.title,
-      this.overview,
-      this.air_date,
-      this.runtime,
-      this.still_image,
-    ]);
-    this.id = (result as any).insertId;
+  async save(): Promise<void> {
+    try {
+      const query =
+        'INSERT into episodes (tmdb_id, season_id, show_id, episode_number, episode_type, season_number, title, overview, air_date, runtime, still_image) VALUES (?,?,?,?,?,?,?,?,?,?,?)';
+      const [result] = await getDbPool().execute<ResultSetHeader>(query, [
+        this.tmdb_id,
+        this.season_id,
+        this.show_id,
+        this.episode_number,
+        this.episode_type,
+        this.season_number,
+        this.title,
+        this.overview,
+        this.air_date,
+        this.runtime,
+        this.still_image,
+      ]);
+      this.id = result.insertId;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown database error saving an episode';
+      throw new DatabaseError(errorMessage, error);
+    }
   }
 
-  async update() {
-    const query =
-      'INSERT into episodes (tmdb_id, season_id, show_id, episode_number, episode_type, season_number, title, overview, air_date, runtime, still_image) VALUES (?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id), episode_number = ?, episode_type = ?, season_number = ?, title = ?, overview = ?, air_date = ?, runtime = ?, still_image = ?';
-    const [result] = await pool.execute(query, [
-      //Insert Values
-      this.tmdb_id,
-      this.season_id,
-      this.show_id,
-      this.episode_number,
-      this.episode_type,
-      this.season_number,
-      this.title,
-      this.overview,
-      this.air_date,
-      this.runtime,
-      this.still_image,
-      //Update Values
-      this.episode_number,
-      this.episode_type,
-      this.season_number,
-      this.title,
-      this.overview,
-      this.air_date,
-      this.runtime,
-      this.still_image,
-    ]);
-    this.id = (result as any).insertId;
+  async update(): Promise<void> {
+    try {
+      const query =
+        'INSERT into episodes (tmdb_id, season_id, show_id, episode_number, episode_type, season_number, title, overview, air_date, runtime, still_image) VALUES (?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id), episode_number = ?, episode_type = ?, season_number = ?, title = ?, overview = ?, air_date = ?, runtime = ?, still_image = ?';
+      const [result] = await getDbPool().execute<ResultSetHeader>(query, [
+        //Insert Values
+        this.tmdb_id,
+        this.season_id,
+        this.show_id,
+        this.episode_number,
+        this.episode_type,
+        this.season_number,
+        this.title,
+        this.overview,
+        this.air_date,
+        this.runtime,
+        this.still_image,
+        //Update Values
+        this.episode_number,
+        this.episode_type,
+        this.season_number,
+        this.title,
+        this.overview,
+        this.air_date,
+        this.runtime,
+        this.still_image,
+      ]);
+      this.id = result.insertId;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown database error updating an episode';
+      throw new DatabaseError(errorMessage, error);
+    }
   }
 
-  async saveFavorite(profile_id: number) {
-    const query = 'INSERT IGNORE INTO episode_watch_status (profile_id, episode_id) VALUES (?,?)';
-    await pool.execute(query, [Number(profile_id), this.id]);
+  async saveFavorite(profile_id: number): Promise<void> {
+    try {
+      const query = 'INSERT IGNORE INTO episode_watch_status (profile_id, episode_id) VALUES (?,?)';
+      await getDbPool().execute(query, [Number(profile_id), this.id]);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown database error saving an episode as a favorite';
+      throw new DatabaseError(errorMessage, error);
+    }
   }
 
-  static async saveFavorite(profile_id: string, episode_id: number) {
-    const query = 'INSERT IGNORE INTO episode_watch_status (profile_id, episode_id) VALUES (?,?)';
-    await pool.execute(query, [Number(profile_id), episode_id]);
+  static async saveFavorite(profile_id: string, episode_id: number): Promise<void> {
+    try {
+      const query = 'INSERT IGNORE INTO episode_watch_status (profile_id, episode_id) VALUES (?,?)';
+      await getDbPool().execute(query, [Number(profile_id), episode_id]);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown database error saving an episode as a favorite';
+      throw new DatabaseError(errorMessage, error);
+    }
   }
 
-  static async removeFavorite(profile_id: string, episode_id: number) {
-    const query = 'DELETE FROM episode_watch_status WHERE profile_id = ? AND episode_id = ?';
-    await pool.execute(query, [Number(profile_id), episode_id]);
+  static async removeFavorite(profile_id: string, episode_id: number): Promise<void> {
+    try {
+      const query = 'DELETE FROM episode_watch_status WHERE profile_id = ? AND episode_id = ?';
+      await getDbPool().execute(query, [Number(profile_id), episode_id]);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown database error removing an episode as a favorite';
+      throw new DatabaseError(errorMessage, error);
+    }
   }
 
   static async updateWatchStatus(profile_id: string, episode_id: number, status: string): Promise<boolean> {
-    const query = 'UPDATE episode_watch_status SET status = ? WHERE profile_id = ? AND episode_id = ?';
-    const [result] = await pool.execute(query, [status, profile_id, episode_id]);
-    if ((result as any).affectedRows === 0) return false;
-    return true;
+    try {
+      const query = 'UPDATE episode_watch_status SET status = ? WHERE profile_id = ? AND episode_id = ?';
+      const [result] = await getDbPool().execute<ResultSetHeader>(query, [status, profile_id, episode_id]);
+
+      // Return true if at least one row was affected (watch status was updated)
+      return result.affectedRows > 0;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown database error updating an episode watch status';
+      throw new DatabaseError(errorMessage, error);
+    }
   }
 
-  static async getEpisodesForSeason(profile_id: string, season_id: number) {
-    const query = 'SELECT * FROM profile_episodes where profile_id = ? and season_id = ? ORDER BY episode_number';
-    const [rows] = await pool.execute(query, [Number(profile_id), season_id]);
-    return rows;
+  static async getEpisodesForSeason(profile_id: string, season_id: number): Promise<ProfileEpisode[]> {
+    try {
+      const query = 'SELECT * FROM profile_episodes where profile_id = ? and season_id = ? ORDER BY episode_number';
+      const [rows] = await getDbPool().execute<RowDataPacket[]>(query, [Number(profile_id), season_id]);
+      return rows as ProfileEpisode[];
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown database error getting episodes for a season';
+      throw new DatabaseError(errorMessage, error);
+    }
   }
 }
 
