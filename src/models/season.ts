@@ -149,19 +149,26 @@ class Season {
    * @throws {DatabaseError} If a database error occurs during the operation
    */
   static async saveFavoriteWithEpisodes(profileId: string, seasonId: number): Promise<void> {
+    const pool = getDbPool();
+    const connection = await pool.getConnection();
     try {
-      const pool = getDbPool();
-      const query = 'INSERT IGNORE INTO season_watch_status (profile_id, season_id) VALUES (?,?)';
-      await pool.execute(query, [Number(profileId), seasonId]);
-      const episodeQuery = 'SELECT id FROM episodes WHERE season_id = ?';
-      const [episode_ids] = await pool.execute<RowDataPacket[]>(episodeQuery, [seasonId]);
-      episode_ids.forEach((id) => {
-        Episode.saveFavorite(profileId, id.id);
-      });
+      await connection.beginTransaction();
+
+      const seasonInsert = 'INSERT IGNORE INTO season_watch_status (profile_id, season_id) VALUES (?,?)';
+      await connection.execute(seasonInsert, [Number(profileId), seasonId]);
+
+      const episodesInsert =
+        'INSERT IGNORE INTO episode_watch_status (profile_id, episode_id) SELECT ?, id FROM episodes WHERE season_id = ?';
+      await connection.execute(episodesInsert, [Number(profileId), seasonId]);
+
+      await connection.commit();
     } catch (error) {
+      await connection.rollback();
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown database error saving a season as a favorite';
       throw new DatabaseError(errorMessage, error);
+    } finally {
+      connection.release();
     }
   }
 
@@ -173,19 +180,26 @@ class Season {
    * @throws {DatabaseError} If a database error occurs during the operation
    */
   static async removeFavorite(profileId: string, seasonId: number): Promise<void> {
+    const pool = getDbPool();
+    const connection = await pool.getConnection();
     try {
-      const pool = getDbPool();
-      const query = 'DELETE FROM season_watch_status WHERE profile_id = ? AND season_id = ?';
-      await pool.execute(query, [Number(profileId), seasonId]);
-      const episodeQuery = 'SELECT id FROM episodes WHERE season_id = ?';
-      const [episode_ids] = await pool.execute<RowDataPacket[]>(episodeQuery, [seasonId]);
-      episode_ids.forEach((id) => {
-        Episode.removeFavorite(profileId, id.id);
-      });
+      await connection.beginTransaction();
+
+      const seasonDelete = 'DELETE FROM season_watch_status WHERE profile_id = ? AND season_id = ?';
+      await connection.execute(seasonDelete, [Number(profileId), seasonId]);
+
+      const episodesDelete =
+        'DELETE FROM episode_watch_status WHERE profile_id = ? AND episode_id IN (SELECT id FROM episodes WHERE season_id = ?)';
+      await connection.execute(episodesDelete, [Number(profileId), seasonId]);
+
+      await connection.commit();
     } catch (error) {
+      await connection.rollback();
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown database error removing a season as a favorite';
       throw new DatabaseError(errorMessage, error);
+    } finally {
+      connection.release();
     }
   }
 
@@ -221,30 +235,15 @@ class Season {
   static async updateWatchStatusByEpisode(profileId: string, seasonId: number): Promise<void> {
     try {
       const pool = getDbPool();
-      const episodesQuery = 'SELECT id FROM episodes WHERE season_id = ?';
-      const [episodeRows] = await pool.execute<RowDataPacket[]>(episodesQuery, [seasonId]);
-      const episodeIds = episodeRows.map((row) => row.id);
 
-      const placeholders = episodeIds.map(() => '?').join(',');
-      const episodeWatchStatusQuery = `SELECT * FROM episode_watch_status WHERE profile_id = ? AND episode_id IN (${placeholders})`;
+      const episodeWatchStatusQuery = `SELECT CASE WHEN COUNT(DISTINCT ews.status) = 1 THEN MAX(ews.status) ELSE 'WATCHING' END AS season_status FROM episodes e JOIN episode_watch_status ews ON e.id = ews.episode_id WHERE e.season_id = ? AND ews.profile_id = ?`;
+      const [statusResult] = await pool.execute<RowDataPacket[]>(episodeWatchStatusQuery, [seasonId, profileId]);
 
-      const [watchStatusRows] = await pool.execute<RowDataPacket[]>(episodeWatchStatusQuery, [
-        profileId,
-        ...episodeIds,
-      ]);
-
-      let seasonStatus: 'WATCHED' | 'NOT_WATCHED' | 'WATCHING';
-
-      seasonStatus = watchStatusRows[0].status;
-      for (let i = 1; i < watchStatusRows.length; i++) {
-        if (watchStatusRows[i].status !== seasonStatus) {
-          seasonStatus = 'WATCHING';
-          break;
-        }
-      }
+      if (!statusResult.length) return;
 
       const updateSeasonStatusQuery =
         'UPDATE season_watch_status SET status = ? WHERE profile_id = ? AND season_id = ?';
+      const seasonStatus = statusResult[0].season_status;
       await pool.execute(updateSeasonStatusQuery, [seasonStatus, profileId, seasonId]);
     } catch (error) {
       const errorMessage =
@@ -262,24 +261,32 @@ class Season {
    * @throws {DatabaseError} If a database error occurs during the operation
    */
   static async updateAllWatchStatuses(profileId: string, seasonId: number, status: string): Promise<boolean> {
+    const pool = getDbPool();
+    const connection = await pool.getConnection();
     try {
-      const pool = getDbPool();
+      await connection.beginTransaction();
       //update season
       const seasonQuery = 'UPDATE season_watch_status SET status = ? WHERE profile_id = ? AND season_id = ?';
-      const [seasonResult] = await pool.execute(seasonQuery, [status, profileId, seasonId]);
-      if ((seasonResult as any).affectedRows === 0) return false;
+      const [seasonResult] = await connection.execute<ResultSetHeader>(seasonQuery, [status, profileId, seasonId]);
+      if (seasonResult.affectedRows === 0) return false;
+
       //update episodes (for seasons)
       const episodeQuery =
         'UPDATE episode_watch_status SET status = ? WHERE profile_id = ? AND episode_id IN (SELECT id from episodes where season_id = ?)';
-      const [episodeResult] = await pool.execute(episodeQuery, [status, profileId, seasonId]);
-      if ((episodeResult as any).affectedRows === 0) return false;
-      return true;
+      const [episodeResult] = await connection.execute<ResultSetHeader>(episodeQuery, [status, profileId, seasonId]);
+
+      await connection.commit();
+
+      return episodeResult.affectedRows > 0;
     } catch (error) {
+      await connection.rollback();
       const errorMessage =
         error instanceof Error
           ? error.message
           : 'Unknown database error updating all watch statuses of a season (including episodes)';
       throw new DatabaseError(errorMessage, error);
+    } finally {
+      connection.release();
     }
   }
 
@@ -292,16 +299,29 @@ class Season {
    */
   static async getSeasonsForShow(profileId: string, showId: string): Promise<ProfileSeason[]> {
     try {
-      const query = 'SELECT * FROM profile_seasons where profile_id = ? and show_id = ? ORDER BY season_number';
-      const [rows] = await getDbPool().execute<RowDataPacket[]>(query, [Number(profileId), Number(showId)]);
-      const promises = rows.map(async (result) => {
-        const season = result as ProfileSeason;
-        const episodes = await Episode.getEpisodesForSeason(profileId, season.season_id);
-        season.episodes = episodes;
-        return season;
+      const seasonQuery = 'SELECT * FROM profile_seasons WHERE profile_id = ? AND show_id = ? ORDER BY season_number';
+      const [seasonRows] = await getDbPool().execute<RowDataPacket[]>(seasonQuery, [Number(profileId), Number(showId)]);
+
+      if (seasonRows.length === 0) return [];
+
+      const seasonIds = seasonRows.map((season) => season.season_id);
+      const placeholders = seasonIds.map(() => '?').join(',');
+
+      const episodeQuery = `SELECT * FROM profile_episodes WHERE profile_id = ? AND season_id IN (${placeholders}) ORDER BY season_id, episode_number`;
+      const [episodeRows] = await getDbPool().execute<RowDataPacket[]>(episodeQuery, [Number(profileId), ...seasonIds]);
+
+      const episodesBySeasonId: Record<number, ProfileEpisode[]> = {};
+      episodeRows.forEach((episode) => {
+        if (!episodesBySeasonId[episode.season_id]) {
+          episodesBySeasonId[episode.season_id] = [];
+        }
+        episodesBySeasonId[episode.season_id].push(episode as ProfileEpisode);
       });
-      const seasons = await Promise.all(promises);
-      return seasons;
+
+      return seasonRows.map((season) => ({
+        ...season,
+        episodes: episodesBySeasonId[season.season_id] || [],
+      })) as ProfileSeason[];
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown database error getting all seasons for a show';
