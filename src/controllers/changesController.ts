@@ -1,10 +1,10 @@
 import { cliLogger, httpLogger } from '../logger/logger';
 import { ErrorMessages } from '../logger/loggerModel';
-import { Change, ChangeItem, ContentUpdates } from '../models/content';
 import Episode from '../models/episode';
 import Movie from '../models/movie';
 import Season from '../models/season';
 import Show from '../models/show';
+import { Change, ChangeItem, ContentUpdates } from '../types/contentTypes';
 import { axiosTMDBAPIInstance } from '../utils/axiosInstance';
 import { getEpisodeToAirId, getInProduction, getUSMPARating, getUSNetwork, getUSRating } from '../utils/contentUtility';
 import { getUSWatchProviders } from '../utils/watchProvidersUtility';

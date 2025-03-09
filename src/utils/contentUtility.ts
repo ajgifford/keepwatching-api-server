@@ -1,4 +1,4 @@
-import { ContentRatings, Network, Release, ReleaseDates } from '../models/content';
+import { ContentRatings, Network, Release, ReleaseDates } from '../types/contentTypes';
 
 export function getUSNetwork(networks: Network[]): string | null {
   for (const network of networks) {

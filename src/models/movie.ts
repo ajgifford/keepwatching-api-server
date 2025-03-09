@@ -1,5 +1,5 @@
+import { ContentUpdates } from '../types/contentTypes';
 import pool from '../utils/db';
-import { ContentUpdates } from './content';
 import { RowDataPacket } from 'mysql2';
 
 class Movie {

@@ -1,6 +1,6 @@
 import { cliLogger, httpLogger } from '../logger/logger';
+import { ContentUpdates } from '../types/contentTypes';
 import pool from '../utils/db';
-import { ContentUpdates } from './content';
 import Season from './season';
 import { RowDataPacket } from 'mysql2';
 

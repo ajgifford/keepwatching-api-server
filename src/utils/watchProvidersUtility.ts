@@ -1,4 +1,4 @@
-import { ContentDetails } from '../models/content';
+import { ContentDetails } from '../types/contentTypes';
 import pool from './db';
 
 let cachedStreamingServiceIds: number[] = [];
