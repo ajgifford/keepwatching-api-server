@@ -5,7 +5,7 @@ import { ResultSetHeader, RowDataPacket } from 'mysql2';
 
 /**
  * Represents a TV show episode with comprehensive metadata and watch status tracking
- * 
+ *
  * The Episode class handles the creation, updating, and management of TV show episodes,
  * including their relationships with shows, seasons, and watch status tracking.
  * @class Episode
@@ -38,7 +38,7 @@ class Episode {
 
   /**
    * Creates a new Episode instance
-   * 
+   *
    * @param {number} tmdb_id - TMDB API identifier for the episode
    * @param {number} show_id - ID of the show this episode belongs to
    * @param {number} season_id - ID of the season this episode belongs to
@@ -82,7 +82,7 @@ class Episode {
 
   /**
    * Saves a new episode to the database
-   * 
+   *
    * This method inserts a new episode record with all associated metadata.
    * After successful insertion, the episode's id property is updated with the new database ID.
    *
@@ -103,7 +103,7 @@ class Episode {
    *   45,            // Runtime in minutes
    *   '/path/to/still.jpg'  // Still image path
    * );
-   * 
+   *
    * await episode.save();
    * console.log(`Episode saved with ID: ${episode.id}`);
    */
@@ -133,7 +133,7 @@ class Episode {
 
   /**
    * Updates an existing episode or inserts a new one if it doesn't exist
-   * 
+   *
    * This method uses MySQL's "INSERT ... ON DUPLICATE KEY UPDATE" syntax to perform
    * an upsert operation, either creating a new episode or updating an existing one
    * based on the TMDB ID.
@@ -156,7 +156,7 @@ class Episode {
    *   48,            // Updated runtime
    *   '/path/to/new_still.jpg'  // Updated still image
    * );
-   * 
+   *
    * await episode.update();
    * console.log('Episode updated successfully');
    */
@@ -196,7 +196,7 @@ class Episode {
 
   /**
    * Adds this episode to a user's favorites/watch list
-   * 
+   *
    * This method creates an entry in the watch status table to track a user's
    * interest in this episode, enabling features like watch history and progress tracking.
    *
@@ -205,7 +205,7 @@ class Episode {
    * @throws {DatabaseError} If a database error occurs during the operation
    *
    * @example
-   * const episode = new Episode(/* ... */); // Create or retrieve episode
+   * // Create or retrieve episode
    * await episode.saveFavorite(123); // Add to profile ID 123's favorites
    * console.log('Episode added to favorites');
    */
@@ -222,7 +222,7 @@ class Episode {
 
   /**
    * Adds an episode to a user's favorites/watch list
-   * 
+   *
    * Static version of the saveFavorite method that can be called without an instance.
    *
    * @param {string} profileId - ID of the profile to add the episode to as a favorite
@@ -248,7 +248,7 @@ class Episode {
 
   /**
    * Removes an episode from a user's favorites/watch list
-   * 
+   *
    * This method deletes the watch status entry for an episode, removing it from
    * a user's list of tracked episodes.
    *
@@ -275,7 +275,7 @@ class Episode {
 
   /**
    * Updates the watch status of an episode for a specific profile
-   * 
+   *
    * This method marks an episode as watched, watching, or not watched for a user,
    * allowing for tracking watch progress of TV shows.
    *
@@ -310,7 +310,7 @@ class Episode {
 
   /**
    * Gets all episodes for a specific season and profile with watch status
-   * 
+   *
    * This method retrieves all episodes belonging to a season along with their
    * watch status for a specific user profile.
    *
@@ -324,7 +324,7 @@ class Episode {
    *   // Get all episodes for season 15 and profile 456
    *   const episodes = await Episode.getEpisodesForSeason('456', 15);
    *   console.log(`Found ${episodes.length} episodes`);
-   *   
+   *
    *   // Count watched episodes
    *   const watchedCount = episodes.filter(ep => ep.watch_status === 'WATCHED').length;
    *   console.log(`${watchedCount} episodes watched out of ${episodes.length}`);
@@ -346,7 +346,7 @@ class Episode {
 
   /**
    * Finds an episode by its database ID
-   * 
+   *
    * This method retrieves a specific episode by its unique identifier.
    *
    * @param {number} id - ID of the episode to find
