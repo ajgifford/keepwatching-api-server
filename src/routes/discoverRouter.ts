@@ -9,8 +9,8 @@ import express from 'express';
 
 const router = express.Router();
 
-router.get('/api/v1/discover/top', validateSchema(discoverTopQuerySchema), discoverTopContent);
-router.get('/api/v1/discover/changes', validateSchema(discoverChangesQuerySchema), discoverChangesContent);
-router.get('/api/v1/discover/trending', validateSchema(discoverTrendingQuerySchema), discoverTrendingContent);
+router.get('/api/v1/discover/top', validateSchema(discoverTopQuerySchema, 'query'), discoverTopContent);
+router.get('/api/v1/discover/changes', validateSchema(discoverChangesQuerySchema, 'query'), discoverChangesContent);
+router.get('/api/v1/discover/trending', validateSchema(discoverTrendingQuerySchema, 'query'), discoverTrendingContent);
 
 export default router;
