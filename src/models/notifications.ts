@@ -4,6 +4,9 @@ import { ResultSetHeader, RowDataPacket } from 'mysql2';
 
 /**
  * Represents a system notification displayed to users
+ * 
+ * The Notification class handles system-wide announcements, alerts, and messages
+ * that are displayed to users with timing controls and dismissal capabilities.
  * @class Notification
  */
 class Notification {
@@ -18,10 +21,11 @@ class Notification {
 
   /**
    * Creates a new Notification instance
+   * 
    * @param {number} notification_id - Unique identifier for the notification
-   * @param {string} message - Content of the notification
-   * @param {Date} start_date - Date when the notification becomes active
-   * @param {Date} end_date - Date when the notification expires
+   * @param {string} message - Content of the notification to display to users
+   * @param {Date} start_date - Date when the notification becomes active/visible
+   * @param {Date} end_date - Date when the notification expires/becomes inactive
    */
   constructor(notification_id: number, message: string, start_date: Date, end_date: Date) {
     this.notification_id = notification_id;
@@ -32,9 +36,27 @@ class Notification {
 
   /**
    * Retrieves all active notifications for a specific account
+   * 
+   * This method fetches all current, non-dismissed notifications that are within
+   * their active date range (between start_date and end_date) for a specific account.
+   *
    * @param {number} accountId - The account ID to fetch notifications for
    * @returns {Promise<Notification[]>} Array of active notifications for the account
    * @throws {DatabaseError} If a database error occurs during the operation
+   * 
+   * @example
+   * try {
+   *   // Get all active notifications for account ID 123
+   *   const notifications = await Notification.getNotificationsForAccount(123);
+   *   
+   *   console.log(`Found ${notifications.length} active notifications:`);
+   *   notifications.forEach(notification => {
+   *     console.log(`- ID ${notification.notification_id}: ${notification.message}`);
+   *     console.log(`  Active from ${notification.start_date} to ${notification.end_date}`);
+   *   });
+   * } catch (error) {
+   *   console.error('Error fetching notifications:', error);
+   * }
    */
   static async getNotificationsForAccount(accountId: number): Promise<Notification[]> {
     try {
@@ -51,10 +73,28 @@ class Notification {
 
   /**
    * Marks a notification as dismissed for a specific account
+   * 
+   * This method updates the account_notifications junction table to mark a notification
+   * as dismissed for a particular account, preventing it from being shown again to that user.
+   *
    * @param {number} notificationId - ID of the notification to dismiss
    * @param {number} accountId - ID of the account that is dismissing the notification
    * @returns {Promise<boolean>} True if the notification was successfully dismissed, false otherwise
    * @throws {DatabaseError} If a database error occurs during the operation
+   * 
+   * @example
+   * try {
+   *   // Dismiss notification ID 456 for account ID 123
+   *   const dismissed = await Notification.dismissNotification(456, 123);
+   *   
+   *   if (dismissed) {
+   *     console.log('Notification dismissed successfully');
+   *   } else {
+   *     console.log('Notification not found or already dismissed');
+   *   }
+   * } catch (error) {
+   *   console.error('Error dismissing notification:', error);
+   * }
    */
   static async dismissNotification(notificationId: number, accountId: number): Promise<boolean> {
     try {
