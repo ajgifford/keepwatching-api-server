@@ -165,7 +165,7 @@ class Show {
 
       const query =
         'INSERT INTO shows (tmdb_id, title, description, release_date, poster_image, backdrop_image, user_rating, content_rating, season_count, episode_count, status, type, in_production, last_air_date, last_episode_to_air, next_episode_to_air, network) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
-      const [result] = await getDbPool().execute<ResultSetHeader>(query, [
+      const [result] = await connection.execute<ResultSetHeader>(query, [
         this.tmdb_id,
         this.title,
         this.description,
@@ -186,23 +186,26 @@ class Show {
       ]);
       this.id = result.insertId;
 
-      if (this.genreIds && this.genreIds.length > 0) {
-        const genrePromises = this.genreIds.map((genreId) => this.saveGenre(this.id!, genreId, connection));
-        await Promise.all(genrePromises);
+      const success = result.affectedRows > 0 && result.insertId > 0;
+      if (success && this.id) {
+        if (this.genreIds && this.genreIds.length > 0) {
+          const genrePromises = this.genreIds.map((genreId) => this.saveGenre(this.id!, genreId, connection));
+          await Promise.all(genrePromises);
+        }
+
+        if (this.streaming_services && this.streaming_services.length > 0) {
+          const servicePromises = this.streaming_services.map((serviceId) =>
+            this.saveStreamingService(this.id!, serviceId, connection),
+          );
+          await Promise.all(servicePromises);
+        }
+        await connection.commit();
+      } else {
+        await connection.rollback();
       }
 
-      if (this.streaming_services && this.streaming_services.length > 0) {
-        const servicePromises = this.streaming_services.map((serviceId) =>
-          this.saveStreamingService(this.id!, serviceId, connection),
-        );
-        await Promise.all(servicePromises);
-      }
-
-      connection.commit();
-
-      return true;
+      return success;
     } catch (error) {
-      console.log(error);
       await connection.rollback();
       const errorMessage = error instanceof Error ? error.message : 'Unknown database error saving a show';
       throw new DatabaseError(errorMessage, error);
@@ -248,7 +251,7 @@ class Show {
         this.tmdb_id,
       ]);
 
-      const success = result.affectedRows !== undefined;
+      const success = result.affectedRows > 0;
       if (success && this.id) {
         if (this.genreIds && this.genreIds.length > 0) {
           const genrePromises = this.genreIds.map((genreId) => this.saveGenre(this.id!, genreId, connection));
@@ -261,11 +264,12 @@ class Show {
           );
           await Promise.all(servicePromises);
         }
+        await connection.commit();
+      } else {
+        await connection.rollback();
       }
 
-      connection.commit();
-
-      return true;
+      return success;
     } catch (error) {
       await connection.rollback();
       const errorMessage = error instanceof Error ? error.message : 'Unknown database error updating a show';
