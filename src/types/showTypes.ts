@@ -30,6 +30,43 @@ export interface ProfileSeason {
   episodes: ProfileEpisode[];
 }
 
+export interface ProfileShow {
+  profile_id: number;
+  show_id: number;
+  tmdb_id: number;
+  title: string;
+  description: string;
+  release_date: string;
+  poster_image: string;
+  backdrop_image: string;
+  user_rating: number;
+  content_rating: string;
+  season_count: number;
+  episode_count: number;
+  watch_status: 'WATCHED' | 'WATCHING' | 'NOT_WATCHED';
+  status: string;
+  type: string;
+  in_production: 0 | 1;
+  genres: string;
+  streaming_services: string;
+  last_episode?: {
+    title: string;
+    air_date: string;
+    episode_number: number;
+    season_number: number;
+  } | null;
+  next_episode?: {
+    title: string;
+    air_date: string;
+    episode_number: number;
+    season_number: number;
+  } | null;
+}
+
+export interface ProfileShowWithSeasons extends ProfileShow {
+  seasons?: ProfileSeason[];
+}
+
 export interface NextEpisode {
   episode_id: number;
   episode_title: string;
@@ -45,4 +82,12 @@ export interface NextEpisode {
   network: string;
   streaming_services: string;
   profile_id: number;
+}
+
+export interface ContinueWatchingShow {
+  show_id: number;
+  show_title: string;
+  poster_image: string;
+  last_watched: string;
+  episodes: NextEpisode[];
 }

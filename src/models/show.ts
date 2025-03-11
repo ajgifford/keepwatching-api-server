@@ -1,33 +1,108 @@
 import { ContentUpdates } from '../types/contentTypes';
-import { NextEpisode } from '../types/showTypes';
+import { ContinueWatchingShow, NextEpisode, ProfileShow, ProfileShowWithSeasons } from '../types/showTypes';
 import { getDbPool } from '../utils/db';
 import Season from './season';
 import { DatabaseError } from '@middleware/errorMiddleware';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { PoolConnection } from 'mysql2/promise';
+import NodeCache from 'node-cache';
 
+const showCache = new NodeCache({ stdTTL: 900 });
+
+/**
+ * Represents a TV show with comprehensive metadata and watch status tracking
+ *
+ * The Show class provides methods for creating, retrieving, updating, and managing
+ * TV shows and their relationships with profiles, seasons, episodes, genres, and streaming services.
+ * Includes support for transaction-based operations to ensure data consistency.
+ *
+ * @class Show
+ */
 class Show {
+  /** Unique identifier for the show (optional, set after saving to database) */
   id?: number;
+
+  /** TMDB API identifier for the show */
   tmdb_id: number;
+
+  /** Title of the show */
   title: string;
+
+  /** Synopsis/description of the show */
   description: string;
+
+  /** Release/premiere date of the show (YYYY-MM-DD format) */
   release_date: string;
+
+  /** Path to the show's poster image */
   poster_image: string;
+
+  /** Path to the show's backdrop image */
   backdrop_image: string;
+
+  /** User/critical rating of the show (typically on a scale of 0-10) */
   user_rating: number;
+
+  /** Content rating (e.g., "TV-MA", "TV-14", "TV-PG") */
   content_rating: string;
+
+  /** IDs of streaming services where the show is available */
   streaming_services?: number[];
+
+  /** Total number of seasons in the show */
   season_count?: number = 0;
+
+  /** Total number of episodes in the show */
   episode_count?: number = 0;
+
+  /** IDs of genres associated with the show */
   genreIds?: number[];
+
+  /** Current production status (e.g., "Returning Series", "Ended", "Canceled") */
   status?: string;
+
+  /** Type of show (e.g., "Scripted", "Reality", "Documentary") */
   type?: string;
+
+  /** Flag indicating if the show is currently in production (1) or not (0) */
   in_production?: 0 | 1;
+
+  /** Date when the most recent episode aired */
   last_air_date?: string | null = null;
+
+  /** ID of the most recently aired episode */
   last_episode_to_air?: number | null = null;
+
+  /** ID of the next episode scheduled to air */
   next_episode_to_air?: number | null = null;
+
+  /** Network that broadcasts the show */
   network?: string | null;
 
+  /**
+   * Creates a new Show instance with comprehensive metadata
+   *
+   * @param tmdbId - TMDB API identifier for the show
+   * @param title - Title of the show
+   * @param description - Synopsis/description of the show
+   * @param releaseDate - Release/premiere date of the show (YYYY-MM-DD format)
+   * @param posterImage - Path to the show's poster image
+   * @param backdropImage - Path to the show's backdrop image
+   * @param userRating - User/critical rating of the show
+   * @param contentRating - Content rating (e.g., "TV-MA", "TV-14", "TV-PG")
+   * @param id - Optional database ID for an existing show
+   * @param streamingServices - Optional array of streaming service IDs
+   * @param episodeCount - Optional total number of episodes
+   * @param seasonCount - Optional total number of seasons
+   * @param genreIds - Optional array of genre IDs
+   * @param status - Optional production status
+   * @param type - Optional show type
+   * @param inProduction - Optional flag indicating if show is in production
+   * @param lastAirDate - Optional date when the most recent episode aired
+   * @param lastEpisodeToAir - Optional ID of the most recently aired episode
+   * @param nextEpisodeToAir - Optional ID of the next episode scheduled to air
+   * @param network - Optional network that broadcasts the show
+   */
   constructor(
     tmdbId: number,
     title: string,
@@ -127,6 +202,7 @@ class Show {
 
       return true;
     } catch (error) {
+      console.log(error);
       await connection.rollback();
       const errorMessage = error instanceof Error ? error.message : 'Unknown database error saving a show';
       throw new DatabaseError(errorMessage, error);
@@ -489,8 +565,8 @@ class Show {
   /**
    * Updates the watch status of a show and its seasons and episodes for a specific profile
    *
-   * This method uses a transaction to ensure that the show, all its seasons and all their episodes
-   * are updated consistently to the same watch status
+   * This method uses a transaction to ensure that the show, all its seasons, and all their episodes
+   * are updated consistently to the same watch status.
    *
    * @param profileId - ID of the profile to update the watch status for
    * @param showId - ID of the show to update
@@ -501,6 +577,18 @@ class Show {
    * @example
    * // Mark show 45 and all its seasons and episodes as watched for profile 123
    * const updated = await Show.updateAllWatchStatuses('123', 45, 'WATCHED');
+   * if (updated) {
+   *   console.log('Show and all its content marked as watched');
+   * } else {
+   *   console.log('Failed to update watch status - show might not be in watchlist');
+   * }
+   *
+   * @example
+   * // Mark show as not watched, resetting watch progress
+   * await Show.updateAllWatchStatuses('123', 45, 'NOT_WATCHED');
+   *
+   * @performance This method performs multiple database operations within a transaction.
+   * For shows with many seasons/episodes, this can be a heavier operation.
    */
   static async updateAllWatchStatuses(profileId: string, showId: number, status: string): Promise<boolean> {
     const pool = getDbPool();
@@ -558,7 +646,10 @@ class Show {
    * const watchedCount = shows.filter(s => s.watch_status === 'WATCHED').length;
    * console.log(`${watchedCount} shows watched out of ${shows.length}`);
    *
-   * @performance This method uses a view for better performance with complex joins
+   * @performance
+   * - Uses a database view for efficient retrieval with complex joins
+   * - Results are not paginated and may be large for users with many shows
+   * - Response time scales with the number of shows in the profile's watchlist
    */
   static async getAllShowsForProfile(profileId: string) {
     try {
@@ -595,11 +686,21 @@ class Show {
    *
    * @performance Uses an indexed view for efficient retrieval with joins
    */
-  static async getShowForProfile(profileId: string, showId: number) {
+  static async getShowForProfile(profileId: string, showId: number): Promise<ProfileShow> {
     try {
+      const cacheKey = `profile_${profileId}_show_${showId}`;
+      const cachedShow = showCache.get<ProfileShow>(cacheKey);
+      if (cachedShow) {
+        return cachedShow;
+      }
+
       const query = 'SELECT * FROM profile_shows where profile_id = ? AND show_id = ?';
       const [shows] = await getDbPool().execute<RowDataPacket[]>(query, [Number(profileId), showId]);
-      return this.transformRow(shows[0]);
+      const result = this.transformRow(shows[0]);
+
+      showCache.set(cacheKey, result);
+
+      return result;
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown database error getting a show for a profile';
@@ -607,14 +708,62 @@ class Show {
     }
   }
 
-  static async getShowWithSeasonsForProfile(profileId: string, show_id: string) {
+  /**
+   * Retrieves a show with all its seasons and episodes for a specific profile
+   *
+   * This method fetches a show with all its associated metadata and watch status, along with
+   * all seasons and their episodes. The resulting hierarchical structure provides a complete
+   * view of the show's content with watch status for the specified profile.
+   *
+   * @param profileId - ID of the profile to get the show for
+   * @param showId - ID of the show to retrieve
+   * @returns Complete show object with seasons and episodes or null if not found
+   * @throws {DatabaseError} If a database error occurs during the operation
+   *
+   * @example
+   * // Get show 123 with all seasons and episodes for profile 456
+   * try {
+   *   const show = await Show.getShowWithSeasonsForProfile('456', '123');
+   *
+   *   if (show) {
+   *     console.log(`${show.title} (${show.season_count} seasons, ${show.episode_count} episodes)`);
+   *
+   *     // Process seasons and episodes
+   *     show.seasons.forEach(season => {
+   *       console.log(`Season ${season.season_number}: ${season.name} (${season.watch_status})`);
+   *
+   *       season.episodes.forEach(episode => {
+   *         console.log(`  S${episode.season_number}E${episode.episode_number}: ${episode.title} (${episode.watch_status})`);
+   *       });
+   *     });
+   *   } else {
+   *     console.log('Show not found or not in profile watchlist');
+   *   }
+   * } catch (error) {
+   *   console.error('Error fetching show with seasons:', error);
+   * }
+   *
+   * @performance
+   * - This is a resource-intensive method that performs multiple database queries
+   * - Performance scales with the number of seasons and episodes in the show
+   * - For shows with many seasons, consider using a paginated version of this method
+   * - Database indexes on profile_id, show_id, and season_id are critical for performance
+   */
+  static async getShowWithSeasonsForProfile(
+    profileId: string,
+    show_id: string,
+  ): Promise<ProfileShowWithSeasons | null> {
     try {
       const query = 'SELECT * FROM profile_shows where profile_id = ? AND show_id = ?';
       const [rows] = await getDbPool().execute<RowDataPacket[]>(query, [Number(profileId), Number(show_id)]);
-      const transformedRows = rows.map(this.transformRow);
-      const show = transformedRows[0];
+      if (rows.length === 0) {
+        return null;
+      }
+
+      const show = this.transformRow(rows[0]) as ProfileShowWithSeasons;
       const seasons = await Season.getSeasonsForShow(profileId, show_id);
       show.seasons = seasons;
+
       return show;
     } catch (error) {
       const errorMessage =
@@ -623,7 +772,48 @@ class Show {
     }
   }
 
-  static async getNextUnwatchedEpisodesForProfile(profileId: string) {
+  /**
+   * Gets the next unwatched episodes for shows a profile has recently watched
+   *
+   * This method identifies shows that a user has partially watched (status = 'WATCHING')
+   * and finds the next unwatched episodes for each show. It's commonly used to build
+   * a "Continue Watching" section in the UI, allowing users to easily resume shows
+   * they've started but not finished.
+   *
+   * @param profileId - ID of the profile to get next unwatched episodes for
+   * @returns Array of shows with their next unwatched episodes, ordered by most recently watched
+   * @throws {DatabaseError} If a database error occurs during the operation
+   *
+   * @example
+   * // Get next unwatched episodes for profile 123
+   * try {
+   *   const continueWatching = await Show.getNextUnwatchedEpisodesForProfile('123');
+   *
+   *   if (continueWatching.length > 0) {
+   *     console.log('Continue watching:');
+   *
+   *     continueWatching.forEach(show => {
+   *       console.log(`${show.show_title} (Last watched: ${new Date(show.last_watched).toLocaleDateString()})`);
+   *
+   *       show.episodes.forEach(episode => {
+   *         console.log(`  Next: S${episode.season_number}E${episode.episode_number}: ${episode.episode_title}`);
+   *         console.log(`  Airs on: ${new Date(episode.air_date).toLocaleDateString()}`);
+   *       });
+   *     });
+   *   } else {
+   *     console.log('No shows in progress');
+   *   }
+   * } catch (error) {
+   *   console.error('Error fetching continue watching list:', error);
+   * }
+   *
+   * @performance
+   * - This method performs multiple database queries in sequence
+   * - Performance is primarily affected by the number of shows the profile has watched recently
+   * - Results are limited to 6 shows with up to 2 episodes each to maintain performance
+   * - Database views are used for optimal query performance
+   */
+  static async getNextUnwatchedEpisodesForProfile(profileId: string): Promise<ContinueWatchingShow[]> {
     try {
       const pool = getDbPool();
       const recentShowsQuery = `SELECT * FROM profile_recent_shows_with_unwatched WHERE profile_id = ? ORDER BY last_watched_date DESC LIMIT 6`;
@@ -696,6 +886,44 @@ class Show {
     }
   }
 
+  /**
+   * Gets all profile IDs that have added this show to their watchlist
+   *
+   * This method retrieves the IDs of all profiles that have saved this show as a favorite.
+   * Useful for notifications, batch updates, and determining the popularity of a show within the system.
+   *
+   * @returns Array of profile IDs that have this show as a favorite
+   * @throws {DatabaseError} If a database error occurs during the operation
+   *
+   * @example
+   * // Get all profiles watching a show
+   * try {
+   *   const show = await Show.findById(123);
+   *
+   *   if (show) {
+   *     const profileIds = await show.getProfilesForShow();
+   *
+   *     console.log(`${show.title} is in ${profileIds.length} profiles' watchlists`);
+   *
+   *     // Notify all profiles about a new episode
+   *     for (const profileId of profileIds) {
+   *       await NotificationService.sendNotification(
+   *         profileId,
+   *         `New episode of ${show.title} available!`,
+   *         `S${newEpisode.season_number}E${newEpisode.episode_number}: ${newEpisode.title} is now available.`
+   *       );
+   *     }
+   *   }
+   * } catch (error) {
+   *   console.error('Error getting profiles for show:', error);
+   * }
+   *
+   * @performance
+   * - This method performs a single database query
+   * - Performance scales with the number of profiles that have added this show
+   * - Results are not paginated, so could be large for popular shows
+   * - Database index on show_id in show_watch_status table is essential
+   */
   async getProfilesForShow(): Promise<number[]> {
     try {
       const query = 'SELECT profile_id FROM show_watch_status where show_id = ?';
@@ -736,8 +964,41 @@ class Show {
     );
   }
 
-  private static transformRow(row: RowDataPacket) {
+  /**
+   * Transforms a raw database row into a structured ProfileShow object
+   *
+   * This method processes the raw database results from the profile_shows view
+   * and transforms them into a well-structured ProfileShow object with proper typing.
+   * It specifically handles the nested episode objects for last/next episodes.
+   *
+   * @param row - Raw database row from the profile_shows view
+   * @returns Properly structured ProfileShow object
+   * @private
+   */
+  private static transformRow(row: RowDataPacket): ProfileShow {
+    if (!row) {
+      throw new Error('Cannot transform undefined or null row');
+    }
+
     const {
+      profile_id,
+      show_id,
+      tmdb_id,
+      title,
+      description,
+      release_date,
+      poster_image,
+      backdrop_image,
+      user_rating,
+      content_rating,
+      season_count,
+      episode_count,
+      watch_status,
+      status,
+      type,
+      in_production,
+      genres,
+      streaming_services,
       last_episode_title,
       last_episode_air_date,
       last_episode_number,
@@ -746,13 +1007,27 @@ class Show {
       next_episode_air_date,
       next_episode_number,
       next_episode_season,
-      seasons,
-      ...rest
     } = row;
 
     return {
-      ...rest,
-      seasons,
+      profile_id,
+      show_id,
+      tmdb_id,
+      title,
+      description,
+      release_date,
+      poster_image,
+      backdrop_image,
+      user_rating,
+      content_rating,
+      season_count,
+      episode_count,
+      watch_status,
+      status,
+      type,
+      in_production,
+      genres,
+      streaming_services,
       last_episode: last_episode_title
         ? {
             title: last_episode_title,
