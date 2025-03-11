@@ -1,5 +1,6 @@
 import { BadRequestError, NotFoundError } from '../middleware/errorMiddleware';
 import Account from '../models/account';
+import Episode from '../models/episode';
 import Movie from '../models/movie';
 import Profile from '../models/profile';
 import Show from '../models/show';
@@ -40,8 +41,8 @@ export const getProfile = asyncHandler(async (req: Request, res: Response, next:
     const profile = await Profile.findById(Number(profileId));
     if (profile) {
       const shows = await Show.getAllShowsForProfile(profileId);
-      const upcomingEpisodes = await Show.getUpcomingEpisodesForProfile(profileId);
-      const recentEpisodes = await Show.getRecentEpisodesForProfile(profileId);
+      const upcomingEpisodes = await Episode.getUpcomingEpisodesForProfile(profileId);
+      const recentEpisodes = await Episode.getRecentEpisodesForProfile(profileId);
       const nextUnwatchedEpisodes = await Show.getNextUnwatchedEpisodesForProfile(profileId);
       const movies = await Movie.getAllMoviesForProfile(profileId);
       const recentMovies = await Movie.getRecentMovieReleasesForProfile(profileId);

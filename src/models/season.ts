@@ -33,41 +33,41 @@ class Season {
 
   /**
    * Creates a new Season instance
-   * @param {number} show_id - ID of the show this season belongs to
-   * @param {number} tmdb_id - TMDB API identifier for the season
-   * @param {string} name - Name of the season
-   * @param {string} overview - Synopsis/description of the season
-   * @param {number} season_number - Season number of this season
-   * @param {string} release_date - Original release date of the season
-   * @param {string} poster_image - Path to the season's poster image
-   * @param {number} number_of_episodes - The number of episodes in the season
-   * @param {number} [id] - Optional ID for an existing season
+   * @param showId - ID of the show this season belongs to
+   * @param tmdbId - TMDB API identifier for the season
+   * @param name - Name of the season
+   * @param overview - Synopsis/description of the season
+   * @param seasonNumber - Season number of this season
+   * @param releaseDate - Original release date of the season
+   * @param posterImage - Path to the season's poster image
+   * @param numberOfEpisodes - The number of episodes in the season
+   * @param id - Optional ID for an existing season
    */
   constructor(
-    show_id: number,
-    tmdb_id: number,
+    showId: number,
+    tmdbId: number,
     name: string,
     overview: string,
-    season_number: number,
-    release_date: string,
-    poster_image: string,
-    number_of_episodes: number,
+    seasonNumber: number,
+    releaseDate: string,
+    posterImage: string,
+    numberOfEpisodes: number,
     id?: number,
   ) {
-    this.show_id = show_id;
-    this.tmdb_id = tmdb_id;
+    this.show_id = showId;
+    this.tmdb_id = tmdbId;
     this.name = name;
     this.overview = overview;
-    this.season_number = season_number;
-    this.release_date = release_date;
-    this.poster_image = poster_image;
-    this.number_of_episodes = number_of_episodes;
+    this.season_number = seasonNumber;
+    this.release_date = releaseDate;
+    this.poster_image = posterImage;
+    this.number_of_episodes = numberOfEpisodes;
     if (id) this.id = id;
   }
 
   /**
    * Saves a new season to the database
-   * @returns {Promise<void>} A promise that resolves when the season has been saved
+   * @returns A promise that resolves when the season has been saved
    * @throws {DatabaseError} If a database error occurs during the operation such as connection failure or constraint violation
    *
    * @example
@@ -100,7 +100,7 @@ class Season {
    * Updates an existing season or inserts a new one if it doesn't exist
    * This method performs an "upsert" operation using the MySQL ON DUPLICATE KEY UPDATE syntax
    *
-   * @returns {Promise<void>} A promise that resolves when the season has been updated
+   * @returns A promise that resolves when the season has been updated
    * @throws {DatabaseError} If a database error occurs during the operation
    *
    * @example
@@ -140,8 +140,8 @@ class Season {
    * Adds this season to a user's favorites
    * This creates an entry in the season_watch_status table to track the user's interest in this season
    *
-   * @param {number} profileId - ID of the profile to add this season to as a favorite
-   * @returns {Promise<void>} A promise that resolves when the favorite has been added
+   * @param profileId - ID of the profile to add this season to as a favorite
+   * @returns A promise that resolves when the favorite has been added
    * @throws {DatabaseError} If a database error occurs during the operation
    *
    * @example
@@ -160,88 +160,12 @@ class Season {
   }
 
   /**
-   * Adds a season and its episodes to a user's favorites
-   * This method uses a transaction to ensure that both the season and all its episodes
-   * are added to the user's favorites consistently
-   *
-   * @param {string} profileId - ID of the profile to add a season as a favorite
-   * @param {number} seasonId - ID of the season to add as a favorite
-   * @returns {Promise<void>} A promise that resolves when the season and episodes have been added as favorites
-   * @throws {DatabaseError} If a database error occurs during the operation
-   *
-   * @example
-   * // Add season with ID 5 and all its episodes to profile 123's favorites
-   * await Season.saveFavoriteWithEpisodes('123', 5);
-   */
-  static async saveFavoriteWithEpisodes(profileId: string, seasonId: number): Promise<void> {
-    const pool = getDbPool();
-    const connection = await pool.getConnection();
-    try {
-      await connection.beginTransaction();
-
-      const seasonInsert = 'INSERT IGNORE INTO season_watch_status (profile_id, season_id) VALUES (?,?)';
-      await connection.execute(seasonInsert, [Number(profileId), seasonId]);
-
-      const episodesInsert =
-        'INSERT IGNORE INTO episode_watch_status (profile_id, episode_id) SELECT ?, id FROM episodes WHERE season_id = ?';
-      await connection.execute(episodesInsert, [Number(profileId), seasonId]);
-
-      await connection.commit();
-    } catch (error) {
-      await connection.rollback();
-      const errorMessage =
-        error instanceof Error ? error.message : 'Unknown database error saving a season as a favorite';
-      throw new DatabaseError(errorMessage, error);
-    } finally {
-      connection.release();
-    }
-  }
-
-  /**
-   * Removes a season from a user's favorites
-   * This method uses a transaction to ensure that both the season and all its episodes
-   * are removed from the user's favorites consistently
-   *
-   * @param {string} profileId - ID of the profile to remove the season from favorites
-   * @param {number} seasonId - ID of the season to remove from favorites
-   * @returns {Promise<void>} A promise that resolves when the season and episodes have been removed from favorites
-   * @throws {DatabaseError} If a database error occurs during the operation
-   *
-   * @example
-   * // Remove season with ID 5 and all its episodes from profile 123's favorites
-   * await Season.removeFavorite('123', 5);
-   */
-  static async removeFavorite(profileId: string, seasonId: number): Promise<void> {
-    const pool = getDbPool();
-    const connection = await pool.getConnection();
-    try {
-      await connection.beginTransaction();
-
-      const seasonDelete = 'DELETE FROM season_watch_status WHERE profile_id = ? AND season_id = ?';
-      await connection.execute(seasonDelete, [Number(profileId), seasonId]);
-
-      const episodesDelete =
-        'DELETE FROM episode_watch_status WHERE profile_id = ? AND episode_id IN (SELECT id FROM episodes WHERE season_id = ?)';
-      await connection.execute(episodesDelete, [Number(profileId), seasonId]);
-
-      await connection.commit();
-    } catch (error) {
-      await connection.rollback();
-      const errorMessage =
-        error instanceof Error ? error.message : 'Unknown database error removing a season as a favorite';
-      throw new DatabaseError(errorMessage, error);
-    } finally {
-      connection.release();
-    }
-  }
-
-  /**
    * Updates the watch status of a season for a specific profile
    *
-   * @param {string} profileId - ID of the profile to update the watch status for
-   * @param {number} seasonId - ID of the season to update
-   * @param {string} status - New watch status ('WATCHED', 'WATCHING', or 'NOT_WATCHED')
-   * @returns {Promise<boolean>} True if the watch status was updated, false if no rows were affected
+   * @param profileId - ID of the profile to update the watch status for
+   * @param seasonId - ID of the season to update
+   * @param status - New watch status ('WATCHED', 'WATCHING', or 'NOT_WATCHED')
+   * @returns `True` if the watch status was updated, `false` if no rows were affected
    * @throws {DatabaseError} If a database error occurs during the operation
    *
    * @example
@@ -274,9 +198,9 @@ class Season {
    * - If episodes have mixed statuses, the season is marked as "WATCHING"
    * - If no episodes exist or no watch status information is available, nothing is updated
    *
-   * @param {string} profileId - ID of the profile to update the watch status for
-   * @param {number} seasonId - ID of the season to update
-   * @returns {Promise<void>} A promise that resolves when the update is complete
+   * @param profileId - ID of the profile to update the watch status for
+   * @param seasonId - ID of the season to update
+   * @returns A promise that resolves when the update is complete
    * @throws {DatabaseError} If a database error occurs during the operation
    *
    * @example
@@ -309,10 +233,10 @@ class Season {
    * This method uses a transaction to ensure that both the season and all its episodes
    * are updated consistently to the same watch status
    *
-   * @param {string} profileId - ID of the profile to update the watch status for
-   * @param {number} seasonId - ID of the season to update
-   * @param {string} status - New watch status ('WATCHED', 'WATCHING', or 'NOT_WATCHED')
-   * @returns {Promise<boolean>} True if the watch status was updated, false if no rows were affected
+   * @param profileId - ID of the profile to update the watch status for
+   * @param seasonId - ID of the season to update
+   * @param status - New watch status ('WATCHED', 'WATCHING', or 'NOT_WATCHED')
+   * @returns `True` if the watch status was updated, `false` if no rows were affected
    * @throws {DatabaseError} If a database error occurs during the operation
    *
    * @example
@@ -355,9 +279,9 @@ class Season {
    * This method retrieves all seasons for a show and then loads all episodes for those seasons.
    * It organizes the data into a hierarchical structure with episodes grouped by season.
    *
-   * @param {string} profileId - ID of the profile to get seasons for
-   * @param {string} showId - ID of the show to get seasons for
-   * @returns {Promise<ProfileSeason[]>} Array of seasons with watch status and their episodes
+   * @param profileId - ID of the profile to get seasons for
+   * @param showId - ID of the show to get seasons for
+   * @returns Array of seasons with watch status and their episodes
    * @throws {DatabaseError} If a database error occurs during the operation
    *
    * @example

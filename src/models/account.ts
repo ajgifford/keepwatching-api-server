@@ -22,7 +22,7 @@ export interface IAccount {
 
 /**
  * Represents a user account with authentication info and profile management
- * 
+ *
  * The Account class manages user accounts and their relationship with profiles,
  * handling operations like registration, finding accounts, and updating account details.
  * @class Account
@@ -44,36 +44,29 @@ class Account implements IAccount {
 
   /**
    * Creates a new Account instance
-   * @param {string} name - Display name of the account owner
-   * @param {string} email - Email address associated with the account
-   * @param {string} uid - External authentication provider's unique ID
-   * @param {string} [image] - Optional path to the account's profile image
-   * @param {number} [account_id] - Optional ID for an existing account
-   * @param {number} [default_profile_id] - Optional ID of the default profile
+   * @param name - Display name of the account owner
+   * @param email - Email address associated with the account
+   * @param uid - External authentication provider's unique ID
+   * @param image - Optional path to the account's profile image
+   * @param accountId - Optional ID for an existing account
+   * @param defaultProfileId - Optional ID of the default profile
    */
-  constructor(
-    name: string,
-    email: string,
-    uid: string,
-    image?: string,
-    account_id?: number,
-    default_profile_id?: number,
-  ) {
+  constructor(name: string, email: string, uid: string, image?: string, accountId?: number, defaultProfileId?: number) {
     this.account_name = name;
     this.email = email;
     this.uid = uid;
     if (image) this.image = image;
-    if (account_id) this.account_id = account_id;
-    if (default_profile_id) this.default_profile_id = default_profile_id;
+    if (accountId) this.account_id = accountId;
+    if (defaultProfileId) this.default_profile_id = defaultProfileId;
   }
 
   /**
    * Registers a new account and creates an initial profile
-   * 
+   *
    * This method creates a new account record in the database, then creates an initial profile
    * with the same name as the account, and sets that profile as the default profile.
    *
-   * @returns {Promise<void>} A promise that resolves when registration is complete
+   * @returns A promise that resolves when registration is complete
    * @throws {DatabaseError} If a database error occurs during registration
    *
    * @example
@@ -103,11 +96,11 @@ class Account implements IAccount {
 
   /**
    * Updates the account's profile image
-   * 
+   *
    * This method updates the image path for the account in the database.
    *
-   * @param {string} imagePath - Path to the new image file
-   * @returns {Promise<Account | null>} Updated account object or null if update failed
+   * @param imagePath - Path to the new image file
+   * @returns Updated account object or `null` if update failed
    * @throws {DatabaseError} If a database error occurs during the operation
    *
    * @example
@@ -137,12 +130,12 @@ class Account implements IAccount {
 
   /**
    * Updates the account details including name and default profile
-   * 
+   *
    * This method updates the account name and default profile ID in the database.
    *
-   * @param {string} accountName - New display name for the account
-   * @param {number} defaultProfileId - ID of the profile to set as default
-   * @returns {Promise<Account | null>} Updated account object or null if update failed
+   * @param accountName - New display name for the account
+   * @param defaultProfileId - ID of the profile to set as default
+   * @returns Updated account object or `null` if update failed
    * @throws {DatabaseError} If a database error occurs during the operation
    *
    * @example
@@ -176,11 +169,11 @@ class Account implements IAccount {
 
   /**
    * Finds an account by external provider UID (e.g., Firebase UID)
-   * 
+   *
    * This static method searches for an account with the specified UID.
    *
-   * @param {string} uid - External provider's unique ID to search for
-   * @returns {Promise<Account | null>} Account object if found, null otherwise
+   * @param uid - External provider's unique ID to search for
+   * @returns Account object if found, `null` otherwise
    * @throws {DatabaseError} If a database error occurs during the operation
    *
    * @example
@@ -220,11 +213,11 @@ class Account implements IAccount {
 
   /**
    * Finds an account by email address
-   * 
+   *
    * This static method searches for an account with the specified email address.
    *
-   * @param {string} email - Email address to search for
-   * @returns {Promise<Account | null>} Account object if found, null otherwise
+   * @param email - Email address to search for
+   * @returns Account object if found, `null` otherwise
    * @throws {DatabaseError} If a database error occurs during the operation
    *
    * @example
@@ -264,11 +257,11 @@ class Account implements IAccount {
 
   /**
    * Finds an account by its database ID
-   * 
+   *
    * This static method searches for an account with the specified ID.
    *
-   * @param {number} id - Account ID to search for
-   * @returns {Promise<Account | null>} Account object if found, null otherwise
+   * @param id - Account ID to search for
+   * @returns Account object if found, `null` otherwise
    * @throws {DatabaseError} If a database error occurs during the operation
    *
    * @example
@@ -307,11 +300,11 @@ class Account implements IAccount {
 
   /**
    * Finds the account ID associated with a specific profile
-   * 
+   *
    * This static method looks up which account owns a given profile.
    *
-   * @param {string} profileId - Profile ID to search for
-   * @returns {Promise<number | null>} Account ID if found, null otherwise
+   * @param profileId - Profile ID to search for
+   * @returns Account ID if found, `null` otherwise
    * @throws {DatabaseError} If a database error occurs during the operation
    *
    * @example

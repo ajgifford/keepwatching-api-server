@@ -4,7 +4,7 @@ import { ResultSetHeader, RowDataPacket } from 'mysql2';
 
 /**
  * Represents a user profile associated with an account
- * 
+ *
  * The Profile class handles user profiles, which are used to track preferences,
  * watched content, and favorites for different users sharing the same account.
  * @class Profile
@@ -21,14 +21,14 @@ class Profile {
 
   /**
    * Creates a new Profile instance
-   * 
-   * @param {number} account_id - ID of the account that owns this profile
-   * @param {string} name - Name of the profile
-   * @param {number} [id] - Optional ID for an existing profile
-   * @param {string} [image] - Optional path to the profile image
+   *
+   * @param accountId - ID of the account that owns this profile
+   * @param name - Name of the profile
+   * @param id - Optional ID for an existing profile
+   * @param image - Optional path to the profile image
    */
-  constructor(account_id: number, name: string, id?: number, image?: string) {
-    this.account_id = account_id;
+  constructor(accountId: number, name: string, id?: number, image?: string) {
+    this.account_id = accountId;
     this.name = name;
     if (id) this.id = id;
     if (image) this.image = image;
@@ -36,17 +36,17 @@ class Profile {
 
   /**
    * Saves a new profile to the database
-   * 
+   *
    * This method inserts a new profile record associated with an account.
    * After successful insertion, the profile's id property is updated with the new database ID.
    *
-   * @returns {Promise<void>} A promise that resolves when the profile has been saved
+   * @returns A promise that resolves when the profile has been saved
    * @throws {DatabaseError} If a database error occurs during the operation
    *
    * @example
    * // Create a new profile for account ID 123
    * const profile = new Profile(123, 'Family Profile');
-   * 
+   *
    * try {
    *   await profile.save();
    *   console.log(`Profile created with ID: ${profile.id}`);
@@ -67,21 +67,21 @@ class Profile {
 
   /**
    * Updates an existing profile's name
-   * 
+   *
    * This method updates the name of a profile in the database.
    *
-   * @param {string} name - New name for the profile
-   * @returns {Promise<Profile | null>} Updated profile object or null if update failed
+   * @param name - New name for the profile
+   * @returns Updated profile object or `null` if update failed
    * @throws {DatabaseError} If a database error occurs during the operation
    *
    * @example
    * // Get an existing profile
    * const profile = await Profile.findById(456);
-   * 
+   *
    * if (profile) {
    *   // Update the profile name
    *   const updatedProfile = await profile.update('New Profile Name');
-   *   
+   *
    *   if (updatedProfile) {
    *     console.log(`Profile renamed to: ${updatedProfile.name}`);
    *   } else {
@@ -105,21 +105,21 @@ class Profile {
 
   /**
    * Updates a profile's image
-   * 
+   *
    * This method updates the image path for a profile in the database.
    *
-   * @param {string} imagePath - Path to the new profile image
-   * @returns {Promise<Profile | null>} Updated profile object or null if update failed
+   * @param imagePath - Path to the new profile image
+   * @returns Updated profile object or `null` if update failed
    * @throws {DatabaseError} If a database error occurs during the operation
    *
    * @example
    * // Get an existing profile
    * const profile = await Profile.findById(456);
-   * 
+   *
    * if (profile) {
    *   // Update the profile image
    *   const updatedProfile = await profile.updateProfileImage('/path/to/new_image.jpg');
-   *   
+   *
    *   if (updatedProfile) {
    *     console.log('Profile image updated successfully');
    *   } else {
@@ -143,21 +143,21 @@ class Profile {
 
   /**
    * Deletes the profile from the database
-   * 
+   *
    * This method removes a profile and its associated data from the database.
    * Note: This will also cascade delete all watch status data for the profile.
    *
-   * @returns {Promise<boolean>} True if profile was successfully deleted, false otherwise
+   * @returns `True` if profile was successfully deleted, `false` otherwise
    * @throws {DatabaseError} If a database error occurs during the operation
    *
    * @example
    * // Get an existing profile
    * const profile = await Profile.findById(456);
-   * 
+   *
    * if (profile) {
    *   // Delete the profile
    *   const deleted = await profile.delete();
-   *   
+   *
    *   if (deleted) {
    *     console.log('Profile deleted successfully');
    *   } else {
@@ -179,18 +179,18 @@ class Profile {
 
   /**
    * Finds a profile by its database ID
-   * 
+   *
    * This static method searches for a profile with the specified ID.
    *
-   * @param {number} id - ID of the profile to find
-   * @returns {Promise<Profile | null>} Profile object if found, null otherwise
+   * @param id - ID of the profile to find
+   * @returns Profile object if found, `null` otherwise
    * @throws {DatabaseError} If a database error occurs during the operation
    *
    * @example
    * try {
    *   // Find profile with ID 456
    *   const profile = await Profile.findById(456);
-   *   
+   *
    *   if (profile) {
    *     console.log(`Found profile: ${profile.name} (Account ID: ${profile.account_id})`);
    *   } else {
@@ -217,18 +217,18 @@ class Profile {
 
   /**
    * Retrieves all profiles associated with an account
-   * 
+   *
    * This static method returns all profiles belonging to a specific account.
    *
-   * @param {number} accountId - ID of the account to get profiles for
-   * @returns {Promise<Profile[]>} Array of profiles belonging to the account
+   * @param accountId - ID of the account to get profiles for
+   * @returns Array of profiles belonging to the account
    * @throws {DatabaseError} If a database error occurs during the operation
    *
    * @example
    * try {
    *   // Get all profiles for account 123
    *   const profiles = await Profile.getAllByAccountId(123);
-   *   
+   *
    *   console.log(`Found ${profiles.length} profiles for account 123:`);
    *   profiles.forEach(profile => {
    *     console.log(`- ${profile.name} (ID: ${profile.id})`);

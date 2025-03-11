@@ -29,3 +29,20 @@ export interface ProfileSeason {
   watch_status: 'WATCHED' | 'NOT_WATCHED' | 'WATCHING';
   episodes: ProfileEpisode[];
 }
+
+export interface NextEpisode {
+  episode_id: number;
+  episode_title: string;
+  overview: string;
+  episode_number: number;
+  season_number: number;
+  episode_still_image: string;
+  air_date: string;
+  show_id: number;
+  show_name: string;
+  season_id: number;
+  poster_image: string;
+  network: string;
+  streaming_services: string;
+  profile_id: number;
+}

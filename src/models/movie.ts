@@ -42,44 +42,44 @@ class Movie {
   /**
    * Creates a new Movie instance with comprehensive metadata
    *
-   * @param {number} tmdb_id - TMDB API identifier for the movie
-   * @param {string} title - Title of the movie
-   * @param {string} description - Synopsis/description of the movie
-   * @param {string} release_date - Release date of the movie (YYYY-MM-DD format)
-   * @param {number} runtime - Runtime of the movie in minutes
-   * @param {string} poster_image - Path to the movie's poster image
-   * @param {string} backdrop_image - Path to the movie's backdrop image
-   * @param {number} user_rating - User/critical rating of the movie
-   * @param {string} mpa_rating - MPAA rating or equivalent content rating
-   * @param {number} [id] - Optional database ID for an existing movie
-   * @param {number[]} [streaming_services] - Optional array of streaming service IDs
-   * @param {number[]} [genreIds] - Optional array of genre IDs
+   * @param tmdbId - TMDB API identifier for the movie
+   * @param title - Title of the movie
+   * @param description - Synopsis/description of the movie
+   * @param releaseDate - Release date of the movie (YYYY-MM-DD format)
+   * @param runtime - Runtime of the movie in minutes
+   * @param posterImage - Path to the movie's poster image
+   * @param backdropImage - Path to the movie's backdrop image
+   * @param userRating - User/critical rating of the movie
+   * @param mpaRating - MPAA rating or equivalent content rating
+   * @param id - Optional database ID for an existing movie
+   * @param streamingServices - Optional array of streaming service IDs
+   * @param genreIds - Optional array of genre IDs
    */
   constructor(
-    tmdb_id: number,
+    tmdbId: number,
     title: string,
     description: string,
-    release_date: string,
+    releaseDate: string,
     runtime: number,
-    poster_image: string,
-    backdrop_image: string,
-    user_rating: number,
-    mpa_rating: string,
+    posterImage: string,
+    backdropImage: string,
+    userRating: number,
+    mpaRating: string,
     id?: number,
-    streaming_services?: number[],
+    streamingServices?: number[],
     genreIds?: number[],
   ) {
-    this.tmdb_id = tmdb_id;
+    this.tmdb_id = tmdbId;
     this.title = title;
     this.description = description;
-    this.release_date = release_date;
+    this.release_date = releaseDate;
     this.runtime = runtime;
-    this.poster_image = poster_image;
-    this.backdrop_image = backdrop_image;
-    this.user_rating = user_rating;
-    this.mpa_rating = mpa_rating;
+    this.poster_image = posterImage;
+    this.backdrop_image = backdropImage;
+    this.user_rating = userRating;
+    this.mpa_rating = mpaRating;
     if (id) this.id = id;
-    if (streaming_services) this.streaming_services = streaming_services;
+    if (streamingServices) this.streaming_services = streamingServices;
     if (genreIds) this.genreIds = genreIds;
   }
 
@@ -89,7 +89,7 @@ class Movie {
    * This method inserts a new movie record in the database along with its
    * associated genres and streaming services.
    *
-   * @returns {Promise<boolean>} True if the movie was successfully saved, false otherwise
+   * @returns `True` if the movie was successfully saved, `false` otherwise
    * @throws {DatabaseError} If a database error occurs during the operation
    *
    * @example
@@ -150,7 +150,7 @@ class Movie {
    *
    * This method updates a movie's metadata, genres, and streaming services.
    *
-   * @returns {Promise<boolean>} True if the movie was successfully updated, false otherwise
+   * @returns `True` if the movie was successfully updated, `false` otherwise
    * @throws {DatabaseError} If a database error occurs during the operation
    *
    * @example
@@ -215,7 +215,7 @@ class Movie {
 
       return success;
     } catch (error) {
-      connection.rollback();
+      await connection.rollback();
       const errorMessage = error instanceof Error ? error.message : 'Unknown database error updating a movie';
       throw new DatabaseError(errorMessage, error);
     } finally {
@@ -226,16 +226,16 @@ class Movie {
   /**
    * Associates a genre with this movie
    *
-   * @param {number} movie_id - ID of the movie
-   * @param {number} genre_id - ID of the genre to associate
-   * @param {PoolConnection} [connection] - Optional existing connection for transaction support
-   * @returns {Promise<void>} A promise that resolves when the genre is associated
+   * @param movieId - ID of the movie
+   * @param genreId - ID of the genre to associate
+   * @param connection - Existing connection for transaction support
+   * @returns A promise that resolves when the genre is associated
    * @throws {DatabaseError} If a database error occurs during the operation
    */
-  async saveGenre(movie_id: number, genre_id: number, connection: PoolConnection) {
+  async saveGenre(movieId: number, genreId: number, connection: PoolConnection): Promise<void> {
     try {
       const query = 'INSERT IGNORE INTO movie_genres (movie_id, genre_id) VALUES (?,?)';
-      await connection.execute(query, [movie_id, genre_id]);
+      await connection.execute(query, [movieId, genreId]);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown database error saving a movie genre';
       throw new DatabaseError(errorMessage, error);
@@ -245,16 +245,16 @@ class Movie {
   /**
    * Associates a streaming service with this movie
    *
-   * @param {number} movie_id - ID of the movie
-   * @param {number} streaming_service_id - ID of the streaming service to associate
-   * @param {PoolConnection} [connection] - Optional existing connection for transaction support
-   * @returns {Promise<void>} A promise that resolves when the streaming service is associated
+   * @param movieId - ID of the movie
+   * @param streamingServiceId - ID of the streaming service to associate
+   * @param connection - Existing connection for transaction support
+   * @returns A promise that resolves when the streaming service is associated
    * @throws {DatabaseError} If a database error occurs during the operation
    */
-  async saveStreamingService(movie_id: number, streaming_service_id: number, connection: PoolConnection) {
+  async saveStreamingService(movieId: number, streamingServiceId: number, connection: PoolConnection): Promise<void> {
     try {
       const query = 'INSERT IGNORE INTO movie_services (movie_id, streaming_service_id) VALUES (?, ?)';
-      await connection.execute(query, [movie_id, streaming_service_id]);
+      await connection.execute(query, [movieId, streamingServiceId]);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown database error saving a movie streaming service';
@@ -268,8 +268,8 @@ class Movie {
    * This method inserts a record in the movie_watch_status table to associate
    * the movie with a user profile, enabling tracking of watch status.
    *
-   * @param {string} profile_id - ID of the profile to add this movie to
-   * @returns {Promise<void>} A promise that resolves when the favorite has been added
+   * @param profileId - ID of the profile to add this movie to
+   * @returns A promise that resolves when the favorite has been added
    * @throws {DatabaseError} If a database error occurs during the operation
    *
    * @example
@@ -280,10 +280,10 @@ class Movie {
    *   console.log('Movie added to favorites');
    * }
    */
-  async saveFavorite(profile_id: string) {
+  async saveFavorite(profileId: string): Promise<void> {
     try {
       const query = 'INSERT IGNORE INTO movie_watch_status (profile_id, movie_id) VALUES (?,?)';
-      await getDbPool().execute(query, [Number(profile_id), this.id]);
+      await getDbPool().execute(query, [Number(profileId), this.id]);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown database error saving a movie as a favorite';
@@ -297,8 +297,8 @@ class Movie {
    * This method deletes the record in the movie_watch_status table that
    * associates the movie with a user profile.
    *
-   * @param {string} profile_id - ID of the profile to remove this movie from
-   * @returns {Promise<void>} A promise that resolves when the favorite has been removed
+   * @param profile_id - ID of the profile to remove this movie from
+   * @returns A promise that resolves when the favorite has been removed
    * @throws {DatabaseError} If a database error occurs during the operation
    *
    * @example
@@ -309,7 +309,7 @@ class Movie {
    *   console.log('Movie removed from favorites');
    * }
    */
-  async removeFavorite(profile_id: string) {
+  async removeFavorite(profile_id: string): Promise<void> {
     try {
       const query = 'DELETE FROM movie_watch_status WHERE profile_id = ? AND movie_id = ?';
       await getDbPool().execute(query, [profile_id, this.id]);
@@ -326,8 +326,8 @@ class Movie {
    * This static method retrieves a movie with the specified ID, including
    * its basic metadata (but not genres or streaming services).
    *
-   * @param {number} id - ID of the movie to find
-   * @returns {Promise<Movie | null>} Movie object if found, null otherwise
+   * @param id - ID of the movie to find
+   * @returns `Movie` object if found, `null` otherwise
    * @throws {DatabaseError} If a database error occurs during the operation
    *
    * @example
@@ -360,8 +360,8 @@ class Movie {
    * This static method retrieves a movie with the specified TMDB ID, including
    * its basic metadata (but not genres or streaming services).
    *
-   * @param {number} tmdb_id - TMDB ID of the movie to find
-   * @returns {Promise<Movie | null>} Movie object if found, null otherwise
+   * @param tmdbId - TMDB ID of the movie to find
+   * @returns `Movie` object if found, `null` otherwise
    * @throws {DatabaseError} If a database error occurs during the operation
    *
    * @example
@@ -376,10 +376,10 @@ class Movie {
    *   console.error('Error finding movie:', error);
    * }
    */
-  static async findByTMDBId(tmdb_id: number): Promise<Movie | null> {
+  static async findByTMDBId(tmdbId: number): Promise<Movie | null> {
     try {
       const query = `SELECT * FROM movies WHERE tmdb_id = ?`;
-      const [movies] = await getDbPool().execute<RowDataPacket[]>(query, [tmdb_id]);
+      const [movies] = await getDbPool().execute<RowDataPacket[]>(query, [tmdbId]);
       if (movies.length === 0) return null;
       return this.transformMovie(movies[0]);
     } catch (error) {
@@ -389,39 +389,15 @@ class Movie {
   }
 
   /**
-   * Transforms a raw database row into a Movie object
-   *
-   * @param {any} movie - Raw database row containing movie data
-   * @returns {Movie} Properly structured Movie object
-   * @private
-   */
-  private static transformMovie(movie: any): Movie {
-    return new Movie(
-      movie.tmdb_id,
-      movie.title,
-      movie.description,
-      movie.release_date,
-      movie.runtime,
-      movie.poster_image,
-      movie.backdrop_image,
-      movie.user_rating,
-      movie.mpa_rating,
-      movie.id,
-      undefined,
-      undefined,
-    );
-  }
-
-  /**
    * Updates the watch status of a movie for a specific profile
    *
    * This static method marks a movie as watched, watching, or not watched
    * for a specific user profile.
    *
-   * @param {string} profile_id - ID of the profile to update the status for
-   * @param {number} movie_id - ID of the movie to update
-   * @param {string} status - New watch status ('WATCHED', 'WATCHING', or 'NOT_WATCHED')
-   * @returns {Promise<boolean>} True if the status was updated, false if no rows were affected
+   * @param profileId - ID of the profile to update the status for
+   * @param movieId - ID of the movie to update
+   * @param status - New watch status ('WATCHED', 'WATCHING', or 'NOT_WATCHED')
+   * @returns `True` if the status was updated, `false` if no rows were affected
    * @throws {DatabaseError} If a database error occurs during the operation
    *
    * @example
@@ -433,10 +409,10 @@ class Movie {
    *   console.log('Movie not in watchlist or status already set');
    * }
    */
-  static async updateWatchStatus(profile_id: string, movie_id: number, status: string): Promise<boolean> {
+  static async updateWatchStatus(profileId: string, movieId: number, status: string): Promise<boolean> {
     try {
       const query = 'UPDATE movie_watch_status SET status = ? WHERE profile_id = ? AND movie_id = ?';
-      const [result] = await getDbPool().execute<ResultSetHeader>(query, [status, profile_id, movie_id]);
+      const [result] = await getDbPool().execute<ResultSetHeader>(query, [status, profileId, movieId]);
 
       // Return true if at least one row was affected (watch status was updated)
       return result.affectedRows > 0;
@@ -453,8 +429,8 @@ class Movie {
    * This static method returns all movies that a profile has added to their
    * favorites/watchlist, including watch status information.
    *
-   * @param {string} profile_id - ID of the profile to get movies for
-   * @returns {Promise<any[]>} Array of movies with their details and watch status
+   * @param profileId - ID of the profile to get movies for
+   * @returns Array of movies with their details and watch status
    * @throws {DatabaseError} If a database error occurs during the operation
    *
    * @example
@@ -468,10 +444,10 @@ class Movie {
    *
    * @performance This method uses a view for better performance with complex joins
    */
-  static async getAllMoviesForProfile(profile_id: string) {
+  static async getAllMoviesForProfile(profileId: string) {
     try {
       const query = 'SELECT * FROM profile_movies where profile_id = ?';
-      const [rows] = await getDbPool().execute(query, [Number(profile_id)]);
+      const [rows] = await getDbPool().execute(query, [Number(profileId)]);
       return rows;
     } catch (error) {
       const errorMessage =
@@ -486,9 +462,9 @@ class Movie {
    * This static method retrieves a single movie from a profile's watchlist
    * along with its watch status.
    *
-   * @param {string} profile_id - ID of the profile
-   * @param {number} movie_id - ID of the movie to retrieve
-   * @returns {Promise<any>} Movie with watch status information
+   * @param profileId - ID of the profile
+   * @param movieId - ID of the movie to retrieve
+   * @returns Movie with watch status information
    * @throws {DatabaseError} If a database error occurs during the operation
    *
    * @example
@@ -502,10 +478,10 @@ class Movie {
    *
    * @performance Uses an indexed view for efficient retrieval with joins
    */
-  static async getMovieForProfile(profile_id: string, movie_id: number) {
+  static async getMovieForProfile(profileId: string, movieId: number) {
     try {
       const query = 'SELECT * FROM profile_movies where profile_id = ? AND movie_id = ?';
-      const [movies] = await getDbPool().execute<RowDataPacket[]>(query, [Number(profile_id), movie_id]);
+      const [movies] = await getDbPool().execute<RowDataPacket[]>(query, [Number(profileId), movieId]);
       return movies[0];
     } catch (error) {
       const errorMessage =
@@ -520,8 +496,8 @@ class Movie {
    * This static method retrieves movies from a profile's watchlist that have
    * been released within the last 60 days, ordered by release date.
    *
-   * @param {string} profile_id - ID of the profile to get recent movies for
-   * @returns {Promise<any[]>} Array of recently released movies
+   * @param profileId - ID of the profile to get recent movies for
+   * @returns Array of recently released movies
    * @throws {DatabaseError} If a database error occurs during the operation
    *
    * @example
@@ -532,11 +508,11 @@ class Movie {
    * @performance Uses a date range index for efficient date-based querying
    * with a LIMIT clause to prevent excessive data retrieval
    */
-  static async getRecentMovieReleasesForProfile(profile_id: string) {
+  static async getRecentMovieReleasesForProfile(profileId: string) {
     try {
       const query =
         'SELECT movie_id from profile_movies WHERE profile_id = ? AND release_date BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY) AND CURRENT_DATE() ORDER BY release_date DESC LIMIT 6';
-      const [rows] = await getDbPool().execute(query, [Number(profile_id)]);
+      const [rows] = await getDbPool().execute(query, [Number(profileId)]);
       return rows;
     } catch (error) {
       const errorMessage =
@@ -551,8 +527,8 @@ class Movie {
    * This static method retrieves movies from a profile's watchlist that are
    * scheduled to be released within the next 60 days, ordered by release date.
    *
-   * @param {string} profile_id - ID of the profile to get upcoming movies for
-   * @returns {Promise<any[]>} Array of upcoming movie releases
+   * @param profileId - ID of the profile to get upcoming movies for
+   * @returns Array of upcoming movie releases
    * @throws {DatabaseError} If a database error occurs during the operation
    *
    * @example
@@ -563,11 +539,11 @@ class Movie {
    * @performance Uses a date range index for efficient date-based querying
    * with a LIMIT clause to prevent excessive data retrieval
    */
-  static async getUpcomingMovieReleasesForProfile(profile_id: string) {
+  static async getUpcomingMovieReleasesForProfile(profileId: string) {
     try {
       const query =
         'SELECT movie_id from profile_movies WHERE profile_id = ? AND release_date BETWEEN DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY) AND DATE_ADD(CURRENT_DATE(), INTERVAL 60 DAY) ORDER BY release_date LIMIT 6';
-      const [rows] = await getDbPool().execute(query, [Number(profile_id)]);
+      const [rows] = await getDbPool().execute(query, [Number(profileId)]);
       return rows;
     } catch (error) {
       const errorMessage =
@@ -583,7 +559,7 @@ class Movie {
    * need their metadata refreshed from external APIs. Useful for scheduled
    * background update tasks.
    *
-   * @returns {Promise<ContentUpdates[]>} Array of movies needing updates
+   * @returns Array of movies needing updates
    * @throws {DatabaseError} If a database error occurs during the operation
    *
    * @example
@@ -592,7 +568,7 @@ class Movie {
    * console.log(`${moviesToUpdate.length} movies need metadata updates`);
    *
    * @performance Uses a date-based filter for recently added/released movies
-   * to minimize the data set. Consider adding an index on the release_date column.
+   * to minimize the data set.
    */
   static async getMoviesForUpdates(): Promise<ContentUpdates[]> {
     try {
@@ -612,6 +588,30 @@ class Movie {
       const errorMessage = error instanceof Error ? error.message : 'Unknown database error getting movies for updates';
       throw new DatabaseError(errorMessage, error);
     }
+  }
+
+  /**
+   * Transforms a raw database row into a Movie object
+   *
+   * @param movie - Raw database row containing movie data
+   * @returns Properly structured `Movie` object
+   * @private
+   */
+  private static transformMovie(movie: any): Movie {
+    return new Movie(
+      movie.tmdb_id,
+      movie.title,
+      movie.description,
+      movie.release_date,
+      movie.runtime,
+      movie.poster_image,
+      movie.backdrop_image,
+      movie.user_rating,
+      movie.mpa_rating,
+      movie.id,
+      undefined,
+      undefined,
+    );
   }
 }
 

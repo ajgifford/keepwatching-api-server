@@ -36,8 +36,8 @@ export async function getShowDetails(req: Request, res: Response) {
 export async function getProfileEpisodes(req: Request, res: Response) {
   const { profileId } = req.params;
   try {
-    const upcomingEpisodes = await Show.getUpcomingEpisodesForProfile(profileId);
-    const recentEpisodes = await Show.getRecentEpisodesForProfile(profileId);
+    const upcomingEpisodes = await Episode.getUpcomingEpisodesForProfile(profileId);
+    const recentEpisodes = await Episode.getRecentEpisodesForProfile(profileId);
     const nextUnwatchedEpisodes = await Show.getNextUnwatchedEpisodesForProfile(profileId);
     res.status(200).json({
       message: 'Successfully retrieved the episodes for a profile',
@@ -71,8 +71,8 @@ export async function addFavorite(req: Request, res: Response, next: NextFunctio
 async function favoriteExistingShowForNewProfile(showToFavorite: Show, profileId: string, res: Response) {
   await showToFavorite.saveFavorite(profileId, true);
   const show = await Show.getShowForProfile(profileId, showToFavorite.id!);
-  const upcomingEpisodes = await Show.getUpcomingEpisodesForProfile(profileId);
-  const recentEpisodes = await Show.getRecentEpisodesForProfile(profileId);
+  const upcomingEpisodes = await Episode.getUpcomingEpisodesForProfile(profileId);
+  const recentEpisodes = await Episode.getRecentEpisodesForProfile(profileId);
   res.status(200).json({
     message: `Successfully saved ${showToFavorite.title} as a favorite`,
     result: { favoritedShow: show, upcomingEpisodes: upcomingEpisodes, recentEpisodes: recentEpisodes },
@@ -176,8 +176,8 @@ export async function removeFavorite(req: Request, res: Response) {
     const showToRemove = await Show.findById(Number(showId));
     if (showToRemove) {
       await showToRemove.removeFavorite(profileId);
-      const upcomingEpisodes = await Show.getUpcomingEpisodesForProfile(profileId);
-      const recentEpisodes = await Show.getRecentEpisodesForProfile(profileId);
+      const upcomingEpisodes = await Episode.getUpcomingEpisodesForProfile(profileId);
+      const recentEpisodes = await Episode.getRecentEpisodesForProfile(profileId);
       const nextUnwatchedEpisodes = await Show.getNextUnwatchedEpisodesForProfile(profileId);
       res.status(200).json({
         message: 'Successfully removed the show from favorites',
