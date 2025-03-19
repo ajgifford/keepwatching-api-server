@@ -1,5 +1,5 @@
-import { DatabaseError } from '@middleware/errorMiddleware';
-import { getDbPool } from '@utils/db';
+import { DatabaseError } from '../middleware/errorMiddleware';
+import { getDbPool } from '../utils/db';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 
 /**

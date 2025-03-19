@@ -1,6 +1,6 @@
+import { DatabaseError } from '../middleware/errorMiddleware';
 import { ProfileEpisode, ProfileSeason } from '../types/showTypes';
 import { getDbPool } from '../utils/db';
-import { DatabaseError } from '@middleware/errorMiddleware';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 
 /**

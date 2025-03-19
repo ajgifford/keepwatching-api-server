@@ -1,8 +1,8 @@
+import { DatabaseError } from '../middleware/errorMiddleware';
 import { ContentUpdates } from '../types/contentTypes';
 import { ContinueWatchingShow, NextEpisode, ProfileShow, ProfileShowWithSeasons } from '../types/showTypes';
 import { getDbPool } from '../utils/db';
 import Season from './season';
-import { DatabaseError } from '@middleware/errorMiddleware';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { PoolConnection } from 'mysql2/promise';
 import NodeCache from 'node-cache';

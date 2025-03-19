@@ -1,6 +1,6 @@
+import { DatabaseError } from '../middleware/errorMiddleware';
 import { ContentUpdates } from '../types/contentTypes';
 import { getDbPool } from '../utils/db';
-import { DatabaseError } from '@middleware/errorMiddleware';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { PoolConnection } from 'mysql2/promise';
 

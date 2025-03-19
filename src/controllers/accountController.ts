@@ -82,7 +82,7 @@ export const editAccount = asyncHandler(async (req: Request, res: Response, next
 
     const updatedAccount = await account.editAccount(account_name, Number(default_profile_id));
     if (updatedAccount) {
-      res.status(200).send({
+      res.status(200).json({
         message: `Updated account ${id}`,
         result: {
           id: updatedAccount.account_id,
