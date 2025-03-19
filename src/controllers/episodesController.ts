@@ -1,10 +1,11 @@
+import { BadRequestError } from '../middleware/errorMiddleware';
 import Episode from '../models/episode';
 import Season from '../models/season';
 import Show from '../models/show';
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 
 // PUT /api/v1/profiles/${profileId}/episodes/watchstatus
-export const updateEpisodeWatchStatus = async (req: Request, res: Response) => {
+export const updateEpisodeWatchStatus = async (req: Request, res: Response, next: NextFunction) => {
   const { profileId } = req.params;
   try {
     const episode_id = req.body.episode_id;
@@ -13,15 +14,15 @@ export const updateEpisodeWatchStatus = async (req: Request, res: Response) => {
     if (success) {
       res.status(200).json({ message: 'Successfully updated the episode watch status' });
     } else {
-      res.status(400).json({ message: 'No status was updated' });
+      throw new BadRequestError('No episode watch status was updated');
     }
   } catch (error) {
-    res.status(500).json({ message: 'Unexpected error while updating an episode watch status', error: error });
+    next(error);
   }
 };
 
 // PUT /api/v1/profiles/${profileId}/episodes/nextWatchstatus
-export const updateNextEpisodeWatchStatus = async (req: Request, res: Response) => {
+export const updateNextEpisodeWatchStatus = async (req: Request, res: Response, next: NextFunction) => {
   const { profileId } = req.params;
   try {
     const showId = req.body.show_id;
@@ -39,11 +40,9 @@ export const updateNextEpisodeWatchStatus = async (req: Request, res: Response) 
         result: { nextUnwatchedEpisodes: nextUnwatchedEpisodes },
       });
     } else {
-      res.status(400).json({ message: 'No status was updated' });
+      throw new BadRequestError('No next episode watch status was updated');
     }
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: 'Unexpected error while updating the watch status of a keep watching episode', error: error });
+    next(error);
   }
 };
