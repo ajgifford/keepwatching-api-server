@@ -13,7 +13,11 @@ export const updateEpisodeWatchStatus = async (req: Request, res: Response, next
 
     const success = await Episode.updateWatchStatus(profileId, episode_id, status);
     if (success) {
-      res.status(200).json({ message: 'Successfully updated the episode watch status' });
+      const nextUnwatchedEpisodes = await Show.getNextUnwatchedEpisodesForProfile(profileId);
+      res.status(200).json({
+        message: 'Successfully updated the episode watch status',
+        result: { nextUnwatchedEpisodes: nextUnwatchedEpisodes },
+      });
     } else {
       throw new BadRequestError('No episode watch status was updated');
     }
