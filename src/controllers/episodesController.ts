@@ -2,7 +2,8 @@ import { BadRequestError } from '../middleware/errorMiddleware';
 import Episode from '../models/episode';
 import Season from '../models/season';
 import Show from '../models/show';
-import { EpisodeWatchStatusParams, NextEpisodeWatchStatusParams, ProfileIdParams } from '../schema/episodeSchema';
+import { EpisodeWatchStatusParams, NextEpisodeWatchStatusParams } from '../schema/episodeSchema';
+import { ProfileIdParams } from '../schema/profileSchema';
 import { NextFunction, Request, Response } from 'express';
 
 // PUT /api/v1/profiles/${profileId}/episodes/watchstatus

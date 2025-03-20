@@ -1,6 +1,7 @@
 import { updateEpisodeWatchStatus, updateNextEpisodeWatchStatus } from '../controllers/episodesController';
 import { validateRequest } from '../middleware/validationMiddleware';
-import { episodeWatchStatusSchema, nextEpisodeWatchStatusSchema, profileIdParamSchema } from '../schema/episodeSchema';
+import { episodeWatchStatusSchema, nextEpisodeWatchStatusSchema } from '../schema/episodeSchema';
+import { profileIdParamSchema } from '../schema/profileSchema';
 import express from 'express';
 
 const router = express.Router();

@@ -30,10 +30,6 @@ export const idParamSchema = z.object({
   id: z.string().regex(/^\d+$/, 'ID must be a number'),
 });
 
-export const profileIdParamSchema = z.object({
-  profileId: z.string().regex(/^\d+$/, 'Profile ID must be a number'),
-});
-
 export const bothIdsParamSchema = z.object({
   id: z.string().regex(/^\d+$/, 'ID must be a number'),
   profileId: z.string().regex(/^\d+$/, 'Profile ID must be a number'),
@@ -48,6 +44,5 @@ export type AccountUpdateParams = z.infer<typeof accountUpdateSchema>;
 export type LoginParams = z.infer<typeof loginSchema>;
 export type GoogleLoginParams = z.infer<typeof googleLoginSchema>;
 export type AccountIdParams = z.infer<typeof idParamSchema>;
-export type ProfileIdParams = z.infer<typeof profileIdParamSchema>;
 export type AccountProfileIdsParams = z.infer<typeof bothIdsParamSchema>;
 export type ProfileNameParams = z.infer<typeof profileNameSchema>;

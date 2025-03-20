@@ -1,31 +1,35 @@
 import { BadRequestError } from '../middleware/errorMiddleware';
 import Movie from '../models/movie';
+import { ProfileIdParams } from '../schema/profileSchema';
 import { axiosTMDBAPIInstance } from '../utils/axiosInstance';
 import { getUSMPARating } from '../utils/contentUtility';
 import { getUSWatchProviders } from '../utils/watchProvidersUtility';
-import { Request, Response } from 'express';
+import { AddMovieFavoriteParams, MovieWatchStatusParams, RemoveMovieFavoriteParams } from '@schema/movieSchema';
+import { NextFunction, Request, Response } from 'express';
 
 // GET /api/v1/profiles/${profileId}/movies
-export async function getMovies(req: Request, res: Response) {
-  const { profileId } = req.params;
+export async function getMovies(req: Request, res: Response, next: NextFunction) {
   try {
+    const { profileId } = req.params as ProfileIdParams;
+
     const results = await Movie.getAllMoviesForProfile(profileId);
+
     res.status(200).json({ message: 'Successfully retrieved movies for a profile', results: results });
   } catch (error) {
-    res.status(500).json({ message: 'Unexpected error while getting movies', error: error });
+    next(error);
   }
 }
 
 // POST /api/v1/profiles/${profileId}/movies/favorites
-export async function addFavorite(req: Request, res: Response) {
-  const { profileId } = req.params;
-
+export async function addFavorite(req: Request, res: Response, next: NextFunction) {
   try {
-    const movie_id = req.body.id;
-    let movieToFavorite = await Movie.findByTMDBId(movie_id);
+    const { profileId } = req.params as ProfileIdParams;
+    const { id: movieId }: AddMovieFavoriteParams = req.body;
+
+    let movieToFavorite = await Movie.findByTMDBId(movieId);
     if (!movieToFavorite) {
       const response = await axiosTMDBAPIInstance.get(
-        `/movie/${movie_id}?append_to_response=release_dates%2Cwatch%2Fproviders&language=en-US`,
+        `/movie/${movieId}?append_to_response=release_dates%2Cwatch%2Fproviders&language=en-US`,
       );
       const responseMovie = response.data;
       movieToFavorite = new Movie(
@@ -45,22 +49,25 @@ export async function addFavorite(req: Request, res: Response) {
       await movieToFavorite.save();
     }
     await movieToFavorite.saveFavorite(profileId);
+
     const newMovie = await Movie.getMovieForProfile(profileId, movieToFavorite.id!);
     const recentMovies = await Movie.getRecentMovieReleasesForProfile(profileId);
     const upcomingMovies = await Movie.getUpcomingMovieReleasesForProfile(profileId);
+
     res.status(200).json({
       message: `Successfully saved ${movieToFavorite.title} as a favorite`,
       result: { favoritedMovie: newMovie, recentMovies: recentMovies, upcomingMovies: upcomingMovies },
     });
   } catch (error) {
-    res.status(500).json({ message: 'Unexpected error while adding a movie favorite', error: error });
+    next(error);
   }
 }
 
 // DELETE /api/v1/profiles/${profileId}/movies/favorites/${movieId}
-export async function removeFavorite(req: Request, res: Response) {
-  const { profileId, movieId } = req.params;
+export async function removeFavorite(req: Request, res: Response, next: NextFunction) {
   try {
+    const { profileId, movieId } = req.params as RemoveMovieFavoriteParams;
+
     const movieToRemove = await Movie.findById(Number(movieId));
     if (movieToRemove) {
       await movieToRemove.removeFavorite(profileId);
@@ -74,40 +81,41 @@ export async function removeFavorite(req: Request, res: Response) {
       throw new BadRequestError('The movie requested to be removed is not a favorite');
     }
   } catch (error) {
-    res.status(500).json({ message: 'Unexpected error while removing a favorite', error: error });
+    next(error);
   }
 }
 
 // PUT /api/v1/profiles/${profileId}/movies/watchstatus
-export async function updateMovieWatchStatus(req: Request, res: Response) {
-  const { profileId } = req.params;
+export async function updateMovieWatchStatus(req: Request, res: Response, next: NextFunction) {
   try {
-    const movie_id = req.body.movie_id;
-    const status = req.body.status;
+    const { profileId } = req.params as ProfileIdParams;
+    const { movie_id, status }: MovieWatchStatusParams = req.body;
+
     const success = await Movie.updateWatchStatus(profileId, movie_id, status);
+
     if (success) {
       res.status(200).json({ message: 'Successfully updated the watch status' });
     } else {
       throw new BadRequestError('The watch status for the requested movie was not updated');
     }
   } catch (error) {
-    res.status(500).json({ message: 'Unexpected error while updating a watch status', error: error });
+    next(error);
   }
 }
 
 // GET /api/v1/profiles/${profileId}/movies/recentUpcoming
-export async function getRecentUpcomingForProfile(req: Request, res: Response) {
-  const { profileId } = req.params;
+export async function getRecentUpcomingForProfile(req: Request, res: Response, next: NextFunction) {
   try {
+    const { profileId } = req.params as ProfileIdParams;
+
     const recentMovies = await Movie.getRecentMovieReleasesForProfile(profileId);
     const upcomingMovies = await Movie.getUpcomingMovieReleasesForProfile(profileId);
+
     res.status(200).json({
       message: 'Successfully retrieved recent & upcoming movies for a profile',
       results: { recent: recentMovies, upcoming: upcomingMovies },
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: 'Unexpected error while getting recent & upcoming movies for a profile', error: error });
+    next(error);
   }
 }
