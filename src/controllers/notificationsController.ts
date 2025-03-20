@@ -1,5 +1,5 @@
 import Notifications from '../models/notifications';
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 import { Pool } from 'mysql2/promise';
 import { z } from 'zod';
@@ -13,14 +13,22 @@ const dismissSchema = z.object({
   notificationId: z.string().regex(/^\d+$/, 'Notification ID must be numeric').transform(Number),
 });
 
-export const getNotifications = asyncHandler(async (req: Request, res: Response) => {
-  const params = accountIdSchema.parse(req.params);
-  const notifications = await Notifications.getNotificationsForAccount(params.accountId);
-  res.status(200).json({ message: 'Retrieved notifications for an account', results: notifications });
+export const getNotifications = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const params = accountIdSchema.parse(req.params);
+    const notifications = await Notifications.getNotificationsForAccount(params.accountId);
+    res.status(200).json({ message: 'Retrieved notifications for an account', results: notifications });
+  } catch (error) {
+    next(error);
+  }
 });
 
-export const dismissNotification = asyncHandler(async (req: Request, res: Response) => {
-  const params = dismissSchema.parse(req.params);
-  await Notifications.dismissNotification(params.notificationId, params.accountId);
-  res.status(200).json({ message: 'Notification dismissed successfully' });
+export const dismissNotification = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const params = dismissSchema.parse(req.params);
+    await Notifications.dismissNotification(params.notificationId, params.accountId);
+    res.status(200).json({ message: 'Notification dismissed successfully' });
+  } catch (error) {
+    next(error);
+  }
 });

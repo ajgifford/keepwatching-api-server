@@ -16,17 +16,17 @@ const client = new streamingAvailability.Client(
 
 // GET /api/v1/discover/top
 export const discoverTopContent = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  const { showType, service } = req.query as DiscoverTopQuery;
-
-  const cacheKey = `discover_top_${showType}_${service}`;
-  const cachedData = cache.get<DiscoverAndSearchResponse>(cacheKey);
-
-  if (cachedData) {
-    res.status(200).json(cachedData);
-    return;
-  }
-
   try {
+    const { showType, service } = req.query as DiscoverTopQuery;
+
+    const cacheKey = `discover_top_${showType}_${service}`;
+    const cachedData = cache.get<DiscoverAndSearchResponse>(cacheKey);
+
+    if (cachedData) {
+      res.status(200).json(cachedData);
+      return;
+    }
+
     const data = await client.showsApi.getTopShows({
       country: 'us',
       service: service,
@@ -61,17 +61,17 @@ export const discoverTopContent = async (req: Request, res: Response, next: Next
 
 // GET /api/v1/discover/changes
 export const discoverChangesContent = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  const { showType, service, changeType } = req.query as DiscoverChangesQuery;
-
-  const cacheKey = `discover_changes_${showType}_${service}_${changeType}`;
-  const cachedData = cache.get<DiscoverAndSearchResponse>(cacheKey);
-
-  if (cachedData) {
-    res.status(200).json(cachedData);
-    return;
-  }
-
   try {
+    const { showType, service, changeType } = req.query as DiscoverChangesQuery;
+
+    const cacheKey = `discover_changes_${showType}_${service}_${changeType}`;
+    const cachedData = cache.get<DiscoverAndSearchResponse>(cacheKey);
+
+    if (cachedData) {
+      res.status(200).json(cachedData);
+      return;
+    }
+
     const data = await client.changesApi.getChanges({
       changeType: changeType,
       itemType: 'show',
@@ -117,17 +117,17 @@ export const discoverChangesContent = async (req: Request, res: Response, next: 
 
 // GET /api/v1/discover/trending
 export const discoverTrendingContent = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  const { showType, page } = req.query as DiscoverTrendingQuery;
-
-  const cacheKey = `discover_trending_${showType}_${page}`;
-  const cachedData = cache.get<DiscoverAndSearchResponse>(cacheKey);
-
-  if (cachedData) {
-    res.status(200).json(cachedData);
-    return;
-  }
-
   try {
+    const { showType, page } = req.query as DiscoverTrendingQuery;
+
+    const cacheKey = `discover_trending_${showType}_${page}`;
+    const cachedData = cache.get<DiscoverAndSearchResponse>(cacheKey);
+
+    if (cachedData) {
+      res.status(200).json(cachedData);
+      return;
+    }
+
     const mediaType = showType === 'movie' ? 'movie' : 'tv';
     const tmdbResponse = await axiosTMDBAPIInstance.get(`/trending/${mediaType}/week`, {
       params: {
