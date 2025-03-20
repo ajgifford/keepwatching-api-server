@@ -1,3 +1,11 @@
+/**
+ * Account Controller
+ *
+ * This module contains controller functions for handling account-related operations
+ * including profile management and account editing.
+ *
+ * @module controllers/accountController
+ */
 import { BadRequestError, NotFoundError } from '../middleware/errorMiddleware';
 import Account from '../models/account';
 import Episode from '../models/episode';
@@ -14,8 +22,13 @@ import { getAccountImage, getProfileImage } from '../utils/imageUtility';
 import { NextFunction, Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 
-// GET /api/v1/accounts/${id}/profiles
-export const getProfiles = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+/**
+ * Retrieves all profiles for a specific account.
+ *
+ * @route GET /api/v1/accounts/:id/profiles
+ * @throws {BadRequestError} If profiles cannot be retrieved
+ */
+export const getProfiles = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { id } = req.params as AccountIdParams;
 
@@ -33,8 +46,13 @@ export const getProfiles = asyncHandler(async (req: Request, res: Response, next
   }
 });
 
-// GET /api/v1/accounts/${id}/profiles/${profileId}
-export const getProfile = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+/**
+ * Retrieves a specific profile with all its associated content (shows, episodes, movies).
+ *
+ * @route GET /api/v1/accounts/:id/profiles/:profileId
+ * @throws {NotFoundError} If the requested profile is not found
+ */
+export const getProfile = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { profileId } = req.params as AccountProfileIdsParams;
 
@@ -69,8 +87,14 @@ export const getProfile = asyncHandler(async (req: Request, res: Response, next:
   }
 });
 
-// PUT /api/v1/accounts/${id}
-export const editAccount = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+/**
+ * Updates an account's details (name and default profile).
+ *
+ * @route PUT /api/v1/accounts/:id
+ * @throws {NotFoundError} If the account is not found
+ * @throws {BadRequestError} If the account update fails
+ */
+export const editAccount = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { id } = req.params as AccountIdParams;
     const { account_name, default_profile_id }: AccountUpdateParams = req.body;
@@ -100,8 +124,13 @@ export const editAccount = asyncHandler(async (req: Request, res: Response, next
   }
 });
 
-// POST /api/v1/accounts/${id}/profiles
-export const addProfile = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+/**
+ * Creates a new profile for an account.
+ *
+ * @route POST /api/v1/accounts/:id/profiles
+ * @throws {BadRequestError} If the profile creation fails
+ */
+export const addProfile = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { id } = req.params as AccountIdParams;
     const { name }: ProfileNameParams = req.body;
@@ -122,8 +151,14 @@ export const addProfile = asyncHandler(async (req: Request, res: Response, next:
   }
 });
 
-// PUT /api/v1/accounts/${id}/profiles/${profileId}
-export const editProfile = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+/**
+ * Updates an existing profile's details.
+ *
+ * @route PUT /api/v1/accounts/:id/profiles/:profileId
+ * @throws {NotFoundError} If the profile is not found
+ * @throws {BadRequestError} If the profile update fails
+ */
+export const editProfile = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { profileId } = req.params as AccountProfileIdsParams;
     const { name }: ProfileNameParams = req.body;
@@ -151,8 +186,16 @@ export const editProfile = asyncHandler(async (req: Request, res: Response, next
   }
 });
 
-// DELETE /api/v1/accounts/${id}/profiles/${profileId}
-export const deleteProfile = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+/**
+ * Deletes a profile from an account.
+ *
+ * This action will cascade delete all watch status data for the profile.
+ *
+ * @route DELETE /api/v1/accounts/:id/profiles/:profileId
+ * @throws {NotFoundError} If the profile is not found
+ * @throws {BadRequestError} If the profile deletion fails
+ */
+export const deleteProfile = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { profileId } = req.params as AccountProfileIdsParams;
 
