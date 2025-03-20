@@ -1,14 +1,15 @@
 import { BadRequestError } from '../middleware/errorMiddleware';
 import Season from '../models/season';
+import { ProfileIdParams } from '../schema/profileSchema';
+import { SeasonWatchStatusParams } from '../schema/seasonSchema';
 import { NextFunction, Request, Response } from 'express';
 
 // PUT /api/v1/profiles/${profileId}/seasons/watchstatus
 export const updateSeasonWatchStatus = async (req: Request, res: Response, next: NextFunction) => {
-  const { profileId } = req.params;
   try {
-    const season_id = req.body.season_id;
-    const status = req.body.status;
-    const recursive: boolean = req.body.recursive;
+    const { profileId } = req.params as ProfileIdParams;
+    const { season_id, status, recursive = false } = req.body as SeasonWatchStatusParams;
+
     const success = recursive
       ? await Season.updateAllWatchStatuses(profileId, season_id, status)
       : await Season.updateWatchStatus(profileId, season_id, status);
