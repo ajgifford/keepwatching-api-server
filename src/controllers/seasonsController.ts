@@ -1,8 +1,9 @@
+import { BadRequestError } from '../middleware/errorMiddleware';
 import Season from '../models/season';
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 
 // PUT /api/v1/profiles/${profileId}/seasons/watchstatus
-export const updateSeasonWatchStatus = async (req: Request, res: Response) => {
+export const updateSeasonWatchStatus = async (req: Request, res: Response, next: NextFunction) => {
   const { profileId } = req.params;
   try {
     const season_id = req.body.season_id;
@@ -14,9 +15,9 @@ export const updateSeasonWatchStatus = async (req: Request, res: Response) => {
     if (success) {
       res.status(200).json({ message: 'Successfully updated the season watch status' });
     } else {
-      res.status(400).json({ message: 'No status was updated' });
+      throw new BadRequestError('No season watch status was updated');
     }
   } catch (error) {
-    res.status(500).json({ message: 'Unexpected error while updating a season watch status', error: error });
+    next(error);
   }
 };
