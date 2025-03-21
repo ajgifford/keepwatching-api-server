@@ -98,3 +98,9 @@ export class DatabaseError extends CustomError {
     super(message, 500, 'DATABASE_ERROR');
   }
 }
+
+export class TMDBAPIError extends CustomError {
+  constructor(message: string, originalError: any) {
+    super(message, 500, 'TMDB_API_ERROR');
+  }
+}

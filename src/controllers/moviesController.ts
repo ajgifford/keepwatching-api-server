@@ -2,7 +2,7 @@ import { BadRequestError, NotFoundError } from '../middleware/errorMiddleware';
 import Movie from '../models/movie';
 import { AddMovieFavoriteParams, MovieWatchStatusParams, RemoveMovieFavoriteParams } from '../schema/movieSchema';
 import { ProfileIdParams } from '../schema/profileSchema';
-import { axiosTMDBAPIInstance } from '../utils/axiosInstance';
+import { getTMDBService } from '../services/tmdbService';
 import { getUSMPARating } from '../utils/contentUtility';
 import { getUSWatchProviders } from '../utils/watchProvidersUtility';
 import { NextFunction, Request, Response } from 'express';
@@ -40,25 +40,22 @@ export async function addFavorite(req: Request, res: Response, next: NextFunctio
     let movieToFavorite = await Movie.findByTMDBId(movieId);
     if (!movieToFavorite) {
       try {
-        const response = await axiosTMDBAPIInstance.get(
-          `/movie/${movieId}?append_to_response=release_dates%2Cwatch%2Fproviders&language=en-US`,
-        );
-
-        const responseMovie = response.data;
+        const tmdbService = getTMDBService();
+        const response = await tmdbService.getMovieDetails(movieId);
 
         movieToFavorite = new Movie(
-          responseMovie.id,
-          responseMovie.title,
-          responseMovie.overview,
-          responseMovie.release_date,
-          responseMovie.runtime,
-          responseMovie.poster_path,
-          responseMovie.backdrop_path,
-          responseMovie.vote_average,
-          getUSMPARating(responseMovie.release_dates),
+          response.id,
+          response.title,
+          response.overview,
+          response.release_date,
+          response.runtime,
+          response.poster_path,
+          response.backdrop_path,
+          response.vote_average,
+          getUSMPARating(response.release_dates),
           undefined,
-          getUSWatchProviders(responseMovie, 9998),
-          responseMovie.genres.map((genre: { id: any }) => genre.id),
+          getUSWatchProviders(response, 9998),
+          response.genres.map((genre: { id: any }) => genre.id),
         );
 
         const saveSuccess = await movieToFavorite.save();

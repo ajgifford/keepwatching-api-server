@@ -1,6 +1,6 @@
 import { DiscoverChangesQuery, DiscoverTopQuery, DiscoverTrendingQuery } from '../schema/discoverSchema';
+import { getTMDBService } from '../services/tmdbService';
 import { DiscoverAndSearchResponse, DiscoverAndSearchResult } from '../types/discoverAndSearchTypes';
-import { axiosTMDBAPIInstance } from '../utils/axiosInstance';
 import { generateGenreArrayFromIds } from '../utils/genreUtility';
 import { buildTMDBImagePath } from '../utils/imageUtility';
 import { NextFunction, Request, Response } from 'express';
@@ -118,7 +118,7 @@ export const discoverChangesContent = async (req: Request, res: Response, next: 
 // GET /api/v1/discover/trending
 export const discoverTrendingContent = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { showType, page } = req.query as DiscoverTrendingQuery;
+    const { showType, page = '1' } = req.query as DiscoverTrendingQuery;
 
     const cacheKey = `discover_trending_${showType}_${page}`;
     const cachedData = cache.get<DiscoverAndSearchResponse>(cacheKey);
@@ -129,17 +129,16 @@ export const discoverTrendingContent = async (req: Request, res: Response, next:
     }
 
     const mediaType = showType === 'movie' ? 'movie' : 'tv';
-    const tmdbResponse = await axiosTMDBAPIInstance.get(`/trending/${mediaType}/week`, {
-      params: {
-        page: page,
-        language: 'en-US',
-      },
-    });
-    const apiResults: any[] = tmdbResponse.data.results;
+
+    const tmdbService = getTMDBService();
+    const tmdbResponse = await tmdbService.getTrending(mediaType, page);
+
+    const apiResults: any[] = tmdbResponse.results;
     const usResults =
       showType === 'movie'
         ? apiResults.filter((movie) => movie.original_language === 'en')
         : apiResults.filter((show) => show.origin_country && show.origin_country.includes('US'));
+
     const contentItems: DiscoverAndSearchResult[] = usResults.map((result): DiscoverAndSearchResult => {
       return {
         id: result.id,
@@ -156,8 +155,8 @@ export const discoverTrendingContent = async (req: Request, res: Response, next:
     const discoverResponse: DiscoverAndSearchResponse = {
       message: `Found trending ${showType}`,
       results: contentItems,
-      total_results: tmdbResponse.data.total_results,
-      total_pages: tmdbResponse.data.total_pages,
+      total_results: tmdbResponse.total_results,
+      total_pages: tmdbResponse.total_pages,
       current_page: page,
     };
 

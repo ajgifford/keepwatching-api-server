@@ -1,6 +1,6 @@
 import { SearchParams } from '../schema/searchSchema';
+import { getTMDBService } from '../services/tmdbService';
 import { DiscoverAndSearchResult } from '../types/discoverAndSearchTypes';
-import { axiosTMDBAPIInstance } from '../utils/axiosInstance';
 import { generateGenreArrayFromIds } from '../utils/genreUtility';
 import { NextFunction, Request, Response } from 'express';
 import NodeCache from 'node-cache';
@@ -24,7 +24,7 @@ export const searchMovies = async (req: Request, res: Response, next: NextFuncti
 
 async function searchMedia(req: Request, res: Response, next: NextFunction, mediaType: MediaType): Promise<void> {
   try {
-    const { searchString, year, page = 1 } = req.query as unknown as SearchParams;
+    const { searchString, year, page = '1' } = req.query as unknown as SearchParams;
 
     const mediaTypeName = mediaType === MediaType.SHOW ? 'show' : 'movie';
     const cacheKey = `${mediaTypeName}_search_${searchString}_${year}_${page}`;
@@ -35,23 +35,13 @@ async function searchMedia(req: Request, res: Response, next: NextFunction, medi
       return;
     }
 
-    const params: Record<string, any> = {
-      query: searchString,
-      page,
-      include_adult: false,
-      language: req.headers['accept-language'] || 'en-US',
-    };
+    const tmdbService = getTMDBService();
+    const response =
+      mediaType === MediaType.SHOW
+        ? await tmdbService.searchShows(searchString, parseInt(page), year)
+        : await tmdbService.searchMovies(searchString, parseInt(page), year);
 
-    if (mediaType === MediaType.SHOW) {
-      params.first_air_date_year = year;
-    } else {
-      params.primary_release_year = year;
-      params.region = 'US';
-    }
-
-    const response = await axiosTMDBAPIInstance.get(`/search/${mediaType}`, { params });
-
-    const results: any[] = response.data.results;
+    const results: any[] = response.results;
     const searchResult = results.map((result) => {
       return {
         id: result.id,
@@ -67,8 +57,8 @@ async function searchMedia(req: Request, res: Response, next: NextFunction, medi
 
     const responseData = {
       results: searchResult,
-      total_pages: response.data.total_pages,
-      total_results: response.data.total_results,
+      total_pages: response.total_pages,
+      total_results: response.total_results,
       current_page: page,
     };
 
