@@ -1,10 +1,10 @@
 import { BadRequestError, NotFoundError } from '../middleware/errorMiddleware';
 import Movie from '../models/movie';
+import { AddMovieFavoriteParams, MovieWatchStatusParams, RemoveMovieFavoriteParams } from '../schema/movieSchema';
 import { ProfileIdParams } from '../schema/profileSchema';
 import { axiosTMDBAPIInstance } from '../utils/axiosInstance';
 import { getUSMPARating } from '../utils/contentUtility';
 import { getUSWatchProviders } from '../utils/watchProvidersUtility';
-import { AddMovieFavoriteParams, MovieWatchStatusParams, RemoveMovieFavoriteParams } from '@schema/movieSchema';
 import { NextFunction, Request, Response } from 'express';
 
 /**

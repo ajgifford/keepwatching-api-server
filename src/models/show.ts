@@ -753,10 +753,7 @@ class Show {
    * - For shows with many seasons, consider using a paginated version of this method
    * - Database indexes on profile_id, show_id, and season_id are critical for performance
    */
-  static async getShowWithSeasonsForProfile(
-    profileId: string,
-    show_id: string,
-  ): Promise<ProfileShowWithSeasons | null> {
+  static async getShowDetailsForProfile(profileId: string, show_id: string): Promise<ProfileShowWithSeasons | null> {
     try {
       const query = 'SELECT * FROM profile_shows where profile_id = ? AND show_id = ?';
       const [rows] = await getDbPool().execute<RowDataPacket[]>(query, [Number(profileId), Number(show_id)]);
