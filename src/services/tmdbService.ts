@@ -1,5 +1,8 @@
-import { TMDBAPIError } from '../middleware/errorMiddleware';
+import { TransientApiError } from '../middleware/errorMiddleware';
 import { axiosTMDBAPIInstance } from '../utils/axiosInstance';
+import { errorService } from './errorService';
+import { cliLogger } from '@logger/logger';
+import { AxiosError } from 'axios';
 import NodeCache from 'node-cache';
 
 // Cache with 5 minute TTL for common requests
@@ -59,6 +62,34 @@ export interface TMDBService {
   getTrending(mediaType: 'tv' | 'movie', page?: string): Promise<any>;
 
   /**
+   * Get recommendations for a TV show
+   * @param showId - TMDB ID of the show
+   * @returns Show recommendations
+   */
+  getShowRecommendations(showId: number): Promise<any>;
+
+  /**
+   * Get recommendations for a movie
+   * @param movieId - TMDB ID of the movie
+   * @returns Movie recommendations
+   */
+  getMovieRecommendations(movieId: number): Promise<any>;
+
+  /**
+   * Get similar shows for a given TV show
+   * @param showId - TMDB ID of the show
+   * @returns Similar shows
+   */
+  getSimilarShows(showId: number): Promise<any>;
+
+  /**
+   * Get similar movies for a given movie
+   * @param movieId - TMDB ID of the movie
+   * @returns Similar movies
+   */
+  getSimilarMovies(movieId: number): Promise<any>;
+
+  /**
    * Get changes for a specific show
    * @param showId - TMDB ID of the show
    * @param startDate - Start date for changes in YYYY-MM-DD format
@@ -96,51 +127,103 @@ export interface TMDBService {
  * Implementation of TMDBService using Axios
  */
 export class DefaultTMDBService implements TMDBService {
-  async searchShows(query: string, page: number = 1, year?: string): Promise<any> {
-    try {
-      const params: Record<string, any> = {
-        query,
-        page,
-        include_adult: false,
-        language: 'en-US',
-      };
+  private async withRetry<T>(
+    fn: () => Promise<T>,
+    maxRetries: number = 3,
+    baseDelay: number = 1000,
+    context: string,
+  ): Promise<T> {
+    let lastError: Error | null = null;
 
-      if (year) {
-        params.first_air_date_year = year;
+    for (let retry = 0; retry <= maxRetries; retry++) {
+      try {
+        return await fn();
+      } catch (error) {
+        lastError = error as Error;
+
+        if (
+          !(error instanceof TransientApiError) &&
+          !(error instanceof AxiosError && this.isRetriableStatus(error.response?.status))
+        ) {
+          throw errorService.handleError(error, context);
+        }
+
+        if (retry === maxRetries) {
+          throw errorService.handleError(error, `${context} (after ${maxRetries} retries)`);
+        }
+
+        const delay = this.calculateRetryDelay(error, retry, baseDelay);
+        cliLogger.info(`Retrying ${context} after error. Attempt ${retry + 1}/${maxRetries} in ${delay}ms`);
+
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
-
-      const response = await axiosTMDBAPIInstance.get('/search/tv', {
-        params,
-      });
-
-      return response.data;
-    } catch (error) {
-      throw this.handleApiError(error, 'Error searching shows');
     }
+
+    throw errorService.handleError(lastError || new Error('Unknown error'), context);
+  }
+
+  private isRetriableStatus(status?: number): boolean {
+    return status === 408 || status === 429 || status === 502 || status === 503 || status === 504;
+  }
+
+  private calculateRetryDelay(error: any, retry: number, baseDelay: number): number {
+    const retryAfter = error.response?.headers?.['retry-after']
+      ? parseInt(error.response.headers['retry-after']) * 1000
+      : null;
+
+    if (retryAfter) return retryAfter;
+
+    return Math.min(
+      baseDelay * Math.pow(2, retry) * (0.8 + Math.random() * 0.4), // Add 20% jitter
+      60000, // Cap at 1 minute
+    );
+  }
+
+  async searchShows(query: string, page: number = 1, year?: string): Promise<any> {
+    return await this.withRetry(
+      async () => {
+        const params: Record<string, any> = {
+          query,
+          page,
+          include_adult: false,
+          language: 'en-US',
+        };
+
+        if (year) {
+          params.first_air_date_year = year;
+        }
+
+        const response = await axiosTMDBAPIInstance.get('/search/tv', { params });
+        return response.data;
+      },
+      3,
+      1000,
+      `searchShows(${query})`,
+    );
   }
 
   async searchMovies(query: string, page: number = 1, year?: string): Promise<any> {
-    try {
-      const params: Record<string, any> = {
-        query,
-        page,
-        include_adult: false,
-        region: 'US',
-        language: 'en-US',
-      };
+    return await this.withRetry(
+      async () => {
+        const params: Record<string, any> = {
+          query,
+          page,
+          include_adult: false,
+          region: 'US',
+          language: 'en-US',
+        };
 
-      if (year) {
-        params.primary_release_year = year;
-      }
+        if (year) {
+          params.primary_release_year = year;
+        }
 
-      const response = await axiosTMDBAPIInstance.get('/search/movie', {
-        params,
-      });
-
-      return response.data;
-    } catch (error) {
-      throw this.handleApiError(error, 'Error searching movies');
-    }
+        const response = await axiosTMDBAPIInstance.get('/search/movie', { params });
+        return response.data;
+      },
+      3,
+      1000,
+      `searchMovies(${query})`,
+    );
   }
 
   async getShowDetails(id: number): Promise<any> {
@@ -151,13 +234,18 @@ export class DefaultTMDBService implements TMDBService {
       return cachedResult;
     }
 
-    try {
-      const response = await axiosTMDBAPIInstance.get(`/tv/${id}?append_to_response=content_ratings,watch/providers`);
-      tmdbCache.set(cacheKey, response.data);
-      return response.data;
-    } catch (error) {
-      throw this.handleApiError(error, `Error fetching show details for ID: ${id}`);
-    }
+    const data = await this.withRetry(
+      async () => {
+        const response = await axiosTMDBAPIInstance.get(`/tv/${id}?append_to_response=content_ratings,watch/providers`);
+        return response.data;
+      },
+      3,
+      1000,
+      `getShowDetails(${id})`,
+    );
+
+    tmdbCache.set(cacheKey, data);
+    return data;
   }
 
   async getMovieDetails(id: number): Promise<any> {
@@ -168,15 +256,20 @@ export class DefaultTMDBService implements TMDBService {
       return cachedResult;
     }
 
-    try {
-      const response = await axiosTMDBAPIInstance.get(
-        `/movie/${id}?append_to_response=release_dates%2Cwatch%2Fproviders&language=en-US`,
-      );
-      tmdbCache.set(cacheKey, response.data);
-      return response.data;
-    } catch (error) {
-      throw this.handleApiError(error, `Error fetching movie details for ID: ${id}`);
-    }
+    const data = await this.withRetry(
+      async () => {
+        const response = await axiosTMDBAPIInstance.get(
+          `/movie/${id}?append_to_response=release_dates%2Cwatch%2Fproviders&language=en-US`,
+        );
+        return response.data;
+      },
+      3,
+      1000,
+      `getMovieDetails(${id})`,
+    );
+
+    tmdbCache.set(cacheKey, data);
+    return data;
   }
 
   async getSeasonDetails(showId: number, seasonNumber: number): Promise<any> {
@@ -187,13 +280,18 @@ export class DefaultTMDBService implements TMDBService {
       return cachedResult;
     }
 
-    try {
-      const response = await axiosTMDBAPIInstance.get(`/tv/${showId}/season/${seasonNumber}`);
-      tmdbCache.set(cacheKey, response.data);
-      return response.data;
-    } catch (error) {
-      throw this.handleApiError(error, `Error fetching season details for show ID: ${showId}, season: ${seasonNumber}`);
-    }
+    const data = await this.withRetry(
+      async () => {
+        const response = await axiosTMDBAPIInstance.get(`/tv/${showId}/season/${seasonNumber}`);
+        return response.data;
+      },
+      3,
+      1000,
+      `getSeasonDetails(${showId}, ${seasonNumber})`,
+    );
+
+    tmdbCache.set(cacheKey, data);
+    return data;
   }
 
   async getTrending(mediaType: 'tv' | 'movie', page: string = '1'): Promise<any> {
@@ -204,18 +302,127 @@ export class DefaultTMDBService implements TMDBService {
       return cachedResult;
     }
 
-    try {
-      const response = await axiosTMDBAPIInstance.get(`/trending/${mediaType}/week`, {
-        params: {
-          page,
-          language: 'en-US',
-        },
-      });
-      tmdbCache.set(cacheKey, response.data);
-      return response.data;
-    } catch (error) {
-      throw this.handleApiError(error, `Error fetching trending ${mediaType}`);
+    const data = await this.withRetry(
+      async () => {
+        const response = await axiosTMDBAPIInstance.get(`/trending/${mediaType}/week`, {
+          params: {
+            page,
+            language: 'en-US',
+          },
+        });
+        return response.data;
+      },
+      3,
+      1000,
+      `getTrending(${mediaType}, ${page})`,
+    );
+
+    tmdbCache.set(cacheKey, data);
+    return data;
+  }
+
+  async getShowRecommendations(showId: number): Promise<any> {
+    const cacheKey = `show_recommendations_${showId}`;
+    const cachedResult = tmdbCache.get(cacheKey);
+
+    if (cachedResult) {
+      return cachedResult;
     }
+
+    const data = await this.withRetry(
+      async () => {
+        const response = await axiosTMDBAPIInstance.get(`/tv/${showId}/recommendations`, {
+          params: {
+            language: 'en-US',
+          },
+        });
+        return response.data;
+      },
+      3,
+      1000,
+      `getShowRecommendations(${showId})`,
+    );
+
+    tmdbCache.set(cacheKey, data, 43200); // Cache for 12 hours
+    return data;
+  }
+
+  async getSimilarShows(showId: number): Promise<any> {
+    const cacheKey = `similar_shows_${showId}`;
+    const cachedResult = tmdbCache.get(cacheKey);
+
+    if (cachedResult) {
+      return cachedResult;
+    }
+
+    const data = await this.withRetry(
+      async () => {
+        const response = await axiosTMDBAPIInstance.get(`/tv/${showId}/similar`, {
+          params: {
+            language: 'en-US',
+          },
+        });
+        return response.data;
+      },
+      3,
+      1000,
+      `getSimilarShows(${showId})`,
+    );
+
+    tmdbCache.set(cacheKey, data, 43200); // Cache for 12 hours
+    return data;
+  }
+
+  async getMovieRecommendations(movieId: number): Promise<any> {
+    const cacheKey = `movie_recommendations_${movieId}`;
+    const cachedResult = tmdbCache.get(cacheKey);
+
+    if (cachedResult) {
+      return cachedResult;
+    }
+
+    const data = await this.withRetry(
+      async () => {
+        const response = await axiosTMDBAPIInstance.get(`/movie/${movieId}/recommendations`, {
+          params: {
+            language: 'en-US',
+          },
+        });
+        return response.data;
+      },
+      3,
+      1000,
+      `getMovieRecommendations(${movieId})`,
+    );
+
+    tmdbCache.set(cacheKey, data, 43200); // Cache for 12 hours
+    return data;
+  }
+
+  async getSimilarMovies(movieId: number): Promise<any> {
+    const cacheKey = `similar_movies_${movieId}`;
+    const cachedResult = tmdbCache.get(cacheKey);
+
+    if (cachedResult) {
+      return cachedResult;
+    }
+
+    const data = await this.withRetry(
+      async () => {
+        const response = await axiosTMDBAPIInstance.get(`/movie/${movieId}/similar`, {
+          params: {
+            language: 'en-US',
+          },
+        });
+        return response.data;
+      },
+      3,
+      1000,
+      `getSimilarMovies(${movieId})`,
+    );
+
+    tmdbCache.set(cacheKey, data, 43200); // Cache for 12 hours
+    return data;
   }
 
   async getShowChanges(showId: number, startDate: string, endDate: string): Promise<any> {
@@ -226,15 +433,20 @@ export class DefaultTMDBService implements TMDBService {
       return cachedResult;
     }
 
-    try {
-      const response = await axiosTMDBAPIInstance.get(
-        `tv/${showId}/changes?end_date=${endDate}&start_date=${startDate}`,
-      );
-      tmdbCache.set(cacheKey, response.data);
-      return response.data;
-    } catch (error) {
-      throw this.handleApiError(error, `Error fetching changes for show ID: ${showId}`);
-    }
+    const data = await this.withRetry(
+      async () => {
+        const response = await axiosTMDBAPIInstance.get(
+          `tv/${showId}/changes?end_date=${endDate}&start_date=${startDate}`,
+        );
+        return response.data;
+      },
+      3,
+      1000,
+      `getShowChanges(${showId})`,
+    );
+
+    tmdbCache.set(cacheKey, data);
+    return data;
   }
 
   async getMovieChanges(movieId: number, startDate: string, endDate: string): Promise<any> {
@@ -245,15 +457,20 @@ export class DefaultTMDBService implements TMDBService {
       return cachedResult;
     }
 
-    try {
-      const response = await axiosTMDBAPIInstance.get(
-        `movie/${movieId}/changes?end_date=${endDate}&start_date=${startDate}`,
-      );
-      tmdbCache.set(cacheKey, response.data);
-      return response.data;
-    } catch (error) {
-      throw this.handleApiError(error, `Error fetching changes for movie ID: ${movieId}`);
-    }
+    const data = await this.withRetry(
+      async () => {
+        const response = await axiosTMDBAPIInstance.get(
+          `movie/${movieId}/changes?end_date=${endDate}&start_date=${startDate}`,
+        );
+        return response.data;
+      },
+      3,
+      1000,
+      `getMovieChanges(${movieId})`,
+    );
+
+    tmdbCache.set(cacheKey, data);
+    return data;
   }
 
   async getSeasonChanges(seasonId: number, startDate: string, endDate: string): Promise<any> {
@@ -264,15 +481,20 @@ export class DefaultTMDBService implements TMDBService {
       return cachedResult;
     }
 
-    try {
-      const response = await axiosTMDBAPIInstance.get(
-        `tv/season/${seasonId}/changes?end_date=${endDate}&start_date=${startDate}`,
-      );
-      tmdbCache.set(cacheKey, response.data);
-      return response.data;
-    } catch (error) {
-      throw this.handleApiError(error, `Error fetching changes for season ID: ${seasonId}`);
-    }
+    const data = await this.withRetry(
+      async () => {
+        const response = await axiosTMDBAPIInstance.get(
+          `tv/season/${seasonId}/changes?end_date=${endDate}&start_date=${startDate}`,
+        );
+        return response.data;
+      },
+      3,
+      1000,
+      `getSeasonChanges(${seasonId})`,
+    );
+
+    tmdbCache.set(cacheKey, data);
+    return data;
   }
 
   clearCache(key?: string): void {
@@ -281,16 +503,6 @@ export class DefaultTMDBService implements TMDBService {
     } else {
       tmdbCache.flushAll();
     }
-  }
-
-  private handleApiError(error: any, customMessage: string): Error {
-    if (error.isAxiosError && error.response && error.response.status === 429) {
-      return error;
-    }
-    if (error.response && error.response.data && error.response.data.status_message) {
-      return new TMDBAPIError(`${customMessage}: ${error.response.data.status_message}`, error);
-    }
-    return new TMDBAPIError(error instanceof Error ? error.message : customMessage, error);
   }
 }
 

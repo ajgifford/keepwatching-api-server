@@ -105,3 +105,79 @@ export async function updateShowWatchStatus(req: Request, res: Response, next: N
     next(error);
   }
 }
+
+/**
+ * Get recommended shows based on a specific show
+ *
+ * @route GET /api/v1/profiles/:profileId/shows/:showId/recommendations
+ */
+export async function getShowRecommendations(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { profileId, showId } = req.params as ShowAndProfileParams;
+    const recommendations = await showService.getShowRecommendations(profileId, Number(showId));
+
+    res.status(200).json({
+      message: 'Successfully retrieved show recommendations',
+      results: recommendations,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Get similar shows based on a specific show
+ *
+ * @route GET /api/v1/profiles/:profileId/shows/:showId/similar
+ */
+export async function getSimilarShows(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { profileId, showId } = req.params as ShowAndProfileParams;
+    const similarShows = await showService.getSimilarShows(profileId, Number(showId));
+
+    res.status(200).json({
+      message: 'Successfully retrieved similar shows',
+      results: similarShows,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Get statistics about a user's shows
+ *
+ * @route GET /api/v1/profiles/:profileId/shows/statistics
+ */
+export async function getShowStatistics(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { profileId } = req.params as ProfileIdParams;
+    const statistics = await showService.getShowStatistics(profileId);
+
+    res.status(200).json({
+      message: 'Successfully retrieved show statistics',
+      results: statistics,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Get detailed watch progress for a profile's shows
+ *
+ * @route GET /api/v1/profiles/:profileId/shows/progress
+ */
+export async function getWatchProgress(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { profileId } = req.params as ProfileIdParams;
+    const progress = await showService.getWatchProgress(profileId);
+
+    res.status(200).json({
+      message: 'Successfully retrieved watch progress',
+      results: progress,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
