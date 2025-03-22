@@ -442,11 +442,16 @@ export class ShowService {
           // Get genre distribution
           const genreCounts: Record<string, number> = {};
           shows.forEach((show) => {
-            if (show.genres) {
-              const genreArray = typeof show.genres === 'string' ? JSON.parse(show.genres) : show.genres;
+            if (show.genres && typeof show.genres === 'string') {
+              // Split the comma-separated string into an array
+              const genreArray = show.genres.split(',').map((genre) => genre.trim());
 
+              // Count occurrences of each genre
               genreArray.forEach((genre: string) => {
-                genreCounts[genre] = (genreCounts[genre] || 0) + 1;
+                if (genre) {
+                  // Skip empty strings
+                  genreCounts[genre] = (genreCounts[genre] || 0) + 1;
+                }
               });
             }
           });
@@ -454,14 +459,16 @@ export class ShowService {
           // Get streaming service distribution
           const serviceCounts: Record<string, number> = {};
           shows.forEach((show) => {
-            if (show.streaming_services) {
-              const serviceArray =
-                typeof show.streaming_services === 'string'
-                  ? JSON.parse(show.streaming_services)
-                  : show.streaming_services;
+            if (show.streaming_services && typeof show.streaming_services === 'string') {
+              // Split the comma-separated string into an array
+              const serviceArray = show.streaming_services.split(',').map((service) => service.trim());
 
+              // Count occurrences of each service
               serviceArray.forEach((service: string) => {
-                serviceCounts[service] = (serviceCounts[service] || 0) + 1;
+                if (service) {
+                  // Skip empty strings
+                  serviceCounts[service] = (serviceCounts[service] || 0) + 1;
+                }
               });
             }
           });

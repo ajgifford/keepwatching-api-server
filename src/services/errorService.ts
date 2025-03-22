@@ -19,31 +19,22 @@ export class ErrorService {
    * @returns A consistent CustomError object
    */
   public handleError(error: unknown, context: string): CustomError {
-    // Log the error with context
-    httpLogger.error(`Error in ${context}:`, { error });
-
-    // Already a CustomError, just return it
     if (error instanceof CustomError) {
       return error;
     }
 
-    // Handle Axios errors (from external APIs)
     if (error instanceof AxiosError) {
       return this.handleAxiosError(error, context);
     }
 
-    // Handle standard JS Error
     if (error instanceof Error) {
-      // Check for typical database error patterns
       if (error.message.includes('database') || error.message.includes('sql') || error.message.includes('query')) {
         return new DatabaseError(`Database error in ${context}: ${error.message}`, error);
       }
 
-      // General error case
       return new BadRequestError(`Error in ${context}: ${error.message}`);
     }
 
-    // Unknown error type - provide a generic message
     return new BadRequestError(`Unknown error in ${context}`);
   }
 
@@ -51,7 +42,6 @@ export class ErrorService {
    * Special handling for Axios errors (external API calls)
    */
   private handleAxiosError(error: AxiosError, context: string): CustomError {
-    // Handle different response status codes
     if (error.response) {
       const status = error.response.status;
 
