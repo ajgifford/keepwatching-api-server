@@ -1,14 +1,15 @@
 import 'module-alias/register';
+
 import 'dotenv/config';
 
 import { initScheduledJobs } from './controllers/changesController';
 import { cliLogger, httpLogger } from './logger/logger';
 import { ErrorMessages } from './logger/loggerModel';
-import { authenticateUser } from './middleware/authMiddleware';
+import { authenticateUser } from './middleware/authenticationMiddleware';
 import { errorHandler } from './middleware/errorMiddleware';
 import responseInterceptor from './middleware/loggerMiddleware';
 import accountRouter from './routes/accountRouter';
-import authRouter from './routes/authRouter';
+import authenticationRouter from './routes/authenticationRouter';
 import discoverRouter from './routes/discoverRouter';
 import episodesRouter from './routes/episodesRouter';
 import fileRouter from './routes/fileRouter';
@@ -94,7 +95,7 @@ app.use('/uploads', express.static(UPLOADS_DIR));
 app.use(ensureSecure);
 app.use(limiter);
 
-app.use(authRouter);
+app.use(authenticationRouter);
 app.use(authenticateUser, accountRouter);
 app.use(authenticateUser, searchRouter);
 app.use(authenticateUser, discoverRouter);

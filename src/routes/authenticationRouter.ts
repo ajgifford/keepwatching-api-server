@@ -1,4 +1,4 @@
-import { googleLogin, login, register } from '../controllers/authController';
+import { googleLogin, login, register } from '../controllers/authenticationController';
 import { validateSchema } from '../middleware/validationMiddleware';
 import { accountSchema, googleLoginSchema, loginSchema } from '../schema/accountSchema';
 import express from 'express';
