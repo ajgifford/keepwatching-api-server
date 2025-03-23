@@ -7,6 +7,7 @@ import Season from '../models/season';
 import Show from '../models/show';
 import { getEpisodeToAirId, getInProduction, getUSNetwork, getUSRating } from '../utils/contentUtility';
 import { generateGenreArrayFromIds } from '../utils/genreUtility';
+import { filterUSOrEnglishShows } from '../utils/usSearchFilter';
 import { getUSWatchProviders } from '../utils/watchProvidersUtility';
 import { CacheService } from './cacheService';
 import { errorService } from './errorService';
@@ -358,11 +359,12 @@ export class ShowService {
         async () => {
           const tmdbService = getTMDBService();
           const response = await tmdbService.getShowRecommendations(show.tmdb_id);
+          const responseShows = filterUSOrEnglishShows(response.results);
 
           const userShows = await Show.getAllShowsForProfile(profileId);
           const userShowIds = new Set(userShows.map((s) => s.tmdb_id));
 
-          const recommendations = response.results.map((rec: any) => ({
+          const recommendations = responseShows.map((rec: any) => ({
             id: rec.id,
             title: rec.name,
             genres: generateGenreArrayFromIds(rec.genre_ids),
@@ -371,6 +373,8 @@ export class ShowService {
             image: rec.poster_path,
             rating: rec.vote_average,
             popularity: rec.popularity,
+            country: rec.origin_country,
+            language: rec.original_language,
             inFavorites: userShowIds.has(rec.id),
           }));
 
@@ -400,11 +404,12 @@ export class ShowService {
         async () => {
           const tmdbService = getTMDBService();
           const response = await tmdbService.getSimilarShows(show.tmdb_id);
+          const responseShows = filterUSOrEnglishShows(response.results);
 
           const userShows = await Show.getAllShowsForProfile(profileId);
           const userShowIds = new Set(userShows.map((s) => s.tmdb_id));
 
-          const similarShows = response.results.map((rec: any) => ({
+          const similarShows = responseShows.map((rec: any) => ({
             id: rec.id,
             title: rec.name,
             genres: generateGenreArrayFromIds(rec.genre_ids),
@@ -413,6 +418,8 @@ export class ShowService {
             image: rec.poster_path,
             rating: rec.vote_average,
             popularity: rec.popularity,
+            country: rec.origin_country,
+            language: rec.original_language,
             inFavorites: userShowIds.has(rec.id),
           }));
 
