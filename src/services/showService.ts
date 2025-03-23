@@ -6,6 +6,7 @@ import Episode from '../models/episode';
 import Season from '../models/season';
 import Show from '../models/show';
 import { getEpisodeToAirId, getInProduction, getUSNetwork, getUSRating } from '../utils/contentUtility';
+import { generateGenreArrayFromIds } from '../utils/genreUtility';
 import { getUSWatchProviders } from '../utils/watchProvidersUtility';
 import { CacheService } from './cacheService';
 import { errorService } from './errorService';
@@ -364,10 +365,12 @@ export class ShowService {
           const recommendations = response.results.map((rec: any) => ({
             id: rec.id,
             title: rec.name,
-            overview: rec.overview,
+            genres: generateGenreArrayFromIds(rec.genre_ids),
+            premiered: rec.first_air_date,
+            summary: rec.overview,
             image: rec.poster_path,
-            releaseDate: rec.first_air_date,
             rating: rec.vote_average,
+            popularity: rec.popularity,
             inFavorites: userShowIds.has(rec.id),
           }));
 
@@ -404,10 +407,12 @@ export class ShowService {
           const similarShows = response.results.map((rec: any) => ({
             id: rec.id,
             title: rec.name,
-            overview: rec.overview,
+            genres: generateGenreArrayFromIds(rec.genre_ids),
+            premiered: rec.first_air_date,
+            summary: rec.overview,
             image: rec.poster_path,
-            releaseDate: rec.first_air_date,
             rating: rec.vote_average,
+            popularity: rec.popularity,
             inFavorites: userShowIds.has(rec.id),
           }));
 
