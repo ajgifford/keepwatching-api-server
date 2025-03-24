@@ -6,21 +6,56 @@ import {
   getProfile,
   getProfiles,
 } from '../controllers/accountController';
+import { authorizeAccountAccess } from '../middleware/authorizationMiddleware';
 import { validateRequest, validateSchema } from '../middleware/validationMiddleware';
-import { accountUpdateSchema, bothIdsParamSchema, idParamSchema, profileNameSchema } from '../schema/accountSchema';
+import {
+  accountAndProfileIdsParamSchema,
+  accountIdParamSchema,
+  accountUpdateSchema,
+  profileNameSchema,
+} from '../schema/accountSchema';
 import express from 'express';
 
 const router = express.Router();
 
-router.put('/api/v1/accounts/:id', validateRequest(accountUpdateSchema, idParamSchema), editAccount);
-router.get('/api/v1/accounts/:id/profiles', validateSchema(idParamSchema, 'params'), getProfiles);
-router.get('/api/v1/accounts/:id/profiles/:profileId', validateSchema(bothIdsParamSchema, 'params'), getProfile);
-router.post('/api/v1/accounts/:id/profiles', validateRequest(profileNameSchema, idParamSchema), addProfile);
 router.put(
-  '/api/v1/accounts/:id/profiles/:profileId',
-  validateRequest(profileNameSchema, bothIdsParamSchema),
+  '/api/v1/accounts/:accountId',
+  validateSchema(accountUpdateSchema, 'params'),
+  authorizeAccountAccess,
+  validateRequest(accountUpdateSchema),
+  editAccount,
+);
+router.get(
+  '/api/v1/accounts/:accountId/profiles',
+  validateSchema(accountIdParamSchema, 'params'),
+  authorizeAccountAccess,
+  getProfiles,
+);
+router.get(
+  '/api/v1/accounts/:accountId/profiles/:profileId',
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
+  getProfile,
+);
+router.post(
+  '/api/v1/accounts/:accountId/profiles',
+  validateSchema(accountIdParamSchema, 'params'),
+  authorizeAccountAccess,
+  validateRequest(profileNameSchema),
+  addProfile,
+);
+router.put(
+  '/api/v1/accounts/:accountId/profiles/:profileId',
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
+  validateRequest(profileNameSchema),
   editProfile,
 );
-router.delete('/api/v1/accounts/:id/profiles/:profileId', validateSchema(bothIdsParamSchema, 'params'), deleteProfile);
+router.delete(
+  '/api/v1/accounts/:accountId/profiles/:profileId',
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
+  deleteProfile,
+);
 
 export default router;

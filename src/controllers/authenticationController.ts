@@ -1,7 +1,7 @@
 import { httpLogger } from '../logger/logger';
 import { AuthenticationError, ConflictError } from '../middleware/errorMiddleware';
 import Account from '../models/account';
-import { AccountParams, GoogleLoginParams, LoginParams } from '../schema/accountSchema';
+import { AccountParams, GoogleLoginParams, LoginParam } from '../schema/accountSchema';
 import { getAccountImage, getPhotoForGoogleAccount } from '../utils/imageUtility';
 import { NextFunction, Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
@@ -38,7 +38,7 @@ export const register = asyncHandler(async (req: Request, res: Response, next: N
 // POST /api/v1/login
 export const login = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { uid }: LoginParams = req.body;
+    const { uid }: LoginParam = req.body;
 
     const account = await Account.findByUID(uid);
     if (!account) {

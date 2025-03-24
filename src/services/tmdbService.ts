@@ -1,7 +1,7 @@
+import { cliLogger } from '../logger/logger';
 import { TransientApiError } from '../middleware/errorMiddleware';
 import { axiosTMDBAPIInstance } from '../utils/axiosInstance';
 import { errorService } from './errorService';
-import { cliLogger } from '@logger/logger';
 import { AxiosError } from 'axios';
 import NodeCache from 'node-cache';
 

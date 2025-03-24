@@ -1,11 +1,12 @@
 import Notifications from '../models/notifications';
-import { AccountIdParams, DismissParams } from '../schema/notificationsSchema';
+import { AccountIdParam } from '../schema/accountSchema';
+import { DismissParams } from '../schema/notificationsSchema';
 import { NextFunction, Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 
 export const getNotifications = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { accountId } = req.params as AccountIdParams;
+    const { accountId } = req.params as AccountIdParam;
     const notifications = await Notifications.getNotificationsForAccount(Number(accountId));
     res.status(200).json({ message: 'Retrieved notifications for an account', results: notifications });
   } catch (error) {

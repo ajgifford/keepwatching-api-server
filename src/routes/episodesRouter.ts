@@ -1,20 +1,25 @@
 import { updateEpisodeWatchStatus, updateNextEpisodeWatchStatus } from '../controllers/episodesController';
-import { validateRequest } from '../middleware/validationMiddleware';
+import { authorizeAccountAccess } from '../middleware/authorizationMiddleware';
+import { validateRequest, validateSchema } from '../middleware/validationMiddleware';
+import { accountAndProfileIdsParamSchema } from '../schema/accountSchema';
 import { episodeWatchStatusSchema, nextEpisodeWatchStatusSchema } from '../schema/episodeSchema';
-import { profileIdParamSchema } from '../schema/profileSchema';
 import express from 'express';
 
 const router = express.Router();
 
 router.put(
-  '/api/v1/profiles/:profileId/episodes/watchStatus',
-  validateRequest(episodeWatchStatusSchema, profileIdParamSchema),
+  '/api/v1/accounts/:accountId/profiles/:profileId/episodes/watchStatus',
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
+  validateRequest(episodeWatchStatusSchema),
   updateEpisodeWatchStatus,
 );
 
 router.put(
-  '/api/v1/profiles/:profileId/episodes/nextWatchStatus',
-  validateRequest(nextEpisodeWatchStatusSchema, profileIdParamSchema),
+  '/api/v1/accounts/:accountId/profiles/:profileId/episodes/nextWatchStatus',
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
+  validateRequest(nextEpisodeWatchStatusSchema),
   updateNextEpisodeWatchStatus,
 );
 

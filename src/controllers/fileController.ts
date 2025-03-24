@@ -4,14 +4,15 @@ import { BadRequestError } from '../middleware/errorMiddleware';
 import uploadFileMiddleware from '../middleware/uploadMiddleware';
 import Account from '../models/account';
 import Profile from '../models/profile';
+import { AccountAndProfileIdsParams, AccountIdParam } from '../schema/accountSchema';
 import { getAccountImage, getProfileImage } from '../utils/imageUtility';
 import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 import fs from 'fs';
 
-// POST /api/v1/upload/accounts/${id}
+// POST /api/v1/upload/accounts/:accountId
 export const uploadAccountImage = asyncHandler(async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const { accountId } = req.params as AccountIdParam;
   try {
     await uploadFileMiddleware(req, res);
 
@@ -19,7 +20,7 @@ export const uploadAccountImage = asyncHandler(async (req: Request, res: Respons
       res.status(400).send({ message: 'Please upload a file!' });
     } else {
       const accountImage = req.file.filename;
-      const account = await Account.findById(Number(id));
+      const account = await Account.findById(Number(accountId));
       if (account) {
         const updatedAccount = await account.updateAccountImage(accountImage);
         if (updatedAccount) {
@@ -37,7 +38,7 @@ export const uploadAccountImage = asyncHandler(async (req: Request, res: Respons
           fs.unlink(filePath, (err) => {
             if (err) {
               if (err.code === 'ENOENT') {
-                httpLogger.info('File not found when attemting to delete');
+                httpLogger.info('File not found when attempting to delete');
               } else {
                 httpLogger.info('Unexpected exception when attempting to delete', err);
               }
@@ -57,9 +58,9 @@ export const uploadAccountImage = asyncHandler(async (req: Request, res: Respons
   }
 });
 
-// POST /api/v1/upload/profiles/${id}
+// POST /api/v1/upload/accounts/:accountId/profiles/:profileId
 export const uploadProfileImage = asyncHandler(async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const { profileId } = req.params as AccountAndProfileIdsParams;
   try {
     await uploadFileMiddleware(req, res);
 
@@ -67,7 +68,7 @@ export const uploadProfileImage = asyncHandler(async (req: Request, res: Respons
       res.status(400).send({ message: 'Please upload a file!' });
     } else {
       const profileImage = req.file.filename;
-      const profile = await Profile.findById(Number(id));
+      const profile = await Profile.findById(Number(profileId));
       if (profile) {
         const updatedProfile = await profile.updateProfileImage(profileImage);
         if (updatedProfile) {
@@ -83,7 +84,7 @@ export const uploadProfileImage = asyncHandler(async (req: Request, res: Respons
           fs.unlink(filePath, (err) => {
             if (err) {
               if (err.code === 'ENOENT') {
-                httpLogger.info('File not found when attemting to delete');
+                httpLogger.info('File not found when attempting to delete');
               } else {
                 httpLogger.info('Unexpected exception when attempting to delete', err);
               }

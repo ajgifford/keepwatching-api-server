@@ -1,14 +1,17 @@
 import { updateSeasonWatchStatus } from '../controllers/seasonsController';
-import { validateRequest } from '../middleware/validationMiddleware';
-import { profileIdParamSchema } from '../schema/profileSchema';
+import { authorizeAccountAccess } from '../middleware/authorizationMiddleware';
+import { validateRequest, validateSchema } from '../middleware/validationMiddleware';
+import { accountAndProfileIdsParamSchema } from '../schema/accountSchema';
 import { seasonWatchStatusSchema } from '../schema/seasonSchema';
 import express from 'express';
 
 const router = express.Router();
 
 router.put(
-  '/api/v1/profiles/:profileId/seasons/watchstatus',
-  validateRequest(seasonWatchStatusSchema, profileIdParamSchema),
+  '/api/v1/accounts/:accountId/profiles/:profileId/seasons/watchstatus',
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
+  validateRequest(seasonWatchStatusSchema),
   updateSeasonWatchStatus,
 );
 

@@ -5,32 +5,44 @@ import {
   removeFavorite,
   updateMovieWatchStatus,
 } from '../controllers/moviesController';
+import { authorizeAccountAccess } from '../middleware/authorizationMiddleware';
 import { validateRequest, validateSchema } from '../middleware/validationMiddleware';
+import { accountAndProfileIdsParamSchema } from '../schema/accountSchema';
 import { addMovieFavoriteSchema, movieWatchStatusSchema, removeMovieFavoriteParamSchema } from '../schema/movieSchema';
-import { profileIdParamSchema } from '../schema/profileSchema';
 import express from 'express';
 
 const router = express.Router();
 
-router.get('/api/v1/profiles/:profileId/movies', validateSchema(profileIdParamSchema, 'params'), getMovies);
+router.get(
+  '/api/v1/accounts/:accountId/profiles/:profileId/movies',
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
+  getMovies,
+);
 router.post(
-  '/api/v1/profiles/:profileId/movies/favorites',
-  validateRequest(addMovieFavoriteSchema, profileIdParamSchema),
+  '/api/v1/accounts/:accountId/profiles/:profileId/movies/favorites',
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
+  validateRequest(addMovieFavoriteSchema),
   addFavorite,
 );
 router.delete(
-  '/api/v1/profiles/:profileId/movies/favorites/:movieId',
+  '/api/v1/accounts/:accountId/profiles/:profileId/movies/favorites/:movieId',
   validateSchema(removeMovieFavoriteParamSchema, 'params'),
+  authorizeAccountAccess,
   removeFavorite,
 );
 router.put(
-  '/api/v1/profiles/:profileId/movies/watchstatus',
-  validateRequest(movieWatchStatusSchema, profileIdParamSchema),
+  '/api/v1/accounts/:accountId/profiles/:profileId/movies/watchstatus',
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
+  validateRequest(movieWatchStatusSchema),
   updateMovieWatchStatus,
 );
 router.get(
-  '/api/v1/profiles/:profileId/movies/recentUpcoming',
-  validateSchema(profileIdParamSchema, 'params'),
+  '/api/v1/accounts/:accountId/profiles/:profileId/movies/recentUpcoming',
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
   getRecentUpcomingForProfile,
 );
 

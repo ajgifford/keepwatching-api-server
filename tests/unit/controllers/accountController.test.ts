@@ -27,7 +27,7 @@ describe('accountController', () => {
     let req: any, res: any, next: any;
 
     beforeEach(() => {
-      req = { params: { id: '1' }, body: { account_name: 'Updated Account 1', default_profile_id: 12 } };
+      req = { params: { accountId: '1' }, body: { name: 'Updated Account 1', defaultProfileId: 12 } };
       res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
       next = jest.fn();
 
@@ -131,7 +131,7 @@ describe('accountController', () => {
     let req: any, res: any, next: any;
 
     beforeEach(() => {
-      req = { params: { id: '1' }, body: { name: 'Added Profile 12' } };
+      req = { params: { accountId: '1' }, body: { name: 'Added Profile 12' } };
       res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
       next = jest.fn();
 
@@ -217,7 +217,7 @@ describe('accountController', () => {
     let req: any, res: any, next: any;
 
     beforeEach(() => {
-      req = { params: { id: '1', profileId: '11' }, body: { name: 'Edit Profile 11' } };
+      req = { params: { accountId: '1', profileId: '11' }, body: { name: 'Edit Profile 11' } };
       res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
       next = jest.fn();
 
@@ -331,7 +331,7 @@ describe('accountController', () => {
     let req: any, res: any, next: any;
 
     beforeEach(() => {
-      req = { params: { id: '1' } };
+      req = { params: { accountId: '1' } };
       res = {
         status: jest.fn().mockReturnThis(),
         json: jest.fn(),
@@ -395,7 +395,7 @@ describe('accountController', () => {
     let req: any, res: any, next: any;
 
     beforeEach(() => {
-      req = { params: { id: '1', profileId: '12' } };
+      req = { params: { accountId: '1', profileId: '12' } };
       res = {
         status: jest.fn().mockReturnThis(),
         json: jest.fn(),

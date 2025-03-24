@@ -13,10 +13,10 @@ import Movie from '../models/movie';
 import Profile from '../models/profile';
 import Show from '../models/show';
 import {
-  AccountIdParams,
-  AccountProfileIdsParams,
+  AccountAndProfileIdsParams,
+  AccountIdParam,
   AccountUpdateParams,
-  ProfileNameParams,
+  ProfileNameParam,
 } from '../schema/accountSchema';
 import { getAccountImage, getProfileImage } from '../utils/imageUtility';
 import { NextFunction, Request, Response } from 'express';
@@ -30,14 +30,14 @@ import asyncHandler from 'express-async-handler';
  */
 export const getProfiles = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { id } = req.params as AccountIdParams;
+    const { accountId } = req.params as AccountIdParam;
 
-    const profiles = await Profile.getAllByAccountId(Number(id));
+    const profiles = await Profile.getAllByAccountId(Number(accountId));
     if (profiles) {
       const responseProfiles = profiles.map((profile) => {
         return { id: profile.id, name: profile.name, image: getProfileImage(profile) };
       });
-      res.status(200).json({ message: `Retrieved profiles for account ${id}`, results: responseProfiles });
+      res.status(200).json({ message: `Retrieved profiles for account ${accountId}`, results: responseProfiles });
     } else {
       throw new BadRequestError('Failed to get all profiles for an account');
     }
@@ -54,7 +54,7 @@ export const getProfiles = asyncHandler(async (req: Request, res: Response, next
  */
 export const getProfile = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { profileId } = req.params as AccountProfileIdsParams;
+    const { profileId } = req.params as AccountAndProfileIdsParams;
 
     const profile = await Profile.findById(Number(profileId));
     if (profile) {
@@ -96,18 +96,18 @@ export const getProfile = asyncHandler(async (req: Request, res: Response, next:
  */
 export const editAccount = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { id } = req.params as AccountIdParams;
-    const { account_name, default_profile_id }: AccountUpdateParams = req.body;
+    const { accountId } = req.params as AccountIdParam;
+    const { name, defaultProfileId }: AccountUpdateParams = req.body;
 
-    const account = await Account.findById(Number(id));
+    const account = await Account.findById(Number(accountId));
     if (!account) {
       throw new NotFoundError('Account not found');
     }
 
-    const updatedAccount = await account.editAccount(account_name, Number(default_profile_id));
+    const updatedAccount = await account.editAccount(name, Number(defaultProfileId));
     if (updatedAccount) {
       res.status(200).json({
-        message: `Updated account ${id}`,
+        message: `Updated account ${accountId}`,
         result: {
           id: updatedAccount.account_id,
           name: updatedAccount.account_name,
@@ -132,10 +132,10 @@ export const editAccount = asyncHandler(async (req: Request, res: Response, next
  */
 export const addProfile = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { id } = req.params as AccountIdParams;
-    const { name }: ProfileNameParams = req.body;
+    const { accountId } = req.params as AccountIdParam;
+    const { name }: ProfileNameParam = req.body;
 
-    const profile = new Profile(Number(id), name);
+    const profile = new Profile(Number(accountId), name);
     await profile.save();
 
     if (profile.id) {
@@ -160,8 +160,8 @@ export const addProfile = asyncHandler(async (req: Request, res: Response, next:
  */
 export const editProfile = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { profileId } = req.params as AccountProfileIdsParams;
-    const { name }: ProfileNameParams = req.body;
+    const { profileId } = req.params as AccountAndProfileIdsParams;
+    const { name }: ProfileNameParam = req.body;
 
     const profile = await Profile.findById(Number(profileId));
     if (!profile) {
@@ -197,7 +197,7 @@ export const editProfile = asyncHandler(async (req: Request, res: Response, next
  */
 export const deleteProfile = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { profileId } = req.params as AccountProfileIdsParams;
+    const { profileId } = req.params as AccountAndProfileIdsParams;
 
     const profile = await Profile.findById(Number(profileId));
     if (!profile) {

@@ -1,7 +1,7 @@
 import { BadRequestError, NotFoundError } from '../middleware/errorMiddleware';
 import Movie from '../models/movie';
+import { AccountAndProfileIdsParams } from '../schema/accountSchema';
 import { AddMovieFavoriteParams, MovieWatchStatusParams, RemoveMovieFavoriteParams } from '../schema/movieSchema';
-import { ProfileIdParams } from '../schema/profileSchema';
 import { getTMDBService } from '../services/tmdbService';
 import { getUSMPARating } from '../utils/contentUtility';
 import { getUSWatchProviders } from '../utils/watchProvidersUtility';
@@ -10,11 +10,11 @@ import { NextFunction, Request, Response } from 'express';
 /**
  * Get all movies for a specific profile
  *
- * @route GET /api/v1/profiles/:profileId/movies
+ * @route GET /api/v1/accounts/:accountId/profiles/:profileId/movies
  */
 export async function getMovies(req: Request, res: Response, next: NextFunction) {
   try {
-    const { profileId } = req.params as ProfileIdParams;
+    const { profileId } = req.params as AccountAndProfileIdsParams;
 
     const results = await Movie.getAllMoviesForProfile(profileId);
 
@@ -30,12 +30,12 @@ export async function getMovies(req: Request, res: Response, next: NextFunction)
  * If the movie doesn't exist in the system, it will fetch details from TMDB
  * and create it before adding it to favorites
  *
- * @route POST /api/v1/profiles/:profileId/movies/favorites
+ * @route POST /api/v1/accounts/:accountId/profiles/:profileId/movies/favorites
  */
 export async function addFavorite(req: Request, res: Response, next: NextFunction) {
   try {
-    const { profileId } = req.params as ProfileIdParams;
-    const { id: movieId }: AddMovieFavoriteParams = req.body;
+    const { profileId } = req.params as AccountAndProfileIdsParams;
+    const { movieId }: AddMovieFavoriteParams = req.body;
 
     let movieToFavorite = await Movie.findByTMDBId(movieId);
     if (!movieToFavorite) {
@@ -87,7 +87,7 @@ export async function addFavorite(req: Request, res: Response, next: NextFunctio
 /**
  * Remove a movie from a profile's favorites
  *
- * @route DELETE /api/v1/profiles/:profileId/movies/favorites/:movieId
+ * @route DELETE /api/v1/accounts/:accountId/profiles/:profileId/movies/favorites/:movieId
  */
 export async function removeFavorite(req: Request, res: Response, next: NextFunction) {
   try {
@@ -114,20 +114,20 @@ export async function removeFavorite(req: Request, res: Response, next: NextFunc
 /**
  * Update the watch status of a movie
  *
- * @route PUT /api/v1/profiles/:profileId/movies/watchstatus
+ * @route PUT /api/v1/accounts/:accountId/profiles/:profileId/movies/watchstatus
  */
 export async function updateMovieWatchStatus(req: Request, res: Response, next: NextFunction) {
   try {
-    const { profileId } = req.params as ProfileIdParams;
-    const { movie_id, status }: MovieWatchStatusParams = req.body;
+    const { profileId } = req.params as AccountAndProfileIdsParams;
+    const { movieId, status }: MovieWatchStatusParams = req.body;
 
-    const success = await Movie.updateWatchStatus(profileId, movie_id, status);
+    const success = await Movie.updateWatchStatus(profileId, movieId, status);
 
     if (success) {
       res.status(200).json({ message: `Successfully updated the watch status to '${status}'` });
     } else {
       throw new BadRequestError(
-        `Failed to update watch status. Ensure the movie (ID: ${movie_id}) exists in your favorites.`,
+        `Failed to update watch status. Ensure the movie (ID: ${movieId}) exists in your favorites.`,
       );
     }
   } catch (error) {
@@ -138,11 +138,11 @@ export async function updateMovieWatchStatus(req: Request, res: Response, next: 
 /**
  * Get recent and upcoming movies for a profile
  *
- * @route GET /api/v1/profiles/:profileId/movies/recentUpcoming
+ * @route GET /api/v1/accounts/:accountId/profiles/:profileId/movies/recentUpcoming
  */
 export async function getRecentUpcomingForProfile(req: Request, res: Response, next: NextFunction) {
   try {
-    const { profileId } = req.params as ProfileIdParams;
+    const { profileId } = req.params as AccountAndProfileIdsParams;
 
     const { recentMovies, upcomingMovies } = await getRecentAndUpcomingMovies(profileId);
 

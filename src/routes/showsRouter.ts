@@ -10,62 +10,83 @@ import {
   removeFavorite,
   updateShowWatchStatus,
 } from '../controllers/showsController';
+import { authorizeAccountAccess } from '../middleware/authorizationMiddleware';
 import { validateRequest, validateSchema } from '../middleware/validationMiddleware';
-import { profileIdParamSchema } from '../schema/profileSchema';
-import { addShowFavoriteSchema, showAndProfileParamSchema, showWatchStatusSchema } from '../schema/showSchema';
+import { accountAndProfileIdsParamSchema } from '../schema/accountSchema';
+import { addShowFavoriteSchema, showParamsSchema, showWatchStatusSchema } from '../schema/showSchema';
 import express from 'express';
 
 const router = express.Router();
 
-router.get('/api/v1/profiles/:profileId/shows', validateSchema(profileIdParamSchema, 'params'), getShows);
+router.get(
+  '/api/v1/accounts/:accountId/profiles/:profileId/shows',
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
+  getShows,
+);
 
 router.post(
-  '/api/v1/profiles/:profileId/shows/favorites',
-  validateRequest(addShowFavoriteSchema, profileIdParamSchema),
+  '/api/v1/accounts/:accountId/profiles/:profileId/shows/favorites',
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
+  validateRequest(addShowFavoriteSchema),
   addFavorite,
 );
 
 router.delete(
-  '/api/v1/profiles/:profileId/shows/favorites/:showId',
-  validateSchema(showAndProfileParamSchema, 'params'),
+  '/api/v1/accounts/:accountId/profiles/:profileId/shows/favorites/:showId',
+  validateSchema(showParamsSchema, 'params'),
+  authorizeAccountAccess,
   removeFavorite,
 );
 
 router.put(
-  '/api/v1/profiles/:profileId/shows/watchstatus',
-  validateRequest(showWatchStatusSchema, profileIdParamSchema),
+  '/api/v1/accounts/:accountId/profiles/:profileId/shows/watchstatus',
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
+  validateRequest(showWatchStatusSchema),
   updateShowWatchStatus,
 );
 
 router.get(
-  '/api/v1/profiles/:profileId/shows/:showId/details',
-  validateSchema(showAndProfileParamSchema, 'params'),
+  '/api/v1/accounts/:accountId/profiles/:profileId/shows/:showId/details',
+  validateSchema(showParamsSchema, 'params'),
+  authorizeAccountAccess,
   getShowDetails,
 );
 
-router.get('/api/v1/profiles/:profileId/episodes', validateSchema(profileIdParamSchema, 'params'), getProfileEpisodes);
+router.get(
+  '/api/v1/accounts/:accountId/profiles/:profileId/episodes',
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
+  getProfileEpisodes,
+);
 
 router.get(
-  '/api/v1/profiles/:profileId/shows/:showId/recommendations',
-  validateSchema(showAndProfileParamSchema, 'params'),
+  '/api/v1/accounts/:accountId/profiles/:profileId/shows/:showId/recommendations',
+  validateSchema(showParamsSchema, 'params'),
+  authorizeAccountAccess,
   getShowRecommendations,
 );
 
 router.get(
-  '/api/v1/profiles/:profileId/shows/:showId/similar',
-  validateSchema(showAndProfileParamSchema, 'params'),
+  '/api/v1/accounts/:accountId/profiles/:profileId/shows/:showId/similar',
+  validateSchema(showParamsSchema, 'params'),
+  authorizeAccountAccess,
   getSimilarShows,
 );
 
 router.get(
-  '/api/v1/profiles/:profileId/shows/statistics',
-  validateSchema(profileIdParamSchema, 'params'),
+  '/api/v1/accounts/:accountId/profiles/:profileId/shows/statistics',
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
   getShowStatistics,
 );
 
 router.get(
-  '/api/v1/profiles/:profileId/shows/progress',
-  validateSchema(profileIdParamSchema, 'params'),
+  '/api/v1/accounts/:accountId/profiles/:profileId/shows/progress',
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
   getWatchProgress,
 );
 
