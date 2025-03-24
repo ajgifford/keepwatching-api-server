@@ -2,11 +2,12 @@ import { httpLogger } from '../logger/logger';
 import { AuthenticationError, ConflictError } from '../middleware/errorMiddleware';
 import Account from '../models/account';
 import { AccountParams, GoogleLoginParams, LoginParam } from '../schema/accountSchema';
+import { cacheService } from '../services/cacheService';
 import { getAccountImage, getPhotoForGoogleAccount } from '../utils/imageUtility';
 import { NextFunction, Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 
-// POST /api/v1/accounts
+// POST /api/v1/authentication/register
 export const register = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { name, email, uid }: AccountParams = req.body;
@@ -35,7 +36,7 @@ export const register = asyncHandler(async (req: Request, res: Response, next: N
   }
 });
 
-// POST /api/v1/login
+// POST /api/v1/authentication/login
 export const login = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { uid }: LoginParam = req.body;
@@ -63,7 +64,7 @@ export const login = asyncHandler(async (req: Request, res: Response, next: Next
   }
 });
 
-// POST /api/v1/googleLogin
+// POST /api/v1/authentication/googleLogin
 export const googleLogin = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { name, email, uid, photoURL }: GoogleLoginParams = req.body;
@@ -102,6 +103,16 @@ export const googleLogin = asyncHandler(async (req: Request, res: Response, next
         default_profile_id: newAccount.default_profile_id,
       },
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/v1/authentication/logout
+export const logout = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    cacheService.flushAll();
+    res.status(200).json({ message: 'Account logged out' });
   } catch (error) {
     next(error);
   }
