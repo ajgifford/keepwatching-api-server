@@ -18,6 +18,7 @@ import notificationsRouter from './routes/notificationsRouter';
 import searchRouter from './routes/searchRouter';
 import seasonsRouter from './routes/seasonsRouter';
 import showsRouter from './routes/showsRouter';
+import statisticsRouter from './routes/statisticsRouter';
 import { loadStreamingService } from './utils/watchProvidersUtility';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
@@ -105,6 +106,7 @@ app.use(authenticateUser, episodesRouter);
 app.use(authenticateUser, moviesRouter);
 app.use(authenticateUser, fileRouter);
 app.use(authenticateUser, notificationsRouter);
+app.use(authenticateUser, statisticsRouter);
 
 app.use(errorHandler);
 

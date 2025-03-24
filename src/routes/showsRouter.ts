@@ -3,10 +3,8 @@ import {
   getProfileEpisodes,
   getShowDetails,
   getShowRecommendations,
-  getShowStatistics,
   getShows,
   getSimilarShows,
-  getWatchProgress,
   removeFavorite,
   updateShowWatchStatus,
 } from '../controllers/showsController';
@@ -74,20 +72,6 @@ router.get(
   validateSchema(showParamsSchema, 'params'),
   authorizeAccountAccess,
   getSimilarShows,
-);
-
-router.get(
-  '/api/v1/accounts/:accountId/profiles/:profileId/shows/statistics',
-  validateSchema(accountAndProfileIdsParamSchema, 'params'),
-  authorizeAccountAccess,
-  getShowStatistics,
-);
-
-router.get(
-  '/api/v1/accounts/:accountId/profiles/:profileId/shows/progress',
-  validateSchema(accountAndProfileIdsParamSchema, 'params'),
-  authorizeAccountAccess,
-  getWatchProgress,
 );
 
 export default router;

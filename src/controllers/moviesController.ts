@@ -2,6 +2,7 @@ import { BadRequestError, NotFoundError } from '../middleware/errorMiddleware';
 import Movie from '../models/movie';
 import { AccountAndProfileIdsParams } from '../schema/accountSchema';
 import { AddMovieFavoriteParams, MovieWatchStatusParams, RemoveMovieFavoriteParams } from '../schema/movieSchema';
+import { errorService } from '../services/errorService';
 import { getTMDBService } from '../services/tmdbService';
 import { getUSMPARating } from '../utils/contentUtility';
 import { getUSWatchProviders } from '../utils/watchProvidersUtility';
@@ -152,6 +153,67 @@ export async function getRecentUpcomingForProfile(req: Request, res: Response, n
     });
   } catch (error) {
     next(error);
+  }
+}
+
+/**
+ * Get statistics about a profile's movies
+ *
+ * @param profileId - ID of the profile to get statistics for
+ * @returns Object containing various watch statistics
+ */
+export async function getProfileMovieStatistics(profileId: string) {
+  try {
+    const movies = await Movie.getAllMoviesForProfile(profileId);
+
+    // Calculate basic statistics
+    const total = movies.length;
+    const watched = movies.filter((m) => m.watch_status === 'WATCHED').length;
+    const notWatched = movies.filter((m) => m.watch_status === 'NOT_WATCHED').length;
+
+    // Get genre distribution
+    const genreCounts: Record<string, number> = {};
+    movies.forEach((movie) => {
+      if (movie.genres && typeof movie.genres === 'string') {
+        // Split the comma-separated string into an array
+        const genreArray = movie.genres.split(',').map((genre) => genre.trim());
+
+        // Count occurrences of each genre
+        genreArray.forEach((genre: string) => {
+          if (genre) {
+            // Skip empty strings
+            genreCounts[genre] = (genreCounts[genre] || 0) + 1;
+          }
+        });
+      }
+    });
+
+    // Get streaming service distribution
+    const serviceCounts: Record<string, number> = {};
+    movies.forEach((movie) => {
+      if (movie.streaming_services && typeof movie.streaming_services === 'string') {
+        // Split the comma-separated string into an array
+        const serviceArray = movie.streaming_services.split(',').map((service) => service.trim());
+
+        // Count occurrences of each service
+        serviceArray.forEach((service: string) => {
+          if (service) {
+            // Skip empty strings
+            serviceCounts[service] = (serviceCounts[service] || 0) + 1;
+          }
+        });
+      }
+    });
+
+    return {
+      total: total,
+      watchStatusCounts: { watched, notWatched },
+      genreDistribution: genreCounts,
+      serviceDistribution: serviceCounts,
+      watchProgress: total > 0 ? Math.round((watched / total) * 100) : 0,
+    };
+  } catch (error) {
+    throw errorService.handleError(error, `getShowStatistics(${profileId})`);
   }
 }
 

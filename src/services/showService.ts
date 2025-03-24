@@ -433,12 +433,12 @@ export class ShowService {
   }
 
   /**
-   * Get statistics about a user's shows
+   * Get statistics about a profile's shows
    *
    * @param profileId - ID of the profile to get statistics for
    * @returns Object containing various watch statistics
    */
-  public async getShowStatistics(profileId: string) {
+  public async getProfileShowStatistics(profileId: string) {
     try {
       return await this.cache.getOrSet(
         `profile_${profileId}_show_stats`,
@@ -486,7 +486,7 @@ export class ShowService {
           });
 
           return {
-            totalShows: total,
+            total: total,
             watchStatusCounts: { watched, watching, notWatched },
             genreDistribution: genreCounts,
             serviceDistribution: serviceCounts,
@@ -501,12 +501,12 @@ export class ShowService {
   }
 
   /**
-   * Get detailed watch progress for a user including episode counts
+   * Get detailed watch progress for a profile including episode counts
    *
    * @param profileId - ID of the profile to get watch progress for
    * @returns Detailed watch progress statistics
    */
-  public async getWatchProgress(profileId: string) {
+  public async getProfileWatchProgress(profileId: string) {
     try {
       return await this.cache.getOrSet(
         `profile_${profileId}_watch_progress`,

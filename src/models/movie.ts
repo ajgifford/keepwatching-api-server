@@ -1,5 +1,6 @@
 import { DatabaseError } from '../middleware/errorMiddleware';
 import { ContentUpdates } from '../types/contentTypes';
+import { ProfileMovie } from '../types/movieTypes';
 import { getDbPool } from '../utils/db';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { PoolConnection } from 'mysql2/promise';
@@ -447,8 +448,23 @@ class Movie {
   static async getAllMoviesForProfile(profileId: string) {
     try {
       const query = 'SELECT * FROM profile_movies where profile_id = ?';
-      const [rows] = await getDbPool().execute(query, [Number(profileId)]);
-      return rows;
+      const [rows] = await getDbPool().execute<RowDataPacket[]>(query, [Number(profileId)]);
+      return rows.map((row) => ({
+        profile_id: row.profile_id,
+        movie_id: row.movie_id,
+        tmdb_id: row.tmdb_id,
+        title: row.title,
+        description: row.description,
+        release_date: row.release_date,
+        poster_image: row.poster_image,
+        backdrop_image: row.backdrop_image,
+        runtime: row.runtime,
+        user_rating: row.user_rating,
+        mpa_rating: row.mpa_rating,
+        watch_status: row.watch_status,
+        genres: row.genres,
+        streaming_services: row.streaming_services,
+      })) as ProfileMovie[];
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown database error getting all movies for a profile';
