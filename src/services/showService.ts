@@ -40,8 +40,12 @@ export class ShowService {
   /**
    * Invalidate all caches related to a profile
    */
-  private invalidateProfileCache(profileId: string): void {
+  public invalidateProfileCache(profileId: string): void {
     this.cache.invalidatePattern(`profile_${profileId}`);
+  }
+
+  public invalidateCache(): void {
+    this.cache.flushAll();
   }
 
   /**
@@ -124,9 +128,7 @@ export class ShowService {
    */
   public async addShowToFavorites(profileId: string, showId: number) {
     try {
-      // First check if the show already exists in our database
       const existingShowToFavorite = await Show.findByTMDBId(showId);
-
       if (existingShowToFavorite) {
         return await this.favoriteExistingShow(existingShowToFavorite, profileId);
       }
@@ -199,9 +201,10 @@ export class ShowService {
     }
 
     await newShowToFavorite.saveFavorite(profileId, false);
-    const show = await Show.getShowForProfile(profileId, newShowToFavorite.id!);
+    this.invalidateProfileCache(profileId);
 
     // Start background process to fetch seasons and episodes
+    const show = await Show.getShowForProfile(profileId, newShowToFavorite.id!);
     this.fetchSeasonsAndEpisodes(responseShow, newShowToFavorite.id!, profileId);
 
     return { favoritedShow: show };

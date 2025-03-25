@@ -4,9 +4,10 @@ import Season from '../models/season';
 import Show from '../models/show';
 import { AccountAndProfileIdsParams } from '../schema/accountSchema';
 import { EpisodeWatchStatusParams, NextEpisodeWatchStatusParams } from '../schema/episodeSchema';
+import { showService } from '../services/showService';
 import { NextFunction, Request, Response } from 'express';
 
-// PUT /api/v1/profiles/${profileId}/episodes/watchstatus
+// PUT /api/v1/accounts/:accountId/profiles/${profileId}/episodes/watchstatus
 export const updateEpisodeWatchStatus = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { profileId } = req.params as AccountAndProfileIdsParams;
@@ -14,6 +15,8 @@ export const updateEpisodeWatchStatus = async (req: Request, res: Response, next
 
     const success = await Episode.updateWatchStatus(profileId, episodeId, status);
     if (success) {
+      showService.invalidateProfileCache(profileId);
+
       const nextUnwatchedEpisodes = await Show.getNextUnwatchedEpisodesForProfile(profileId);
       res.status(200).json({
         message: 'Successfully updated the episode watch status',
@@ -27,7 +30,7 @@ export const updateEpisodeWatchStatus = async (req: Request, res: Response, next
   }
 };
 
-// PUT /api/v1/profiles/${profileId}/episodes/nextWatchstatus
+// PUT /api/v1/accounts/:accountId/profiles/${profileId}/episodes/nextWatchstatus
 export const updateNextEpisodeWatchStatus = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { profileId } = req.params as AccountAndProfileIdsParams;
@@ -37,6 +40,9 @@ export const updateNextEpisodeWatchStatus = async (req: Request, res: Response, 
     if (success) {
       await Season.updateWatchStatusByEpisode(profileId, seasonId);
       await Show.updateWatchStatusBySeason(profileId, showId);
+
+      showService.invalidateProfileCache(profileId);
+
       const nextUnwatchedEpisodes = await Show.getNextUnwatchedEpisodesForProfile(profileId);
       res.status(200).json({
         message: 'Successfully updated the episode watch status',
