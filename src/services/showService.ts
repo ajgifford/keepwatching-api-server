@@ -221,7 +221,13 @@ export class ShowService {
   private async fetchSeasonsAndEpisodes(show: any, showId: number, profileId: string): Promise<void> {
     try {
       const tmdbService = getTMDBService();
-      for (const responseSeason of show.seasons) {
+      const validSeasons = show.seasons.filter((season: any) => {
+        return season.season_number > 0;
+      });
+
+      for (const responseSeason of validSeasons) {
+        const responseData = await tmdbService.getSeasonDetails(show.id, responseSeason.season_number);
+
         const season = new Season(
           showId,
           responseSeason.id,
@@ -234,8 +240,6 @@ export class ShowService {
         );
         await season.save();
         await season.saveFavorite(Number(profileId));
-
-        const responseData = await tmdbService.getSeasonDetails(show.id, season.season_number);
 
         for (const responseEpisode of responseData.episodes) {
           const episode = new Episode(
@@ -254,6 +258,8 @@ export class ShowService {
           await episode.save();
           await episode.saveFavorite(Number(profileId));
         }
+
+        await new Promise((resolve) => setTimeout(resolve, 200));
       }
 
       this.notifyShowDataLoaded(profileId, showId);

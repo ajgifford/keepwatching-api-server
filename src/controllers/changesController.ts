@@ -171,45 +171,46 @@ function processSeasonChanges(changes: ChangeItem[], responseShow: any, content:
   const responseShowSeasons = responseShow.seasons;
   uniqueSeasonIds.forEach(async (season_id) => {
     await sleep(500);
-    const responseShowSeason = responseShowSeasons.find((season: { id: number }) => season.id === season_id);
-    if (responseShowSeason) {
-      const seasonToUpdate = new Season(
-        content.id,
-        responseShowSeason.id,
-        responseShowSeason.name,
-        responseShowSeason.overview,
-        responseShowSeason.season_number,
-        responseShowSeason.air_date,
-        responseShowSeason.poster_path,
-        responseShowSeason.episode_count,
-      );
-      await seasonToUpdate.update();
-      profileIds.forEach((id) => seasonToUpdate.saveFavorite(id));
 
-      const seasonHasEpisodeChanges = await checkSeasonForEpisodeChanges(season_id);
-      if (seasonHasEpisodeChanges) {
-        const response = await axiosTMDBAPIInstance.get(
-          `/tv/${content.tmdb_id}/season/${seasonToUpdate.season_number}`,
+    const responseShowSeason = responseShowSeasons.find((season: { id: number }) => season.id === season_id);
+    if (!responseShowSeason || responseShowSeason.season_number === 0) {
+      return;
+    }
+
+    const seasonToUpdate = new Season(
+      content.id,
+      responseShowSeason.id,
+      responseShowSeason.name,
+      responseShowSeason.overview,
+      responseShowSeason.season_number,
+      responseShowSeason.air_date,
+      responseShowSeason.poster_path,
+      responseShowSeason.episode_count,
+    );
+    await seasonToUpdate.update();
+    profileIds.forEach((id) => seasonToUpdate.saveFavorite(id));
+
+    const seasonHasEpisodeChanges = await checkSeasonForEpisodeChanges(season_id);
+    if (seasonHasEpisodeChanges) {
+      const response = await axiosTMDBAPIInstance.get(`/tv/${content.tmdb_id}/season/${seasonToUpdate.season_number}`);
+      const responseData = response.data;
+      responseData.episodes.forEach(async (responseEpisode: any) => {
+        const episodeToUpdate = new Episode(
+          responseEpisode.id,
+          content.id,
+          seasonToUpdate.id!,
+          responseEpisode.episode_number,
+          responseEpisode.episode_type,
+          responseEpisode.season_number,
+          responseEpisode.name,
+          responseEpisode.overview,
+          responseEpisode.air_date,
+          responseEpisode.runtime,
+          responseEpisode.still_path,
         );
-        const responseData = response.data;
-        responseData.episodes.forEach(async (responseEpisode: any) => {
-          const episodeToUpdate = new Episode(
-            responseEpisode.id,
-            content.id,
-            seasonToUpdate.id!,
-            responseEpisode.episode_number,
-            responseEpisode.episode_type,
-            responseEpisode.season_number,
-            responseEpisode.name,
-            responseEpisode.overview,
-            responseEpisode.air_date,
-            responseEpisode.runtime,
-            responseEpisode.still_path,
-          );
-          await episodeToUpdate.update();
-          profileIds.forEach((id) => episodeToUpdate.saveFavorite(id));
-        });
-      }
+        await episodeToUpdate.update();
+        profileIds.forEach((id) => episodeToUpdate.saveFavorite(id));
+      });
     }
   });
 }
