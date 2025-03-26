@@ -4,15 +4,20 @@ import Episode from '../models/episode';
 import Movie from '../models/movie';
 import Season from '../models/season';
 import Show from '../models/show';
+import { errorService } from '../services/errorService';
+import { getTMDBService } from '../services/tmdbService';
 import { Change, ChangeItem, ContentUpdates } from '../types/contentTypes';
-import { axiosTMDBAPIInstance } from '../utils/axiosInstance';
 import { getEpisodeToAirId, getInProduction, getUSMPARating, getUSNetwork, getUSRating } from '../utils/contentUtility';
 import { getDbPool } from '../utils/db';
 import { getUSWatchProviders } from '../utils/watchProvidersUtility';
 import { RowDataPacket } from 'mysql2';
 import CronJob from 'node-cron';
 
-const supportedChangesSets = [
+/**
+ * List of content change keys we want to process
+ * Changes with these keys will trigger an update
+ */
+const SUPPORTED_CHANGE_KEYS = [
   'air_date',
   'episode',
   'episode_number',
@@ -31,26 +36,43 @@ const supportedChangesSets = [
   'type',
 ];
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+// Callbacks for notifying UI about updates
 let showUpdatesCallback: (() => void) | null = null;
 let movieUpdatesCallback: (() => void) | null = null;
 
+/**
+ * Initialize scheduled jobs for content updates
+ * @param notifyShowUpdates Callback to notify UI when shows are updated
+ * @param notifyMovieUpdates Callback to notify UI when movies are updated
+ */
 export function initScheduledJobs(notifyShowUpdates: () => void, notifyMovieUpdates: () => void) {
   showUpdatesCallback = notifyShowUpdates;
   movieUpdatesCallback = notifyMovieUpdates;
 
+  // Daily job for show updates (2 AM)
   const showsJob = CronJob.schedule('0 2 * * *', async () => {
     cliLogger.info('Starting the show change job');
-    await updateShows();
-    if (showUpdatesCallback) showUpdatesCallback();
-    cliLogger.info(`Ending the show change job`);
+    try {
+      await updateShows();
+      if (showUpdatesCallback) showUpdatesCallback();
+    } catch (error) {
+      cliLogger.error('Failed to complete show update job', error);
+    } finally {
+      cliLogger.info('Ending the show change job');
+    }
   });
 
+  // Weekly job for movie updates (1 AM on 7th, 14th, 21st, and 28th of each month)
   const moviesJob = CronJob.schedule('0 1 7,14,21,28 * *', async () => {
     cliLogger.info('Starting the movie change job');
-    await updateMovies();
-    if (movieUpdatesCallback) movieUpdatesCallback();
-    cliLogger.info(`Ending the movie change job`);
+    try {
+      await updateMovies();
+      if (movieUpdatesCallback) movieUpdatesCallback();
+    } catch (error) {
+      cliLogger.error('Failed to complete movie update job', error);
+    } finally {
+      cliLogger.info('Ending the movie change job');
+    }
   });
 
   showsJob.start();
@@ -58,33 +80,59 @@ export function initScheduledJobs(notifyShowUpdates: () => void, notifyMovieUpda
   cliLogger.info('Job Scheduler Initialized');
 }
 
+/**
+ * Helper function to delay execution
+ * @param ms Milliseconds to delay
+ */
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Updates movies that might have changes
+ */
 async function updateMovies() {
   try {
     const movies = await Movie.getMoviesForUpdates();
-    movies.forEach(async (movie) => {
-      await sleep(500);
-      await checkForMovieChanges(movie);
-    });
+    cliLogger.info(`Found ${movies.length} movies to check for updates`);
+
+    for (const movie of movies) {
+      try {
+        // Add rate limiting between requests to avoid API throttling
+        await sleep(500);
+        await checkForMovieChanges(movie);
+      } catch (error) {
+        // Log error but continue with next movie
+        cliLogger.error(`Failed to check for changes in movie ID ${movie.id}`, error);
+      }
+    }
   } catch (error) {
-    cliLogger.error({ message: 'Unexpected error while checking for movie updates', error: error });
+    cliLogger.error('Unexpected error while checking for movie updates', error);
     httpLogger.error(ErrorMessages.MoviesChangeFail, { error });
+    throw error; // Re-throw to be caught by the job handler
   }
 }
 
+/**
+ * Check for changes to a specific movie and update if necessary
+ * @param content Movie to check for changes
+ */
 async function checkForMovieChanges(content: ContentUpdates) {
-  const { currentDate, pastDate } = generateDates(10);
+  const tmdbService = getTMDBService();
+  const { currentDate, pastDate } = generateDateRange(10);
+
   try {
-    const changesResponse = await axiosTMDBAPIInstance.get(
-      `movie/${content.tmdb_id}/changes?end_date=${currentDate}&start_date=${pastDate}`,
-    );
-    const changes: Change[] = changesResponse.data.changes;
-    const supportedChanges = changes.filter((item) => supportedChangesSets.includes(item.key));
+    // Get changes for this movie from TMDB
+    const changesData = await tmdbService.getMovieChanges(content.tmdb_id, pastDate, currentDate);
+    const changes: Change[] = changesData.changes || [];
+
+    // Filter for supported changes only
+    const supportedChanges = changes.filter((item) => SUPPORTED_CHANGE_KEYS.includes(item.key));
+
     if (supportedChanges.length > 0) {
-      const movieDetailsResponse = await axiosTMDBAPIInstance.get(
-        `/movie/${content.tmdb_id}?append_to_response=release_dates%2Cwatch%2Fproviders&language=en-US`,
-      );
-      const movieDetails = movieDetailsResponse.data;
-      const movieToFavorite = new Movie(
+      // Fetch updated movie details from TMDB
+      const movieDetails = await tmdbService.getMovieDetails(content.tmdb_id);
+
+      // Create new Movie object with updated data
+      const updatedMovie = new Movie(
         movieDetails.id,
         movieDetails.title,
         movieDetails.overview,
@@ -98,41 +146,64 @@ async function checkForMovieChanges(content: ContentUpdates) {
         getUSWatchProviders(movieDetails, 9998),
         movieDetails.genres.map((genre: { id: any }) => genre.id),
       );
-      movieToFavorite.update();
+
+      // Update the movie in our database
+      await updatedMovie.update();
     }
   } catch (error) {
-    cliLogger.error({ message: 'Error checking movie changes', error: error });
-    httpLogger.error(ErrorMessages.MovieChangeFail, { error });
+    cliLogger.error(`Error checking changes for movie ID ${content.id}`, error);
+    httpLogger.error(ErrorMessages.MovieChangeFail, { error, movieId: content.id });
+    throw errorService.handleError(error, `checkForMovieChanges(${content.id})`);
   }
 }
 
+/**
+ * Updates shows that might have changes
+ */
 async function updateShows() {
   try {
     const shows = await Show.getShowsForUpdates();
-    shows.forEach(async (show) => {
-      await sleep(500);
-      await checkForShowChanges(show);
-    });
+    cliLogger.info(`Found ${shows.length} shows to check for updates`);
+
+    for (const show of shows) {
+      try {
+        // Add rate limiting between requests to avoid API throttling
+        await sleep(500);
+        await checkForShowChanges(show);
+      } catch (error) {
+        // Log error but continue with next show
+        cliLogger.error(`Failed to check for changes in show ID ${show.id}`, error);
+      }
+    }
   } catch (error) {
-    cliLogger.error({ message: 'Unexpected error while checking for show updates', error: error });
+    cliLogger.error('Unexpected error while checking for show updates', error);
     httpLogger.error(ErrorMessages.ShowsChangeFail, { error });
+    throw error; // Re-throw to be caught by the job handler
   }
 }
 
+/**
+ * Check for changes to a specific show and update if necessary
+ * @param content Show to check for changes
+ */
 async function checkForShowChanges(content: ContentUpdates) {
-  const { currentDate, pastDate } = generateDates(2);
+  const tmdbService = getTMDBService();
+  const { currentDate, pastDate } = generateDateRange(2);
+
   try {
-    const changesResponse = await axiosTMDBAPIInstance.get(
-      `tv/${content.tmdb_id}/changes?end_date=${currentDate}&start_date=${pastDate}`,
-    );
-    const changes: Change[] = changesResponse.data.changes;
-    const supportedChanges = changes.filter((item) => supportedChangesSets.includes(item.key));
+    // Get changes for this show from TMDB
+    const changesData = await tmdbService.getShowChanges(content.tmdb_id, pastDate, currentDate);
+    const changes: Change[] = changesData.changes || [];
+
+    // Filter for supported changes only
+    const supportedChanges = changes.filter((item) => SUPPORTED_CHANGE_KEYS.includes(item.key));
+
     if (supportedChanges.length > 0) {
-      const showDetailsResponse = await axiosTMDBAPIInstance.get(
-        `/tv/${content.tmdb_id}?append_to_response=content_ratings,watch/providers`,
-      );
-      const showDetails = showDetailsResponse.data;
-      const showToUpdate = new Show(
+      // Fetch updated show details from TMDB
+      const showDetails = await tmdbService.getShowDetails(content.tmdb_id);
+
+      // Create new Show object with updated data
+      const updatedShow = new Show(
         showDetails.id,
         showDetails.name,
         showDetails.overview,
@@ -154,90 +225,162 @@ async function checkForShowChanges(content: ContentUpdates) {
         getEpisodeToAirId(showDetails.next_episode_to_air),
         getUSNetwork(showDetails.networks),
       );
-      await showToUpdate.update();
-      const profileIds = await showToUpdate.getProfilesForShow();
 
+      // Update the show in our database
+      await updatedShow.update();
+
+      // Get profiles that have this show in their watchlist
+      const profileIds = await updatedShow.getProfilesForShow();
+
+      // Check if any season changes exist
       const seasonChanges = changes.filter((item) => item.key === 'season');
       if (seasonChanges.length > 0) {
         await processSeasonChanges(seasonChanges[0].items, showDetails, content, profileIds);
-        await updateShowWatchStatusForNewContent(showToUpdate.id!, profileIds);
+        await updateShowWatchStatusForNewContent(updatedShow.id!, profileIds);
       }
     }
   } catch (error) {
-    cliLogger.error({ message: 'Error checking show changes', error: error });
-    httpLogger.error(ErrorMessages.ShowChangeFail, { error });
+    cliLogger.error(`Error checking changes for show ID ${content.id}`, error);
+    httpLogger.error(ErrorMessages.ShowChangeFail, { error, showId: content.id });
+    throw errorService.handleError(error, `checkForShowChanges(${content.id})`);
   }
 }
 
+/**
+ * Process season changes for a show
+ * @param changes Season change items from TMDB
+ * @param responseShow Full show details from TMDB
+ * @param content Basic show info from our database
+ * @param profileIds Profile IDs that have this show in their watchlist
+ */
 async function processSeasonChanges(
   changes: ChangeItem[],
   responseShow: any,
   content: ContentUpdates,
   profileIds: number[],
 ) {
-  const uniqueSeasonIds = filterSeasonChanges(changes);
-  const responseShowSeasons = responseShow.seasons;
+  const tmdbService = getTMDBService();
+  const uniqueSeasonIds = filterUniqueSeasonIds(changes);
+  const responseShowSeasons = responseShow.seasons || [];
 
-  for (const season_id of uniqueSeasonIds) {
-    await sleep(500);
+  for (const seasonId of uniqueSeasonIds) {
+    try {
+      await sleep(500); // Rate limiting
 
-    const responseShowSeason = responseShowSeasons.find((season: { id: number }) => season.id === season_id);
-    if (!responseShowSeason || responseShowSeason.season_number === 0) {
-      continue;
-    }
+      // Find the season in the show data
+      const seasonInfo = responseShowSeasons.find((season: { id: number }) => season.id === seasonId);
 
-    const seasonToUpdate = new Season(
-      content.id,
-      responseShowSeason.id,
-      responseShowSeason.name,
-      responseShowSeason.overview,
-      responseShowSeason.season_number,
-      responseShowSeason.air_date,
-      responseShowSeason.poster_path,
-      responseShowSeason.episode_count,
-    );
-    await seasonToUpdate.update();
+      // Skip "season 0" (specials) and missing seasons
+      if (!seasonInfo || seasonInfo.season_number === 0) {
+        continue;
+      }
 
-    for (const profileId of profileIds) {
-      await seasonToUpdate.saveFavorite(profileId);
-    }
+      // Create Season object with updated data
+      const updatedSeason = new Season(
+        content.id,
+        seasonInfo.id,
+        seasonInfo.name,
+        seasonInfo.overview,
+        seasonInfo.season_number,
+        seasonInfo.air_date,
+        seasonInfo.poster_path,
+        seasonInfo.episode_count,
+      );
 
-    const seasonHasEpisodeChanges = await checkSeasonForEpisodeChanges(season_id);
-    if (seasonHasEpisodeChanges) {
-      const response = await axiosTMDBAPIInstance.get(`/tv/${content.tmdb_id}/season/${seasonToUpdate.season_number}`);
-      const responseData = response.data;
+      // Update the season in our database
+      await updatedSeason.update();
 
-      for (const responseEpisode of responseData.episodes) {
-        const episodeToUpdate = new Episode(
-          responseEpisode.id,
-          content.id,
-          seasonToUpdate.id!,
-          responseEpisode.episode_number,
-          responseEpisode.episode_type,
-          responseEpisode.season_number,
-          responseEpisode.name,
-          responseEpisode.overview,
-          responseEpisode.air_date,
-          responseEpisode.runtime,
-          responseEpisode.still_path,
-        );
-        await episodeToUpdate.update();
+      // Add this season to all profiles that have the show
+      for (const profileId of profileIds) {
+        await updatedSeason.saveFavorite(profileId);
+      }
 
+      // Check if there are episode changes for this season
+      const hasEpisodeChanges = await checkSeasonForEpisodeChanges(seasonId);
+
+      if (hasEpisodeChanges) {
+        // Get detailed season info including episodes
+        const seasonDetails = await tmdbService.getSeasonDetails(content.tmdb_id, updatedSeason.season_number);
+        const episodes = seasonDetails.episodes || [];
+
+        // Update each episode
+        for (const episodeData of episodes) {
+          const updatedEpisode = new Episode(
+            episodeData.id,
+            content.id,
+            updatedSeason.id!,
+            episodeData.episode_number,
+            episodeData.episode_type || 'standard',
+            episodeData.season_number,
+            episodeData.name,
+            episodeData.overview,
+            episodeData.air_date,
+            episodeData.runtime || 0,
+            episodeData.still_path,
+          );
+
+          await updatedEpisode.update();
+
+          // Add this episode to all profiles that have the show
+          for (const profileId of profileIds) {
+            await updatedEpisode.saveFavorite(profileId);
+          }
+        }
+
+        // Update watch status for all affected profiles
         for (const profileId of profileIds) {
-          await episodeToUpdate.saveFavorite(profileId);
+          await updateSeasonWatchStatusForNewEpisodes(String(profileId), updatedSeason.id!);
         }
       }
-
-      for (const profileId of profileIds) {
-        await updateSeasonWatchStatusForNewEpisodes(String(profileId), seasonToUpdate.id!);
-      }
+    } catch (error) {
+      // Log error but continue with next season
+      cliLogger.error(`Error processing season ID ${seasonId} for show ${content.id}`, error);
     }
+  }
+}
+
+/**
+ * Extract unique season IDs from change items
+ * @param changes Change items from TMDB
+ * @returns Array of unique season IDs
+ */
+function filterUniqueSeasonIds(changes: ChangeItem[]): number[] {
+  const uniqueSeasonIds = new Set<number>();
+
+  for (const change of changes) {
+    if (change.value && change.value.season_id) {
+      uniqueSeasonIds.add(change.value.season_id);
+    }
+  }
+
+  return Array.from(uniqueSeasonIds);
+}
+
+/**
+ * Check if a season has episode changes
+ * @param seasonId Season ID to check
+ * @returns True if there are episode changes, false otherwise
+ */
+async function checkSeasonForEpisodeChanges(seasonId: number): Promise<boolean> {
+  const tmdbService = getTMDBService();
+  const { currentDate, pastDate } = generateDateRange(2);
+
+  try {
+    const changesData = await tmdbService.getSeasonChanges(seasonId, pastDate, currentDate);
+    const changes: Change[] = changesData.changes || [];
+    return changes.some((item) => item.key === 'episode');
+  } catch (error) {
+    cliLogger.error(`Error checking changes for season ID ${seasonId}`, error);
+    httpLogger.error(ErrorMessages.SeasonChangeFail, { error, seasonId });
+    return false; // Assume no changes on error
   }
 }
 
 /**
  * Update watch status for a show when new seasons are added
  * If a show was previously marked as WATCHED, update to WATCHING since there's new content
+ * @param showId ID of the show in the database
+ * @param profileIds List of profile IDs that have this show in their watchlist
  */
 async function updateShowWatchStatusForNewContent(showId: number, profileIds: number[]): Promise<void> {
   try {
@@ -246,20 +389,19 @@ async function updateShowWatchStatusForNewContent(showId: number, profileIds: nu
       const [rows] = await getDbPool().execute<RowDataPacket[]>(query, [profileId, showId]);
 
       if (rows.length > 0 && rows[0].status === 'WATCHED') {
-        cliLogger.info(
-          `Updating show ${showId} watch status for profile ${profileId} from WATCHED to WATCHING due to new seasons`,
-        );
         await Show.updateWatchStatus(String(profileId), showId, 'WATCHING');
       }
     }
   } catch (error) {
-    cliLogger.error({ message: 'Error updating show watch status for new content', error });
+    cliLogger.error('Error updating show watch status for new content', error);
   }
 }
 
 /**
  * Update watch status for a season when new episodes are added
  * If a season was previously marked as WATCHED, update to WATCHING since there's new content
+ * @param profileId ID of the profile
+ * @param seasonId ID of the season in the database
  */
 async function updateSeasonWatchStatusForNewEpisodes(profileId: string, seasonId: number): Promise<void> {
   try {
@@ -267,11 +409,9 @@ async function updateSeasonWatchStatusForNewEpisodes(profileId: string, seasonId
     const [rows] = await getDbPool().execute<RowDataPacket[]>(query, [profileId, seasonId]);
 
     if (rows.length > 0 && rows[0].status === 'WATCHED') {
-      cliLogger.info(
-        `Updating season ${seasonId} watch status for profile ${profileId} from WATCHED to WATCHING due to new episodes`,
-      );
       await Season.updateWatchStatus(profileId, seasonId, 'WATCHING');
 
+      // Also update the parent show's watch status
       const showIdQuery = 'SELECT show_id FROM seasons WHERE id = ?';
       const [showIdResult] = await getDbPool().execute<RowDataPacket[]>(showIdQuery, [seasonId]);
       if (showIdResult.length > 0) {
@@ -280,39 +420,20 @@ async function updateSeasonWatchStatusForNewEpisodes(profileId: string, seasonId
       }
     }
   } catch (error) {
-    cliLogger.error({ message: 'Error updating season watch status for new episodes', error });
+    cliLogger.error('Error updating season watch status for new episodes', error);
   }
 }
 
-function filterSeasonChanges(changes: ChangeItem[]) {
-  const uniqueSeasonIds = new Set<number>();
-  for (const change of changes) {
-    const seasonId = change.value.season_id;
-    uniqueSeasonIds.add(seasonId);
-  }
-  return Array.from(uniqueSeasonIds);
-}
-
-async function checkSeasonForEpisodeChanges(season_id: number) {
-  const { currentDate, pastDate } = generateDates(2);
-  try {
-    const response = await axiosTMDBAPIInstance.get(
-      `tv/season/${season_id}/changes?end_date=${currentDate}&start_date=${pastDate}`,
-    );
-    const changes: Change[] = response.data.changes;
-    return changes.filter((item) => item.key === 'episode').length > 0;
-  } catch (error) {
-    cliLogger.error({ message: 'Error checking season changes', error: error });
-    httpLogger.error(ErrorMessages.SeasonChangeFail, { error });
-    return false;
-  }
-}
-
-function generateDates(lookBack: number): { currentDate: string; pastDate: string } {
+/**
+ * Generate a date range for querying changes
+ * @param lookBackDays Number of days to look back
+ * @returns Object containing formatted current date and past date
+ */
+function generateDateRange(lookBackDays: number): { currentDate: string; pastDate: string } {
   const currentDate = new Date();
   const pastDate = new Date();
 
-  pastDate.setDate(currentDate.getDate() - lookBack);
+  pastDate.setDate(currentDate.getDate() - lookBackDays);
 
   const formatDate = (date: Date): string => {
     const year = date.getFullYear();
