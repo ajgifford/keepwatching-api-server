@@ -7,7 +7,9 @@ import Show from '../models/show';
 import { Change, ChangeItem, ContentUpdates } from '../types/contentTypes';
 import { axiosTMDBAPIInstance } from '../utils/axiosInstance';
 import { getEpisodeToAirId, getInProduction, getUSMPARating, getUSNetwork, getUSRating } from '../utils/contentUtility';
+import { getDbPool } from '../utils/db';
 import { getUSWatchProviders } from '../utils/watchProvidersUtility';
+import { RowDataPacket } from 'mysql2';
 import CronJob from 'node-cron';
 
 const supportedChangesSets = [
@@ -157,7 +159,8 @@ async function checkForShowChanges(content: ContentUpdates) {
 
       const seasonChanges = changes.filter((item) => item.key === 'season');
       if (seasonChanges.length > 0) {
-        processSeasonChanges(seasonChanges[0].items, showDetails, content, profileIds);
+        await processSeasonChanges(seasonChanges[0].items, showDetails, content, profileIds);
+        await updateShowWatchStatusForNewContent(showToUpdate.id!, profileIds);
       }
     }
   } catch (error) {
@@ -166,15 +169,21 @@ async function checkForShowChanges(content: ContentUpdates) {
   }
 }
 
-function processSeasonChanges(changes: ChangeItem[], responseShow: any, content: ContentUpdates, profileIds: number[]) {
+async function processSeasonChanges(
+  changes: ChangeItem[],
+  responseShow: any,
+  content: ContentUpdates,
+  profileIds: number[],
+) {
   const uniqueSeasonIds = filterSeasonChanges(changes);
   const responseShowSeasons = responseShow.seasons;
-  uniqueSeasonIds.forEach(async (season_id) => {
+
+  for (const season_id of uniqueSeasonIds) {
     await sleep(500);
 
     const responseShowSeason = responseShowSeasons.find((season: { id: number }) => season.id === season_id);
     if (!responseShowSeason || responseShowSeason.season_number === 0) {
-      return;
+      continue;
     }
 
     const seasonToUpdate = new Season(
@@ -188,13 +197,17 @@ function processSeasonChanges(changes: ChangeItem[], responseShow: any, content:
       responseShowSeason.episode_count,
     );
     await seasonToUpdate.update();
-    profileIds.forEach((id) => seasonToUpdate.saveFavorite(id));
+
+    for (const profileId of profileIds) {
+      await seasonToUpdate.saveFavorite(profileId);
+    }
 
     const seasonHasEpisodeChanges = await checkSeasonForEpisodeChanges(season_id);
     if (seasonHasEpisodeChanges) {
       const response = await axiosTMDBAPIInstance.get(`/tv/${content.tmdb_id}/season/${seasonToUpdate.season_number}`);
       const responseData = response.data;
-      responseData.episodes.forEach(async (responseEpisode: any) => {
+
+      for (const responseEpisode of responseData.episodes) {
         const episodeToUpdate = new Episode(
           responseEpisode.id,
           content.id,
@@ -209,10 +222,66 @@ function processSeasonChanges(changes: ChangeItem[], responseShow: any, content:
           responseEpisode.still_path,
         );
         await episodeToUpdate.update();
-        profileIds.forEach((id) => episodeToUpdate.saveFavorite(id));
-      });
+
+        for (const profileId of profileIds) {
+          await episodeToUpdate.saveFavorite(profileId);
+        }
+      }
+
+      for (const profileId of profileIds) {
+        await updateSeasonWatchStatusForNewEpisodes(String(profileId), seasonToUpdate.id!);
+      }
     }
-  });
+  }
+}
+
+/**
+ * Update watch status for a show when new seasons are added
+ * If a show was previously marked as WATCHED, update to WATCHING since there's new content
+ */
+async function updateShowWatchStatusForNewContent(showId: number, profileIds: number[]): Promise<void> {
+  try {
+    for (const profileId of profileIds) {
+      const query = 'SELECT status FROM show_watch_status WHERE profile_id = ? AND show_id = ?';
+      const [rows] = await getDbPool().execute<RowDataPacket[]>(query, [profileId, showId]);
+
+      if (rows.length > 0 && rows[0].status === 'WATCHED') {
+        cliLogger.info(
+          `Updating show ${showId} watch status for profile ${profileId} from WATCHED to WATCHING due to new seasons`,
+        );
+        await Show.updateWatchStatus(String(profileId), showId, 'WATCHING');
+      }
+    }
+  } catch (error) {
+    cliLogger.error({ message: 'Error updating show watch status for new content', error });
+  }
+}
+
+/**
+ * Update watch status for a season when new episodes are added
+ * If a season was previously marked as WATCHED, update to WATCHING since there's new content
+ */
+async function updateSeasonWatchStatusForNewEpisodes(profileId: string, seasonId: number): Promise<void> {
+  try {
+    const query = 'SELECT status FROM season_watch_status WHERE profile_id = ? AND season_id = ?';
+    const [rows] = await getDbPool().execute<RowDataPacket[]>(query, [profileId, seasonId]);
+
+    if (rows.length > 0 && rows[0].status === 'WATCHED') {
+      cliLogger.info(
+        `Updating season ${seasonId} watch status for profile ${profileId} from WATCHED to WATCHING due to new episodes`,
+      );
+      await Season.updateWatchStatus(profileId, seasonId, 'WATCHING');
+
+      const showIdQuery = 'SELECT show_id FROM seasons WHERE id = ?';
+      const [showIdResult] = await getDbPool().execute<RowDataPacket[]>(showIdQuery, [seasonId]);
+      if (showIdResult.length > 0) {
+        const showId = showIdResult[0].show_id;
+        await Show.updateWatchStatusBySeason(profileId, showId);
+      }
+    }
+  } catch (error) {
+    cliLogger.error({ message: 'Error updating season watch status for new episodes', error });
+  }
 }
 
 function filterSeasonChanges(changes: ChangeItem[]) {
@@ -221,7 +290,7 @@ function filterSeasonChanges(changes: ChangeItem[]) {
     const seasonId = change.value.season_id;
     uniqueSeasonIds.add(seasonId);
   }
-  return uniqueSeasonIds;
+  return Array.from(uniqueSeasonIds);
 }
 
 async function checkSeasonForEpisodeChanges(season_id: number) {
@@ -235,14 +304,15 @@ async function checkSeasonForEpisodeChanges(season_id: number) {
   } catch (error) {
     cliLogger.error({ message: 'Error checking season changes', error: error });
     httpLogger.error(ErrorMessages.SeasonChangeFail, { error });
+    return false;
   }
 }
 
-function generateDates(lookback: number): { currentDate: string; pastDate: string } {
+function generateDates(lookBack: number): { currentDate: string; pastDate: string } {
   const currentDate = new Date();
   const pastDate = new Date();
 
-  pastDate.setDate(currentDate.getDate() - lookback);
+  pastDate.setDate(currentDate.getDate() - lookBack);
 
   const formatDate = (date: Date): string => {
     const year = date.getFullYear();
