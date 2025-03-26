@@ -89,7 +89,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 /**
  * Updates movies that might have changes
  */
-async function updateMovies() {
+export async function updateMovies() {
   try {
     const movies = await Movie.getMoviesForUpdates();
     cliLogger.info(`Found ${movies.length} movies to check for updates`);
@@ -115,7 +115,7 @@ async function updateMovies() {
  * Check for changes to a specific movie and update if necessary
  * @param content Movie to check for changes
  */
-async function checkForMovieChanges(content: ContentUpdates) {
+export async function checkForMovieChanges(content: ContentUpdates) {
   const tmdbService = getTMDBService();
   const { currentDate, pastDate } = generateDateRange(10);
 
@@ -160,7 +160,7 @@ async function checkForMovieChanges(content: ContentUpdates) {
 /**
  * Updates shows that might have changes
  */
-async function updateShows() {
+export async function updateShows() {
   try {
     const shows = await Show.getShowsForUpdates();
     cliLogger.info(`Found ${shows.length} shows to check for updates`);
@@ -186,7 +186,7 @@ async function updateShows() {
  * Check for changes to a specific show and update if necessary
  * @param content Show to check for changes
  */
-async function checkForShowChanges(content: ContentUpdates) {
+export async function checkForShowChanges(content: ContentUpdates) {
   const tmdbService = getTMDBService();
   const { currentDate, pastDate } = generateDateRange(2);
 
@@ -253,7 +253,7 @@ async function checkForShowChanges(content: ContentUpdates) {
  * @param content Basic show info from our database
  * @param profileIds Profile IDs that have this show in their watchlist
  */
-async function processSeasonChanges(
+export async function processSeasonChanges(
   changes: ChangeItem[],
   responseShow: any,
   content: ContentUpdates,
@@ -344,7 +344,7 @@ async function processSeasonChanges(
  * @param changes Change items from TMDB
  * @returns Array of unique season IDs
  */
-function filterUniqueSeasonIds(changes: ChangeItem[]): number[] {
+export function filterUniqueSeasonIds(changes: ChangeItem[]): number[] {
   const uniqueSeasonIds = new Set<number>();
 
   for (const change of changes) {
@@ -361,7 +361,7 @@ function filterUniqueSeasonIds(changes: ChangeItem[]): number[] {
  * @param seasonId Season ID to check
  * @returns True if there are episode changes, false otherwise
  */
-async function checkSeasonForEpisodeChanges(seasonId: number): Promise<boolean> {
+export async function checkSeasonForEpisodeChanges(seasonId: number): Promise<boolean> {
   const tmdbService = getTMDBService();
   const { currentDate, pastDate } = generateDateRange(2);
 
@@ -382,7 +382,7 @@ async function checkSeasonForEpisodeChanges(seasonId: number): Promise<boolean> 
  * @param showId ID of the show in the database
  * @param profileIds List of profile IDs that have this show in their watchlist
  */
-async function updateShowWatchStatusForNewContent(showId: number, profileIds: number[]): Promise<void> {
+export async function updateShowWatchStatusForNewContent(showId: number, profileIds: number[]): Promise<void> {
   try {
     for (const profileId of profileIds) {
       const query = 'SELECT status FROM show_watch_status WHERE profile_id = ? AND show_id = ?';
@@ -403,7 +403,7 @@ async function updateShowWatchStatusForNewContent(showId: number, profileIds: nu
  * @param profileId ID of the profile
  * @param seasonId ID of the season in the database
  */
-async function updateSeasonWatchStatusForNewEpisodes(profileId: string, seasonId: number): Promise<void> {
+export async function updateSeasonWatchStatusForNewEpisodes(profileId: string, seasonId: number): Promise<void> {
   try {
     const query = 'SELECT status FROM season_watch_status WHERE profile_id = ? AND season_id = ?';
     const [rows] = await getDbPool().execute<RowDataPacket[]>(query, [profileId, seasonId]);
@@ -429,7 +429,7 @@ async function updateSeasonWatchStatusForNewEpisodes(profileId: string, seasonId
  * @param lookBackDays Number of days to look back
  * @returns Object containing formatted current date and past date
  */
-function generateDateRange(lookBackDays: number): { currentDate: string; pastDate: string } {
+export function generateDateRange(lookBackDays: number): { currentDate: string; pastDate: string } {
   const currentDate = new Date();
   const pastDate = new Date();
 
