@@ -1,6 +1,6 @@
 import { googleLogin, login, logout, register } from '../controllers/authenticationController';
 import { validateSchema } from '../middleware/validationMiddleware';
-import { accountSchema, googleLoginSchema, loginSchema } from '../schema/accountSchema';
+import { accountIdParamSchema, accountSchema, googleLoginSchema, loginSchema } from '../schema/accountSchema';
 import express from 'express';
 
 const router = express.Router();

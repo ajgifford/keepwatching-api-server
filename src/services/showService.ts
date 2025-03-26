@@ -1,8 +1,9 @@
 import { io } from '../index';
 import { cliLogger } from '../logger/logger';
-import { BadRequestError, CustomError, NotFoundError } from '../middleware/errorMiddleware';
+import { BadRequestError } from '../middleware/errorMiddleware';
 import Account from '../models/account';
 import Episode from '../models/episode';
+import Profile from '../models/profile';
 import Season from '../models/season';
 import Show from '../models/show';
 import { getEpisodeToAirId, getInProduction, getUSNetwork, getUSRating } from '../utils/contentUtility';
@@ -30,11 +31,9 @@ const CACHE_KEYS = {
  */
 export class ShowService {
   private cache: CacheService;
-  private showCache: NodeCache;
 
   constructor() {
     this.cache = new CacheService();
-    this.showCache = new NodeCache({ stdTTL: 300 });
   }
 
   /**
@@ -44,8 +43,14 @@ export class ShowService {
     this.cache.invalidatePattern(`profile_${profileId}`);
   }
 
-  public invalidateCache(): void {
-    this.cache.flushAll();
+  /**
+   * Invalidate all caches related to an account by running through it's profiles
+   */
+  public async invalidateAccountCache(accountId: number): Promise<void> {
+    const profiles = await Profile.getAllByAccountId(accountId);
+    for (const profile of profiles) {
+      this.invalidateProfileCache(String(profile.id!));
+    }
   }
 
   /**
