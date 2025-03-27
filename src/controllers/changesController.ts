@@ -93,12 +93,13 @@ export async function updateMovies() {
   try {
     const movies = await Movie.getMoviesForUpdates();
     cliLogger.info(`Found ${movies.length} movies to check for updates`);
+    const { currentDate, pastDate } = generateDateRange(10);
 
     for (const movie of movies) {
       try {
         // Add rate limiting between requests to avoid API throttling
         await sleep(500);
-        await checkForMovieChanges(movie);
+        await checkForMovieChanges(movie, pastDate, currentDate);
       } catch (error) {
         // Log error but continue with next movie
         cliLogger.error(`Failed to check for changes in movie ID ${movie.id}`, error);
@@ -114,10 +115,11 @@ export async function updateMovies() {
 /**
  * Check for changes to a specific movie and update if necessary
  * @param content Movie to check for changes
+ * @param pastDate Date past date used as the start of the change window
+ * @param currentDate Date current date used as the end of the change window
  */
-export async function checkForMovieChanges(content: ContentUpdates) {
+export async function checkForMovieChanges(content: ContentUpdates, pastDate: string, currentDate: string) {
   const tmdbService = getTMDBService();
-  const { currentDate, pastDate } = generateDateRange(10);
 
   try {
     // Get changes for this movie from TMDB
@@ -164,12 +166,12 @@ export async function updateShows() {
   try {
     const shows = await Show.getShowsForUpdates();
     cliLogger.info(`Found ${shows.length} shows to check for updates`);
+    const { currentDate, pastDate } = generateDateRange(2);
 
     for (const show of shows) {
       try {
-        // Add rate limiting between requests to avoid API throttling
         await sleep(500);
-        await checkForShowChanges(show);
+        await checkForShowChanges(show, pastDate, currentDate);
       } catch (error) {
         // Log error but continue with next show
         cliLogger.error(`Failed to check for changes in show ID ${show.id}`, error);
@@ -185,10 +187,11 @@ export async function updateShows() {
 /**
  * Check for changes to a specific show and update if necessary
  * @param content Show to check for changes
+ * @param pastDate Date past date used as the start of the change window
+ * @param currentDate Date current date used as the end of the change window
  */
-export async function checkForShowChanges(content: ContentUpdates) {
+export async function checkForShowChanges(content: ContentUpdates, pastDate: string, currentDate: string) {
   const tmdbService = getTMDBService();
-  const { currentDate, pastDate } = generateDateRange(2);
 
   try {
     // Get changes for this show from TMDB
@@ -235,7 +238,7 @@ export async function checkForShowChanges(content: ContentUpdates) {
       // Check if any season changes exist
       const seasonChanges = changes.filter((item) => item.key === 'season');
       if (seasonChanges.length > 0) {
-        await processSeasonChanges(seasonChanges[0].items, showDetails, content, profileIds);
+        await processSeasonChanges(seasonChanges[0].items, showDetails, content, profileIds, pastDate, currentDate);
         await updateShowWatchStatusForNewContent(updatedShow.id!, profileIds);
       }
     }
@@ -252,12 +255,16 @@ export async function checkForShowChanges(content: ContentUpdates) {
  * @param responseShow Full show details from TMDB
  * @param content Basic show info from our database
  * @param profileIds Profile IDs that have this show in their watchlist
+ * @param pastDate Date past date used as the start of the change window
+ * @param currentDate Date current date used as the end of the change window
  */
 export async function processSeasonChanges(
   changes: ChangeItem[],
   responseShow: any,
   content: ContentUpdates,
   profileIds: number[],
+  pastDate: string,
+  currentDate: string,
 ) {
   const tmdbService = getTMDBService();
   const uniqueSeasonIds = filterUniqueSeasonIds(changes);
@@ -296,7 +303,7 @@ export async function processSeasonChanges(
       }
 
       // Check if there are episode changes for this season
-      const hasEpisodeChanges = await checkSeasonForEpisodeChanges(seasonId);
+      const hasEpisodeChanges = await checkSeasonForEpisodeChanges(seasonId, pastDate, currentDate);
 
       if (hasEpisodeChanges) {
         // Get detailed season info including episodes
@@ -359,11 +366,16 @@ export function filterUniqueSeasonIds(changes: ChangeItem[]): number[] {
 /**
  * Check if a season has episode changes
  * @param seasonId Season ID to check
+ * @param pastDate Date past date used as the start of the change window
+ * @param currentDate Date current date used as the end of the change window
  * @returns True if there are episode changes, false otherwise
  */
-export async function checkSeasonForEpisodeChanges(seasonId: number): Promise<boolean> {
+export async function checkSeasonForEpisodeChanges(
+  seasonId: number,
+  pastDate: string,
+  currentDate: string,
+): Promise<boolean> {
   const tmdbService = getTMDBService();
-  const { currentDate, pastDate } = generateDateRange(2);
 
   try {
     const changesData = await tmdbService.getSeasonChanges(seasonId, pastDate, currentDate);
