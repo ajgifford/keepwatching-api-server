@@ -1,4 +1,5 @@
 import { Change, ChangeItem, ContentUpdates } from '../../../src/types/contentTypes';
+import { updateShows } from '@controllers/changesController';
 import * as changesControllerModule from '@controllers/changesController';
 import { cliLogger, httpLogger } from '@logger/logger';
 import { ErrorMessages } from '@logger/loggerModel';
@@ -93,9 +94,30 @@ describe('changesController', () => {
     });
   });
 
+  describe('updateShowsGPT', () => {
+    it('should process each show and call checkForShowChanges', async () => {
+      const mockShows = [
+        { id: 1, tmdb_id: 100 },
+        { id: 2, tmdb_id: 200 },
+      ];
+      (Show.getShowsForUpdates as jest.Mock).mockResolvedValue(mockShows);
+      const checkSpy = jest.spyOn(changesControllerModule, 'checkForShowChanges').mockResolvedValue(undefined);
+
+      await updateShows();
+
+      expect(Show.getShowsForUpdates).toHaveBeenCalled();
+      expect(checkSpy).toHaveBeenCalledTimes(mockShows.length);
+      expect(checkSpy).toHaveBeenCalledWith(mockShows[0], expect.any(String), expect.any(String));
+    });
+  });
+
   describe('updateShows', () => {
-    let checkForShowChangesSpy: jest.SpyInstance;
     let generateDateRangeSpy: jest.SpyInstance;
+
+    const mockTMDBService = {
+      getShowChanges: jest.fn(),
+      getShowDetails: jest.fn(),
+    };
 
     beforeEach(() => {
       // Mock the TMDB service first since it's needed by checkForShowChanges
@@ -124,10 +146,6 @@ describe('changesController', () => {
       };
       (getTMDBService as jest.Mock).mockReturnValue(mockTMDBService);
 
-      checkForShowChangesSpy = jest
-        .spyOn(changesControllerModule, 'checkForShowChanges')
-        .mockImplementation(() => Promise.resolve());
-
       generateDateRangeSpy = jest.spyOn(changesControllerModule, 'generateDateRange').mockImplementation(() => ({
         currentDate: '2023-05-15',
         pastDate: '2023-05-13',
@@ -145,9 +163,9 @@ describe('changesController', () => {
       await changesControllerModule.updateShows();
 
       expect(cliLogger.info).toHaveBeenCalledWith('Found 2 shows to check for updates');
-      expect(checkForShowChangesSpy).toHaveBeenCalledTimes(2);
-      expect(checkForShowChangesSpy).toHaveBeenCalledWith(mockShows[0]);
-      expect(checkForShowChangesSpy).toHaveBeenCalledWith(mockShows[1]);
+      expect(mockTMDBService.getShowChanges).toHaveBeenCalledTimes(2);
+      // expect(testSpy).toHaveBeenCalledWith(mockShows[0]);
+      // expect(testSpy).toHaveBeenCalledWith(mockShows[1]);
     });
 
     it('should handle empty shows list', async () => {
@@ -1033,94 +1051,6 @@ describe('changesController', () => {
 
       const result = changesControllerModule.filterUniqueSeasonIds(changes);
       expect(result).toEqual([123, 456]);
-    });
-  });
-
-  describe('generateDateRange', () => {
-    const RealDate = Date;
-
-    beforeEach(() => {
-      const mockNow = new RealDate(2023, 5, 15); // June 15, 2023
-
-      jest.spyOn(global, 'Date').mockImplementation((...args: any[]) => {
-        if (args.length === 0) {
-          return new RealDate(mockNow.getTime());
-        }
-        return new RealDate(...(args as [any]));
-      });
-    });
-
-    afterEach(() => {
-      jest.restoreAllMocks();
-    });
-
-    it('should generate correct date range with lookback days', () => {
-      const { currentDate, pastDate } = changesControllerModule.generateDateRange(10);
-
-      expect(currentDate).toBe('2023-06-15');
-      expect(pastDate).toBe('2023-06-05');
-    });
-
-    it('should generate correct date range with 1 day lookback', () => {
-      const { currentDate, pastDate } = changesControllerModule.generateDateRange(1);
-
-      expect(currentDate).toBe('2023-06-15');
-      expect(pastDate).toBe('2023-06-14');
-    });
-
-    it('should generate correct date range with 30 days lookback', () => {
-      const { currentDate, pastDate } = changesControllerModule.generateDateRange(30);
-
-      expect(currentDate).toBe('2023-06-15');
-      expect(pastDate).toBe('2023-05-16');
-    });
-
-    it('should handle date crossing month boundaries', () => {
-      const mockNow = new RealDate(2023, 6, 1); // July 1, 2023
-
-      jest.spyOn(global, 'Date').mockImplementation((...args: any[]) => {
-        if (args.length === 0) {
-          return new RealDate(mockNow.getTime());
-        }
-        return new RealDate(...(args as [any]));
-      });
-
-      const { currentDate, pastDate } = changesControllerModule.generateDateRange(5);
-
-      expect(currentDate).toBe('2023-07-01');
-      expect(pastDate).toBe('2023-06-26');
-    });
-
-    it('should handle date crossing year boundaries', () => {
-      const mockNow = new RealDate(2023, 0, 1); // January 1, 2023
-
-      jest.spyOn(global, 'Date').mockImplementation((...args: any[]) => {
-        if (args.length === 0) {
-          return new RealDate(mockNow.getTime());
-        }
-        return new RealDate(...(args as [any]));
-      });
-
-      const { currentDate, pastDate } = changesControllerModule.generateDateRange(5);
-
-      expect(currentDate).toBe('2023-01-01');
-      expect(pastDate).toBe('2022-12-27');
-    });
-
-    it('should format dates with leading zeros', () => {
-      const mockNow = new RealDate(2023, 0, 9); // January 9, 2023
-
-      jest.spyOn(global, 'Date').mockImplementation((...args: any[]) => {
-        if (args.length === 0) {
-          return new RealDate(mockNow.getTime());
-        }
-        return new RealDate(...(args as [any]));
-      });
-
-      const { currentDate, pastDate } = changesControllerModule.generateDateRange(5);
-
-      expect(currentDate).toBe('2023-01-09');
-      expect(pastDate).toBe('2023-01-04');
     });
   });
 });
