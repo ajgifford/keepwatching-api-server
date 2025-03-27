@@ -79,7 +79,7 @@
     "build": "npx tsc",
     "start": "node dist/index.js",
     "dev": "tsx watch src",
-    "format": "prettier --config ./prettier.config.js . --write",
+    "format": "prettier --config ./.prettierrc.js . --write",
     "serve": "yarn build && pm2 start ecosystem.config.js --only keepwatching-server --env production",
     "test": "jest",
     "test:watch": "jest --watch",
