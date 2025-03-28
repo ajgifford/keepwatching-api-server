@@ -20,18 +20,14 @@ export async function checkForShowChanges(content: ContentUpdates, pastDate: str
   const tmdbService = getTMDBService();
 
   try {
-    // Get changes for this show from TMDB
     const changesData = await tmdbService.getShowChanges(content.tmdb_id, pastDate, currentDate);
     const changes: Change[] = changesData.changes || [];
 
-    // Filter for supported changes only
     const supportedChanges = changes.filter((item) => SUPPORTED_CHANGE_KEYS.includes(item.key));
 
     if (supportedChanges.length > 0) {
-      // Fetch updated show details from TMDB
       const showDetails = await tmdbService.getShowDetails(content.tmdb_id);
 
-      // Create new Show object with updated data
       const updatedShow = new Show(
         showDetails.id,
         showDetails.name,
@@ -55,13 +51,10 @@ export async function checkForShowChanges(content: ContentUpdates, pastDate: str
         getUSNetwork(showDetails.networks),
       );
 
-      // Update the show in our database
       await updatedShow.update();
 
-      // Get profiles that have this show in their watchlist
       const profileIds = await updatedShow.getProfilesForShow();
 
-      // Check if any season changes exist
       const seasonChanges = changes.filter((item) => item.key === 'season');
       if (seasonChanges.length > 0) {
         await processSeasonChanges(seasonChanges[0].items, showDetails, content, profileIds, pastDate, currentDate);
