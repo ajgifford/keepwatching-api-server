@@ -2000,6 +2000,13 @@ create-jest@^29.7.0:
     jest-util "^29.7.0"
     prompts "^2.0.1"
 
+cron-parser@^5.0.6:
+  version "5.0.6"
+  resolved "https://registry.yarnpkg.com/cron-parser/-/cron-parser-5.0.6.tgz#8613ceec17cf5414aeed3ba375aec61e95bb8eb2"
+  integrity sha512-KtZxEaO4XtQwQ6q2Val3gX09TxM/1Okz0BIqkm6Wwc582gAHTnjBP1rtYEgWcVOUPRIg2CeirOTiUSu7A2I+HQ==
+  dependencies:
+    luxon "^3.5.0"
+
 cross-spawn@^7.0.3:
   version "7.0.6"
   resolved "https://registry.yarnpkg.com/cross-spawn/-/cross-spawn-7.0.6.tgz#8a58fe78f00dcd70c370451759dfbfaf03e8ee9f"
@@ -4082,6 +4089,11 @@ lru.min@^1.0.0:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/lru.min/-/lru.min-1.1.1.tgz#146e01e3a183fa7ba51049175de04667d5701f0e"
   integrity sha512-FbAj6lXil6t8z4z3j0E5mfRlPzxkySotzUHwRXjlpRh10vc6AI6WN62ehZj82VG7M20rqogJ0GLwar2Xa05a8Q==
+
+luxon@^3.5.0:
+  version "3.6.0"
+  resolved "https://registry.yarnpkg.com/luxon/-/luxon-3.6.0.tgz#e84453dbdbd716b5eac95bee702b379863059f83"
+  integrity sha512-WE7p0p7W1xji9qxkLYsvcIxZyfP48GuFrWIBQZIsbjCyf65dG1rv4n83HcOyEyhvzxJCrUoObCRNFgRNIQ5KNA==
 
 make-dir@^4.0.0:
   version "4.0.0"

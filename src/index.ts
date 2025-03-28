@@ -2,7 +2,6 @@ import 'module-alias/register';
 
 import 'dotenv/config';
 
-import { initScheduledJobs } from './controllers/changesController';
 import { cliLogger, httpLogger } from './logger/logger';
 import { ErrorMessages } from './logger/loggerModel';
 import { authenticateUser } from './middleware/authenticationMiddleware';
@@ -19,8 +18,10 @@ import searchRouter from './routes/searchRouter';
 import seasonsRouter from './routes/seasonsRouter';
 import showsRouter from './routes/showsRouter';
 import statisticsRouter from './routes/statisticsRouter';
+import { initScheduledJobs, shutdownJobs } from './services/scheduledUpdatesService';
 import { setSocketInstance } from './services/socketService';
 import { loadStreamingService } from './utils/watchProvidersUtility';
+import { getDbPool } from '@utils/db';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
@@ -185,3 +186,35 @@ const startServer = async () => {
 };
 
 startServer();
+
+const gracefulShutdown = (signal: string) => {
+  cliLogger.info(`Received ${signal}, starting graceful shutdown...`);
+
+  server.close(() => {
+    cliLogger.info('HTTP server closed');
+
+    shutdownJobs();
+
+    try {
+      const pool = getDbPool();
+      if (pool) {
+        cliLogger.info('Closing database connections...');
+        pool.end();
+      }
+    } catch (err) {
+      cliLogger.error('Error closing database connections', err);
+    }
+
+    cliLogger.info('Graceful shutdown complete, exiting process');
+    process.exit(0);
+  });
+
+  setTimeout(() => {
+    cliLogger.error('Could not close connections in time, forcefully shutting down');
+    process.exit(1);
+  }, 10000);
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGUSR2', () => gracefulShutdown('SIGUSR2'));

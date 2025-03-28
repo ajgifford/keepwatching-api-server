@@ -1,5 +1,5 @@
-import { initScheduledJobs } from '@controllers/changesController';
 import { cliLogger } from '@logger/logger';
+import { initScheduledJobs } from '@services/scheduledUpdatesService';
 import CronJob from 'node-cron';
 
 jest.mock('@logger/logger', () => ({
@@ -13,6 +13,7 @@ jest.mock('node-cron', () => ({
   schedule: jest.fn().mockReturnValue({
     start: jest.fn(),
   }),
+  validate: jest.fn().mockReturnValue(true),
 }));
 
 describe('initScheduledJobs', () => {
