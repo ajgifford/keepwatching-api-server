@@ -1,4 +1,3 @@
-import { io } from '../index';
 import { cliLogger } from '../logger/logger';
 import { BadRequestError } from '../middleware/errorMiddleware';
 import Account from '../models/account';
@@ -12,8 +11,8 @@ import { filterUSOrEnglishShows } from '../utils/usSearchFilter';
 import { getUSWatchProviders } from '../utils/watchProvidersUtility';
 import { CacheService } from './cacheService';
 import { errorService } from './errorService';
+import { getSocketInstance } from './socketService';
 import { getTMDBService } from './tmdbService';
-import NodeCache from 'node-cache';
 
 // Cache invalidation constants
 const CACHE_KEYS = {
@@ -281,6 +280,9 @@ export class ShowService {
    */
   private async notifyShowDataLoaded(profileId: string, showId: number): Promise<void> {
     try {
+      const io = getSocketInstance();
+      if (!io) return;
+
       const account_id = await Account.findAccountIdByProfileId(profileId);
       const loadedShow = await Show.getShowForProfile(profileId, showId);
 
@@ -353,6 +355,26 @@ export class ShowService {
       return success;
     } catch (error) {
       throw errorService.handleError(error, `updateShowWatchStatus(${profileId}, ${showId}, ${status}, ${recursive})`);
+    }
+  }
+
+  /**
+   * Update watch status for a show when new seasons are added
+   * If a show was previously marked as WATCHED, update to WATCHING since there's new content
+   * @param showId ID of the show in the database
+   * @param profileIds List of profile IDs that have this show in their watchlist
+   */
+  public async updateShowWatchStatusForNewContent(showId: number, profileIds: number[]): Promise<void> {
+    try {
+      for (const profileId of profileIds) {
+        const watchStatus = await Show.getWatchStatus(String(profileId), showId);
+
+        if (watchStatus === 'WATCHED') {
+          await Show.updateWatchStatus(String(profileId), showId, 'WATCHING');
+        }
+      }
+    } catch (error) {
+      throw errorService.handleError(error, `updateShowWatchStatusForNewContent(${showId})`);
     }
   }
 

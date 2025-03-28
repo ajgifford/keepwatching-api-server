@@ -320,6 +320,35 @@ class Season {
       throw new DatabaseError(errorMessage, error);
     }
   }
+
+  static async getShowIdForSeason(seasonId: number): Promise<number | null> {
+    try {
+      const query = 'SELECT show_id FROM seasons WHERE id = ?';
+      const [rows] = await getDbPool().execute<RowDataPacket[]>(query, [seasonId]);
+      if (rows.length === 0) return null;
+
+      return rows[0].show_id;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown database error getting the show id for a season';
+      throw new DatabaseError(errorMessage, error);
+    }
+  }
+
+  static async getWatchStatus(profileId: string, seasonId: number): Promise<string | null> {
+    try {
+      const query = 'SELECT status FROM season_watch_status WHERE profile_id = ? AND season_id = ?';
+      const [rows] = await getDbPool().execute<RowDataPacket[]>(query, [profileId, seasonId]);
+
+      if (rows.length === 0) return null;
+
+      return rows[0].status;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown database error getting the watch status for a season';
+      throw new DatabaseError(errorMessage, error);
+    }
+  }
 }
 
 export default Season;

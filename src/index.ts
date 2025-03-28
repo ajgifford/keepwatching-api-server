@@ -19,6 +19,7 @@ import searchRouter from './routes/searchRouter';
 import seasonsRouter from './routes/seasonsRouter';
 import showsRouter from './routes/showsRouter';
 import statisticsRouter from './routes/statisticsRouter';
+import { setSocketInstance } from './services/socketService';
 import { loadStreamingService } from './utils/watchProvidersUtility';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
@@ -122,6 +123,8 @@ export const io = new Server(server, {
     credentials: true,
   },
 });
+
+setSocketInstance(io);
 
 io.use(async (socket, next) => {
   try {

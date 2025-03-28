@@ -631,6 +631,21 @@ class Show {
     }
   }
 
+  static async getWatchStatus(profileId: string, showId: number): Promise<string | null> {
+    try {
+      const query = 'SELECT status FROM show_watch_status WHERE profile_id = ? AND show_id = ?';
+      const [rows] = await getDbPool().execute<RowDataPacket[]>(query, [profileId, showId]);
+
+      if (rows.length === 0) return null;
+
+      return rows[0].status;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown database error getting the watch status for a show';
+      throw new DatabaseError(errorMessage, error);
+    }
+  }
+
   /**
    * Retrieves all shows for a specific profile with their watch status
    *
