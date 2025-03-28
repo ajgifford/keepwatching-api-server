@@ -1,9 +1,10 @@
 import Show from '@models/show';
+import { errorService } from '@services/errorService';
 import { showService } from '@services/showService';
-import { RowDataPacket } from 'mysql2';
 
 jest.mock('@models/show');
 jest.mock('@utils/db');
+jest.mock('@services/errorService');
 
 describe('showService', () => {
   describe('updateShowWatchStatusForNewContent', () => {
@@ -60,6 +61,37 @@ describe('showService', () => {
       expect(Show.updateWatchStatus).toHaveBeenCalledTimes(2);
       expect(Show.updateWatchStatus).toHaveBeenCalledWith('1', 123, 'WATCHING');
       expect(Show.updateWatchStatus).toHaveBeenCalledWith('3', 123, 'WATCHING');
+    });
+
+    it('should handle errors when getting show watch status', async () => {
+      const mockError = new Error('Get show watch status failed');
+      (Show.getWatchStatus as jest.Mock).mockRejectedValue(mockError);
+      (errorService.handleError as jest.Mock).mockImplementation((error) => {
+        throw error;
+      });
+
+      await expect(showService.updateShowWatchStatusForNewContent(123, [1])).rejects.toThrow(
+        'Get show watch status failed',
+      );
+
+      expect(errorService.handleError).toHaveBeenCalledWith(mockError, 'updateShowWatchStatusForNewContent(123)');
+      expect(Show.updateWatchStatus).not.toHaveBeenCalled();
+    });
+
+    it('should handle errors when updating show watch status', async () => {
+      const mockError = new Error('Update show watch status failed');
+      (Show.getWatchStatus as jest.Mock).mockResolvedValueOnce('WATCHED');
+      (Show.updateWatchStatus as jest.Mock).mockRejectedValue(mockError);
+      (errorService.handleError as jest.Mock).mockImplementation((error) => {
+        throw error;
+      });
+
+      await expect(showService.updateShowWatchStatusForNewContent(123, [1])).rejects.toThrow(
+        'Update show watch status failed',
+      );
+
+      expect(errorService.handleError).toHaveBeenCalledWith(mockError, 'updateShowWatchStatusForNewContent(123)');
+      expect(Show.getWatchStatus).toHaveBeenCalledTimes(1);
     });
   });
 });
