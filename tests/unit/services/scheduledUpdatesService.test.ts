@@ -1,5 +1,5 @@
 import { cliLogger, httpLogger } from '@logger/logger';
-import { updateMovies } from '@services/movieChangesService';
+import { updateMovies, updateShows } from '@services/contentUpdatesService';
 import {
   getJobsStatus,
   initScheduledJobs,
@@ -9,7 +9,6 @@ import {
   runShowsUpdateJob,
   shutdownJobs,
 } from '@services/scheduledUpdatesService';
-import { updateShows } from '@services/showChangesService';
 import parser from 'cron-parser';
 import CronJob from 'node-cron';
 
@@ -25,11 +24,8 @@ jest.mock('@logger/logger', () => ({
   },
 }));
 
-jest.mock('@services/movieChangesService', () => ({
+jest.mock('@services/contentUpdatesService', () => ({
   updateMovies: jest.fn(),
-}));
-
-jest.mock('@services/showChangesService', () => ({
   updateShows: jest.fn(),
 }));
 

@@ -1,8 +1,7 @@
 import { cliLogger, httpLogger } from '../logger/logger';
 import { ErrorMessages } from '../logger/loggerModel';
+import { updateMovies, updateShows } from './contentUpdatesService';
 import { errorService } from './errorService';
-import { updateMovies } from './movieChangesService';
-import { updateShows } from './showChangesService';
 import parser from 'cron-parser';
 import CronJob from 'node-cron';
 
