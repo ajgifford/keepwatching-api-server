@@ -3,7 +3,11 @@ import { SeasonWatchStatusParams } from '../schema/seasonSchema';
 import { seasonsService } from '../services/seasonsService';
 import { NextFunction, Request, Response } from 'express';
 
-// PUT /api/v1/accounts/:accountId/profiles/:profileId/seasons/watchstatus
+/**
+ * Update the watch status of a season
+ *
+ * @route PUT /api/v1/accounts/:accountId/profiles/:profileId/seasons/watchstatus
+ */
 export const updateSeasonWatchStatus = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { profileId } = req.params as AccountAndProfileIdsParams;
@@ -17,7 +21,11 @@ export const updateSeasonWatchStatus = async (req: Request, res: Response, next:
   }
 };
 
-// GET /api/v1/accounts/:accountId/profiles/:profileId/shows/:showId/seasons
+/**
+ * Get all the seasons for the specified show
+ *
+ * @route GET /api/v1/accounts/:accountId/profiles/:profileId/shows/:showId/seasons
+ */
 export const getSeasonsForShow = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { profileId } = req.params as AccountAndProfileIdsParams;
