@@ -12,6 +12,7 @@ import { getUSWatchProviders } from '../utils/watchProvidersUtility';
 import { CacheService } from './cacheService';
 import { errorService } from './errorService';
 import { getSocketInstance } from './socketService';
+import { statisticsService } from './statisticsService';
 import { getTMDBService } from './tmdbService';
 
 // Cache invalidation constants
@@ -40,6 +41,7 @@ export class ShowService {
    */
   public invalidateProfileCache(profileId: string): void {
     this.cache.invalidatePattern(`profile_${profileId}`);
+    statisticsService.invalidateProfileStatistics(profileId);
   }
 
   /**
@@ -50,6 +52,7 @@ export class ShowService {
     for (const profile of profiles) {
       this.invalidateProfileCache(String(profile.id!));
     }
+    statisticsService.invalidateAccountStatistics(accountId);
   }
 
   /**

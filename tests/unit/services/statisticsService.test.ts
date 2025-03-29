@@ -1,0 +1,256 @@
+import { getProfileMovieStatistics } from '@controllers/moviesController';
+import { BadRequestError, CustomError } from '@middleware/errorMiddleware';
+import Profile from '@models/profile';
+import { CacheService } from '@services/cacheService';
+import { errorService } from '@services/errorService';
+import { showService } from '@services/showService';
+import { statisticsService } from '@services/statisticsService';
+
+jest.mock('@models/profile');
+jest.mock('@services/showService');
+jest.mock('@services/errorService');
+jest.mock('@controllers/moviesController');
+jest.mock('@services/cacheService');
+
+describe('statisticsService', () => {
+  // Create a partial mock of CacheService
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // Instead of trying to mock the entire CacheService class, we'll mock just the methods we need
+    // Mock the specific methods we use in our tests
+    jest.spyOn(CacheService.prototype, 'getOrSet').mockImplementation(jest.fn());
+    jest.spyOn(CacheService.prototype, 'invalidate').mockImplementation(jest.fn());
+  });
+
+  describe('getProfileStatistics', () => {
+    it('should return profile statistics from cache if available', async () => {
+      const mockStats = {
+        showStatistics: { total: 5 },
+        movieStatistics: { total: 3 },
+        episodeWatchProgress: { watchedEpisodes: 20 },
+      };
+
+      (CacheService.prototype.getOrSet as jest.Mock).mockResolvedValue(mockStats);
+
+      const result = await statisticsService.getProfileStatistics('123');
+
+      expect(CacheService.prototype.getOrSet).toHaveBeenCalledWith(
+        'profile_123_statistics',
+        expect.any(Function),
+        1800,
+      );
+      expect(result).toEqual(mockStats);
+      // Verify the service methods weren't called because we got a cache hit
+      expect(showService.getProfileShowStatistics).not.toHaveBeenCalled();
+      expect(getProfileMovieStatistics).not.toHaveBeenCalled();
+      expect(showService.getProfileWatchProgress).not.toHaveBeenCalled();
+    });
+
+    it('should fetch and return profile statistics on cache miss', async () => {
+      const mockShowStats = { total: 5 };
+      const mockMovieStats = { total: 3 };
+      const mockWatchProgress = { watchedEpisodes: 20 };
+
+      (CacheService.prototype.getOrSet as jest.Mock).mockImplementation(async (_key, fn) => fn());
+      (showService.getProfileShowStatistics as jest.Mock).mockResolvedValue(mockShowStats);
+      (getProfileMovieStatistics as jest.Mock).mockResolvedValue(mockMovieStats);
+      (showService.getProfileWatchProgress as jest.Mock).mockResolvedValue(mockWatchProgress);
+
+      const result = await statisticsService.getProfileStatistics('123');
+
+      expect(CacheService.prototype.getOrSet).toHaveBeenCalledWith(
+        'profile_123_statistics',
+        expect.any(Function),
+        1800,
+      );
+      expect(showService.getProfileShowStatistics).toHaveBeenCalledWith('123');
+      expect(getProfileMovieStatistics).toHaveBeenCalledWith('123');
+      expect(showService.getProfileWatchProgress).toHaveBeenCalledWith('123');
+      expect(result).toEqual({
+        showStatistics: mockShowStats,
+        movieStatistics: mockMovieStats,
+        episodeWatchProgress: mockWatchProgress,
+      });
+    });
+
+    it('should handle errors when getting profile statistics', async () => {
+      const error = new Error('Failed to get show statistics');
+      (CacheService.prototype.getOrSet as jest.Mock).mockImplementation(async (_key, fn) => fn());
+      (showService.getProfileShowStatistics as jest.Mock).mockRejectedValue(error);
+      (errorService.handleError as jest.Mock).mockImplementation((err) => {
+        throw new Error(`Handled: ${err.message}`);
+      });
+
+      await expect(statisticsService.getProfileStatistics('123')).rejects.toThrow(
+        'Handled: Failed to get show statistics',
+      );
+
+      expect(errorService.handleError).toHaveBeenCalledWith(error, 'getProfileStatistics(123)');
+    });
+  });
+
+  describe('getAccountStatistics', () => {
+    const mockProfiles = [
+      { id: 1, name: 'Profile 1' },
+      { id: 2, name: 'Profile 2' },
+    ];
+
+    const mockProfileStats = [
+      {
+        profileId: 1,
+        profileName: 'Profile 1',
+        showStatistics: {
+          total: 10,
+          watchStatusCounts: { watched: 5, watching: 3, notWatched: 2 },
+          genreDistribution: { Drama: 4, Comedy: 6 },
+          serviceDistribution: { Netflix: 6, 'Prime Video': 4 },
+          watchProgress: 50,
+        },
+        movieStatistics: {
+          total: 8,
+          watchStatusCounts: { watched: 3, notWatched: 5 },
+          genreDistribution: { Action: 3, Comedy: 5 },
+          serviceDistribution: { Netflix: 5, 'Prime Video': 3 },
+          watchProgress: 37,
+        },
+        progress: {
+          totalEpisodes: 50,
+          watchedEpisodes: 25,
+          overallProgress: 50,
+          showsProgress: [
+            { showId: 101, title: 'Show 1', totalEpisodes: 20, watchedEpisodes: 10 },
+            { showId: 102, title: 'Show 2', totalEpisodes: 30, watchedEpisodes: 15 },
+          ],
+        },
+      },
+      {
+        profileId: 2,
+        profileName: 'Profile 2',
+        showStatistics: {
+          total: 5,
+          watchStatusCounts: { watched: 2, watching: 1, notWatched: 2 },
+          genreDistribution: { Drama: 2, 'Sci-Fi': 3 },
+          serviceDistribution: { Netflix: 3, Disney: 2 },
+          watchProgress: 40,
+        },
+        movieStatistics: {
+          total: 3,
+          watchStatusCounts: { watched: 1, notWatched: 2 },
+          genreDistribution: { Drama: 1, Horror: 2 },
+          serviceDistribution: { Netflix: 2, HBO: 1 },
+          watchProgress: 33,
+        },
+        progress: {
+          totalEpisodes: 30,
+          watchedEpisodes: 10,
+          overallProgress: 33,
+          showsProgress: [
+            { showId: 101, title: 'Show 1', totalEpisodes: 20, watchedEpisodes: 5 },
+            { showId: 103, title: 'Show 3', totalEpisodes: 10, watchedEpisodes: 5 },
+          ],
+        },
+      },
+    ];
+
+    it('should return account statistics from cache if available', async () => {
+      const mockStats = {
+        profileCount: 2,
+        uniqueContent: { showCount: 3, movieCount: 11 },
+        showStatistics: { total: 15 },
+        movieStatistics: { total: 11 },
+        episodeStatistics: { watchedEpisodes: 35 },
+      };
+
+      (CacheService.prototype.getOrSet as jest.Mock).mockResolvedValue(mockStats);
+
+      const result = await statisticsService.getAccountStatistics(123);
+
+      expect(CacheService.prototype.getOrSet).toHaveBeenCalledWith(
+        'account_123_statistics',
+        expect.any(Function),
+        3600,
+      );
+      expect(result).toEqual(mockStats);
+      // Verify the callback wasn't executed because we got a cache hit
+      expect(Profile.getAllByAccountId).not.toHaveBeenCalled();
+    });
+
+    it('should fetch and aggregate account statistics on cache miss', async () => {
+      (CacheService.prototype.getOrSet as jest.Mock).mockImplementation(async (_key, fn) => fn());
+      (Profile.getAllByAccountId as jest.Mock).mockResolvedValue(mockProfiles);
+
+      // Mock showService and getProfileMovieStatistics for each profile
+      (showService.getProfileShowStatistics as jest.Mock)
+        .mockResolvedValueOnce(mockProfileStats[0].showStatistics)
+        .mockResolvedValueOnce(mockProfileStats[1].showStatistics);
+
+      (getProfileMovieStatistics as jest.Mock)
+        .mockResolvedValueOnce(mockProfileStats[0].movieStatistics)
+        .mockResolvedValueOnce(mockProfileStats[1].movieStatistics);
+
+      (showService.getProfileWatchProgress as jest.Mock)
+        .mockResolvedValueOnce(mockProfileStats[0].progress)
+        .mockResolvedValueOnce(mockProfileStats[1].progress);
+
+      const result = await statisticsService.getAccountStatistics(123);
+
+      expect(CacheService.prototype.getOrSet).toHaveBeenCalledWith(
+        'account_123_statistics',
+        expect.any(Function),
+        3600,
+      );
+      expect(Profile.getAllByAccountId).toHaveBeenCalledWith(123);
+
+      // Verify we called service methods for each profile
+      expect(showService.getProfileShowStatistics).toHaveBeenCalledTimes(2);
+      expect(getProfileMovieStatistics).toHaveBeenCalledTimes(2);
+      expect(showService.getProfileWatchProgress).toHaveBeenCalledTimes(2);
+
+      // Check the aggregated results
+      expect(result).toHaveProperty('profileCount', 2);
+      expect(result).toHaveProperty('uniqueContent');
+      expect(result).toHaveProperty('showStatistics');
+      expect(result).toHaveProperty('movieStatistics');
+      expect(result).toHaveProperty('episodeStatistics');
+      expect(result.uniqueContent.showCount).toBeGreaterThan(0);
+      expect(result.showStatistics.total).toBe(15); // 10 + 5
+    });
+
+    it('should throw BadRequestError when no profiles found', async () => {
+      (CacheService.prototype.getOrSet as jest.Mock).mockImplementation(async (_key, fn) => fn());
+      (Profile.getAllByAccountId as jest.Mock).mockResolvedValue([]);
+      (errorService.handleError as jest.Mock).mockImplementation((err) => {
+        throw err;
+      });
+
+      await expect(statisticsService.getAccountStatistics(123)).rejects.toThrow(CustomError);
+      expect(Profile.getAllByAccountId).toHaveBeenCalledWith(123);
+    });
+
+    it('should handle errors when getting account statistics', async () => {
+      const error = new Error('Failed to get profiles');
+      (CacheService.prototype.getOrSet as jest.Mock).mockImplementation(async (_key, fn) => fn());
+      (Profile.getAllByAccountId as jest.Mock).mockRejectedValue(error);
+      (errorService.handleError as jest.Mock).mockImplementation((err) => {
+        throw new Error(`Handled: ${err.message}`);
+      });
+
+      await expect(statisticsService.getAccountStatistics(123)).rejects.toThrow('Handled: Failed to get profiles');
+
+      expect(errorService.handleError).toHaveBeenCalledWith(error, 'getAccountStatistics(123)');
+    });
+  });
+
+  describe('cache invalidation', () => {
+    it('should invalidate profile statistics', () => {
+      statisticsService.invalidateProfileStatistics('123');
+      expect(CacheService.prototype.invalidate).toHaveBeenCalledWith('profile_123_statistics');
+    });
+
+    it('should invalidate account statistics', () => {
+      statisticsService.invalidateAccountStatistics(123);
+      expect(CacheService.prototype.invalidate).toHaveBeenCalledWith('account_123_statistics');
+    });
+  });
+});

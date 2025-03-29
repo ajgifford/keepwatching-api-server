@@ -3,6 +3,7 @@ import Movie from '../models/movie';
 import { AccountAndProfileIdsParams } from '../schema/accountSchema';
 import { AddMovieFavoriteParams, MovieWatchStatusParams, RemoveMovieFavoriteParams } from '../schema/movieSchema';
 import { errorService } from '../services/errorService';
+import { statisticsService } from '../services/statisticsService';
 import { getTMDBService } from '../services/tmdbService';
 import { getUSMPARating } from '../utils/contentUtility';
 import { getUSWatchProviders } from '../utils/watchProvidersUtility';
@@ -75,6 +76,7 @@ export async function addFavorite(req: Request, res: Response, next: NextFunctio
 
     const newMovie = await Movie.getMovieForProfile(profileId, movieToFavorite.id!);
     const { recentMovies, upcomingMovies } = await getRecentAndUpcomingMovies(profileId);
+    statisticsService.invalidateProfileStatistics(profileId);
 
     res.status(200).json({
       message: `Successfully saved ${movieToFavorite.title} as a favorite`,
@@ -102,6 +104,7 @@ export async function removeFavorite(req: Request, res: Response, next: NextFunc
 
     await movieToRemove.removeFavorite(profileId);
     const { recentMovies, upcomingMovies } = await getRecentAndUpcomingMovies(profileId);
+    statisticsService.invalidateProfileStatistics(profileId);
 
     res.status(200).json({
       message: 'Successfully removed the movie from favorites',
@@ -125,6 +128,7 @@ export async function updateMovieWatchStatus(req: Request, res: Response, next: 
     const success = await Movie.updateWatchStatus(profileId, movieId, status);
 
     if (success) {
+      statisticsService.invalidateProfileStatistics(profileId);
       res.status(200).json({ message: `Successfully updated the watch status to '${status}'` });
     } else {
       throw new BadRequestError(
