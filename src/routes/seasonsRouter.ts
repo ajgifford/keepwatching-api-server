@@ -1,4 +1,4 @@
-import { updateSeasonWatchStatus } from '../controllers/seasonsController';
+import { getSeasonsForShow, updateSeasonWatchStatus } from '../controllers/seasonsController';
 import { authorizeAccountAccess } from '../middleware/authorizationMiddleware';
 import { validateRequest, validateSchema } from '../middleware/validationMiddleware';
 import { accountAndProfileIdsParamSchema } from '../schema/accountSchema';
@@ -13,6 +13,13 @@ router.put(
   authorizeAccountAccess,
   validateRequest(seasonWatchStatusSchema),
   updateSeasonWatchStatus,
+);
+
+router.get(
+  '/api/v1/accounts/:accountId/profiles/:profileId/shows/:showId/seasons',
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
+  getSeasonsForShow,
 );
 
 export default router;

@@ -4,7 +4,7 @@ import Season from '../models/season';
 import { ChangeItem, ContentUpdates } from '../types/contentTypes';
 import { filterUniqueSeasonIds, sleep } from '../utils/changesUtility';
 import { checkSeasonForEpisodeChanges } from './episodeChangesService';
-import { seasonService } from './seasonService';
+import { seasonsService } from './seasonsService';
 import { getTMDBService } from './tmdbService';
 
 /**
@@ -94,7 +94,7 @@ export async function processSeasonChanges(
 
         // Update watch status for all affected profiles
         for (const profileId of profileIds) {
-          await seasonService.updateSeasonWatchStatusForNewEpisodes(String(profileId), updatedSeason.id!);
+          await seasonsService.updateSeasonWatchStatusForNewEpisodes(String(profileId), updatedSeason.id!);
         }
       }
     } catch (error) {
