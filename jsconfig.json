@@ -10,7 +10,7 @@
       "@services/*": ["src/services/*"],
       "@logger/*": ["src/logger/*"],
       "@schema/*": ["src/schema/*"],
-      "@types/*": ["src/types/*"]
+      "@db/*": ["src/db/*"]
     }
   }
 }

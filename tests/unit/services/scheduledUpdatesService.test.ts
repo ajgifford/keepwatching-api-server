@@ -65,7 +65,7 @@ describe('scheduledUpdatesService', () => {
   });
 
   describe('initScheduledJobs', () => {
-    test('should initialize scheduled jobs with correct patterns', () => {
+    it('should initialize scheduled jobs with correct patterns', () => {
       initScheduledJobs(mockNotifyShowUpdates, mockNotifyMovieUpdates);
 
       expect(CronJob.schedule).toHaveBeenCalledTimes(2);
@@ -78,7 +78,7 @@ describe('scheduledUpdatesService', () => {
       expect(cliLogger.info).toHaveBeenCalledWith('Job Scheduler Initialized');
     });
 
-    test('should use custom cron schedules from environment variables', () => {
+    it('should use custom cron schedules from environment variables', () => {
       process.env.SHOWS_UPDATE_SCHEDULE = '0 4 * * *';
       process.env.MOVIES_UPDATE_SCHEDULE = '0 3 1,15 * *';
 
@@ -88,7 +88,7 @@ describe('scheduledUpdatesService', () => {
       expect(CronJob.schedule).toHaveBeenCalledWith('0 3 1,15 * *', expect.any(Function));
     });
 
-    test('should throw error if show cron expression is invalid', () => {
+    it('should throw error if show cron expression is invalid', () => {
       (CronJob.validate as jest.Mock).mockImplementationOnce(() => false);
 
       expect(() => {
@@ -96,7 +96,7 @@ describe('scheduledUpdatesService', () => {
       }).toThrow();
     });
 
-    test('should throw error if movie cron expression is invalid', () => {
+    it('should throw error if movie cron expression is invalid', () => {
       (CronJob.validate as jest.Mock)
         .mockImplementationOnce(() => true) // For shows
         .mockImplementationOnce(() => false); // For movies
@@ -108,7 +108,7 @@ describe('scheduledUpdatesService', () => {
   });
 
   describe('runShowsUpdateJob', () => {
-    test('should run shows update job successfully', async () => {
+    it('should run shows update job successfully', async () => {
       (updateShows as jest.Mock).mockResolvedValueOnce(undefined);
 
       initScheduledJobs(mockNotifyShowUpdates, mockNotifyMovieUpdates);
@@ -121,7 +121,7 @@ describe('scheduledUpdatesService', () => {
       expect(cliLogger.info).toHaveBeenCalledWith('Shows update job completed successfully');
     });
 
-    test('should handle errors during shows update job', async () => {
+    it('should handle errors during shows update job', async () => {
       const error = new Error('Update failed');
       (updateShows as jest.Mock).mockRejectedValueOnce(error);
 
@@ -134,7 +134,7 @@ describe('scheduledUpdatesService', () => {
       expect(httpLogger.error).toHaveBeenCalled();
     });
 
-    test('should skip execution if job is already running', async () => {
+    it('should skip execution if job is already running', async () => {
       // First call to set isRunning = true
       const firstExecution = runShowsUpdateJob();
 
@@ -154,7 +154,7 @@ describe('scheduledUpdatesService', () => {
   });
 
   describe('runMoviesUpdateJob', () => {
-    test('should run movies update job successfully', async () => {
+    it('should run movies update job successfully', async () => {
       (updateMovies as jest.Mock).mockResolvedValueOnce(undefined);
 
       initScheduledJobs(mockNotifyShowUpdates, mockNotifyMovieUpdates);
@@ -167,7 +167,7 @@ describe('scheduledUpdatesService', () => {
       expect(cliLogger.info).toHaveBeenCalledWith('Movies update job completed successfully');
     });
 
-    test('should handle errors during movies update job', async () => {
+    it('should handle errors during movies update job', async () => {
       const error = new Error('Update failed');
       (updateMovies as jest.Mock).mockRejectedValueOnce(error);
 
@@ -180,7 +180,7 @@ describe('scheduledUpdatesService', () => {
       expect(httpLogger.error).toHaveBeenCalled();
     });
 
-    test('should skip execution if job is already running', async () => {
+    it('should skip execution if job is already running', async () => {
       // First call to set isRunning = true
       const firstExecution = runMoviesUpdateJob();
 
@@ -200,7 +200,7 @@ describe('scheduledUpdatesService', () => {
   });
 
   describe('getJobsStatus', () => {
-    test('should return correct job status information', () => {
+    it('should return correct job status information', () => {
       const status = getJobsStatus();
 
       expect(status).toHaveProperty('showsUpdate');
@@ -221,7 +221,7 @@ describe('scheduledUpdatesService', () => {
       expect(parser.parse).toHaveBeenCalledTimes(2);
     });
 
-    test('should handle error when calculating next run time', () => {
+    it('should handle error when calculating next run time', () => {
       (parser.parse as jest.Mock).mockImplementation(() => {
         throw new Error('Invalid cron expression');
       });
@@ -235,7 +235,7 @@ describe('scheduledUpdatesService', () => {
   });
 
   describe('pauseJobs and resumeJobs', () => {
-    test('should pause all scheduled jobs', () => {
+    it('should pause all scheduled jobs', () => {
       pauseJobs();
 
       const mockJobInstance = CronJob.schedule('', () => {}).stop;
@@ -243,7 +243,7 @@ describe('scheduledUpdatesService', () => {
       expect(cliLogger.info).toHaveBeenCalledWith('All scheduled jobs paused');
     });
 
-    test('should resume all scheduled jobs', () => {
+    it('should resume all scheduled jobs', () => {
       initScheduledJobs(mockNotifyShowUpdates, mockNotifyMovieUpdates);
       resumeJobs();
 
@@ -254,7 +254,7 @@ describe('scheduledUpdatesService', () => {
   });
 
   describe('shutdownJobs', () => {
-    test('should stop all jobs and log shutdown complete', () => {
+    it('should stop all jobs and log shutdown complete', () => {
       shutdownJobs();
 
       const mockJobInstance = CronJob.schedule('', () => {}).stop;

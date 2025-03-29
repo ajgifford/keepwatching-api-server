@@ -21,7 +21,7 @@ describe('Account class', () => {
   });
 
   describe('register()', () => {
-    test('should insert account and profile into DB', async () => {
+    it('should insert account and profile into DB', async () => {
       mockPool.execute
         .mockResolvedValueOnce([{ insertId: 1 } as ResultSetHeader])
         .mockResolvedValueOnce([{ insertId: 10 } as ResultSetHeader])
@@ -39,7 +39,7 @@ describe('Account class', () => {
       expect(account.default_profile_id).toBe(10);
     });
 
-    test('should throw error when registration fails', async () => {
+    it('should throw error when registration fails', async () => {
       const mockError = new Error('DB connection failed');
       mockPool.execute.mockRejectedValueOnce(mockError);
 
@@ -48,7 +48,7 @@ describe('Account class', () => {
       await expect(account.register()).rejects.toThrow('DB connection failed');
     });
 
-    test('should throw error with default message when registration fails', async () => {
+    it('should throw error with default message when registration fails', async () => {
       mockPool.execute.mockRejectedValueOnce({});
 
       const account = new Account('John Doe', 'john@example.com', 'uid123');
@@ -58,7 +58,7 @@ describe('Account class', () => {
   });
 
   describe('updateAccountImage()', () => {
-    test('should update account image', async () => {
+    it('should update account image', async () => {
       mockPool.execute.mockResolvedValueOnce([{ affectedRows: 1 } as ResultSetHeader]);
 
       const account = new Account('John Doe', 'john@example.com', 'uid123', undefined, 1, 10);
@@ -72,7 +72,7 @@ describe('Account class', () => {
       expect(updatedAccount?.image).toBe('/path/to/image.jpg');
     });
 
-    test('should return null when no rows affected', async () => {
+    it('should return null when no rows affected', async () => {
       mockPool.execute.mockResolvedValueOnce([{ affectedRows: 0 } as ResultSetHeader]);
 
       const account = new Account('John Doe', 'john@example.com', 'uid123', undefined, 1, 10);
@@ -81,7 +81,7 @@ describe('Account class', () => {
       expect(updatedAccount).toBeNull();
     });
 
-    test('should throw error when update image fails', async () => {
+    it('should throw error when update image fails', async () => {
       const mockError = new Error('DB connection failed');
       mockPool.execute.mockRejectedValueOnce(mockError);
 
@@ -90,7 +90,7 @@ describe('Account class', () => {
       await expect(account.updateAccountImage('/path/to/image.jpg')).rejects.toThrow('DB connection failed');
     });
 
-    test('should throw error with default message when update image fails', async () => {
+    it('should throw error with default message when update image fails', async () => {
       mockPool.execute.mockRejectedValueOnce({});
 
       const account = new Account('John Doe', 'john@example.com', 'uid123');
@@ -100,7 +100,7 @@ describe('Account class', () => {
   });
 
   describe('editAccount()', () => {
-    test('should update account details', async () => {
+    it('should update account details', async () => {
       mockPool.execute.mockResolvedValueOnce([{ affectedRows: 1 } as ResultSetHeader]);
 
       const account = new Account('John Doe', 'john@example.com', 'uid123', undefined, 1, 10);
@@ -115,7 +115,7 @@ describe('Account class', () => {
       expect(updatedAccount?.default_profile_id).toBe(20);
     });
 
-    test('should return null when no rows affected', async () => {
+    it('should return null when no rows affected', async () => {
       mockPool.execute.mockResolvedValueOnce([{ affectedRows: 0 } as ResultSetHeader]);
 
       const account = new Account('John Doe', 'john@example.com', 'uid123', undefined, 1, 10);
@@ -124,7 +124,7 @@ describe('Account class', () => {
       expect(updatedAccount).toBeNull();
     });
 
-    test('should throw error when edit account fails', async () => {
+    it('should throw error when edit account fails', async () => {
       const mockError = new Error('DB connection failed');
       mockPool.execute.mockRejectedValueOnce(mockError);
 
@@ -133,7 +133,7 @@ describe('Account class', () => {
       await expect(account.editAccount('Jane Doe', 20)).rejects.toThrow('DB connection failed');
     });
 
-    test('should throw error with default message when edit account fails', async () => {
+    it('should throw error with default message when edit account fails', async () => {
       mockPool.execute.mockRejectedValueOnce({});
 
       const account = new Account('John Doe', 'john@example.com', 'uid123');
@@ -143,7 +143,7 @@ describe('Account class', () => {
   });
 
   describe('findByUID()', () => {
-    test('should return an account object', async () => {
+    it('should return an account object', async () => {
       const mockAccount = {
         account_id: 1,
         account_name: 'John Doe',
@@ -163,7 +163,7 @@ describe('Account class', () => {
       expect(account?.account_name).toBe('John Doe');
     });
 
-    test('should return null when account not found', async () => {
+    it('should return null when account not found', async () => {
       mockPool.execute.mockResolvedValueOnce([[] as RowDataPacket[]]);
 
       const account = await Account.findByUID('unknown-uid');
@@ -171,14 +171,14 @@ describe('Account class', () => {
       expect(account).toBeNull();
     });
 
-    test('should throw error when find by UID fails', async () => {
+    it('should throw error when find by UID fails', async () => {
       const mockError = new Error('DB connection failed');
       mockPool.execute.mockRejectedValueOnce(mockError);
 
       await expect(Account.findByUID('uid123')).rejects.toThrow('DB connection failed');
     });
 
-    test('should throw error with default message when find by UID fails', async () => {
+    it('should throw error with default message when find by UID fails', async () => {
       mockPool.execute.mockRejectedValueOnce({});
 
       await expect(Account.findByUID('uid123')).rejects.toThrow('Unknown database error when finding account by UID');
@@ -186,7 +186,7 @@ describe('Account class', () => {
   });
 
   describe('findByEmail()', () => {
-    test('should return an account object', async () => {
+    it('should return an account object', async () => {
       const mockAccount = {
         account_id: 1,
         account_name: 'John Doe',
@@ -206,7 +206,7 @@ describe('Account class', () => {
       expect(account?.account_name).toBe('John Doe');
     });
 
-    test('should return null when account not found', async () => {
+    it('should return null when account not found', async () => {
       mockPool.execute.mockResolvedValueOnce([[] as RowDataPacket[]]);
 
       const account = await Account.findByEmail('unknown@example.com');
@@ -214,14 +214,14 @@ describe('Account class', () => {
       expect(account).toBeNull();
     });
 
-    test('should throw error when find by email fails', async () => {
+    it('should throw error when find by email fails', async () => {
       const mockError = new Error('DB connection failed');
       mockPool.execute.mockRejectedValueOnce(mockError);
 
       await expect(Account.findByEmail('john@example.com')).rejects.toThrow('DB connection failed');
     });
 
-    test('should throw error with default message when find by email fails', async () => {
+    it('should throw error with default message when find by email fails', async () => {
       mockPool.execute.mockRejectedValueOnce({});
 
       await expect(Account.findByEmail('john@example.com')).rejects.toThrow(
@@ -231,7 +231,7 @@ describe('Account class', () => {
   });
 
   describe('findById()', () => {
-    test('should return an account object', async () => {
+    it('should return an account object', async () => {
       const mockAccount = {
         account_id: 1,
         account_name: 'John Doe',
@@ -251,7 +251,7 @@ describe('Account class', () => {
       expect(account?.account_name).toBe('John Doe');
     });
 
-    test('should return null when account not found', async () => {
+    it('should return null when account not found', async () => {
       mockPool.execute.mockResolvedValueOnce([[] as RowDataPacket[]]);
 
       const account = await Account.findById(999);
@@ -259,14 +259,14 @@ describe('Account class', () => {
       expect(account).toBeNull();
     });
 
-    test('should throw error when find by id fails', async () => {
+    it('should throw error when find by id fails', async () => {
       const mockError = new Error('DB connection failed');
       mockPool.execute.mockRejectedValueOnce(mockError);
 
       await expect(Account.findById(1)).rejects.toThrow('DB connection failed');
     });
 
-    test('should throw error with default message when find by id fails', async () => {
+    it('should throw error with default message when find by id fails', async () => {
       mockPool.execute.mockRejectedValueOnce({});
 
       await expect(Account.findById(1)).rejects.toThrow('Unknown database error when finding account by ID');
@@ -274,7 +274,7 @@ describe('Account class', () => {
   });
 
   describe('findAccountIdByProfileId()', () => {
-    test('should return account ID', async () => {
+    it('should return account ID', async () => {
       const mockProfile = {
         profile_id: 5,
         account_id: 1,
@@ -289,7 +289,7 @@ describe('Account class', () => {
       expect(accountId).toBe(1);
     });
 
-    test('should return null when profile not found', async () => {
+    it('should return null when profile not found', async () => {
       mockPool.execute.mockResolvedValueOnce([[] as RowDataPacket[]]);
 
       const accountId = await Account.findAccountIdByProfileId('999');
@@ -297,14 +297,14 @@ describe('Account class', () => {
       expect(accountId).toBeNull();
     });
 
-    test('should throw error when find by profile id fails', async () => {
+    it('should throw error when find by profile id fails', async () => {
       const mockError = new Error('DB connection failed');
       mockPool.execute.mockRejectedValueOnce(mockError);
 
       await expect(Account.findAccountIdByProfileId('5')).rejects.toThrow('DB connection failed');
     });
 
-    test('should throw error with default message when find by profile id fails', async () => {
+    it('should throw error with default message when find by profile id fails', async () => {
       mockPool.execute.mockRejectedValueOnce({});
 
       await expect(Account.findAccountIdByProfileId('5')).rejects.toThrow(

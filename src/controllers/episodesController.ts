@@ -1,56 +1,86 @@
-import { BadRequestError } from '../middleware/errorMiddleware';
-import Episode from '../models/episode';
-import Season from '../models/season';
-import Show from '../models/show';
 import { AccountAndProfileIdsParams } from '../schema/accountSchema';
 import { EpisodeWatchStatusParams, NextEpisodeWatchStatusParams } from '../schema/episodeSchema';
-import { showService } from '../services/showService';
+import { episodesService } from '../services/episodesService';
 import { NextFunction, Request, Response } from 'express';
 
-// PUT /api/v1/accounts/:accountId/profiles/${profileId}/episodes/watchstatus
+// PUT /api/v1/accounts/:accountId/profiles/${profileId}/episodes/watchStatus
 export const updateEpisodeWatchStatus = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { profileId } = req.params as AccountAndProfileIdsParams;
     const { episodeId, status } = req.body as EpisodeWatchStatusParams;
 
-    const success = await Episode.updateWatchStatus(profileId, episodeId, status);
-    if (success) {
-      showService.invalidateProfileCache(profileId);
+    const result = await episodesService.updateEpisodeWatchStatus(profileId, episodeId, status);
 
-      const nextUnwatchedEpisodes = await Show.getNextUnwatchedEpisodesForProfile(profileId);
-      res.status(200).json({
-        message: 'Successfully updated the episode watch status',
-        result: { nextUnwatchedEpisodes: nextUnwatchedEpisodes },
-      });
-    } else {
-      throw new BadRequestError('No episode watch status was updated');
-    }
+    res.status(200).json({
+      message: 'Successfully updated the episode watch status',
+      result,
+    });
   } catch (error) {
     next(error);
   }
 };
 
-// PUT /api/v1/accounts/:accountId/profiles/${profileId}/episodes/nextWatchstatus
+// PUT /api/v1/accounts/:accountId/profiles/${profileId}/episodes/nextWatchStatus
 export const updateNextEpisodeWatchStatus = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { profileId } = req.params as AccountAndProfileIdsParams;
     const { showId, seasonId, episodeId, status } = req.body as NextEpisodeWatchStatusParams;
 
-    const success = await Episode.updateWatchStatus(profileId, episodeId, status);
-    if (success) {
-      await Season.updateWatchStatusByEpisode(profileId, seasonId);
-      await Show.updateWatchStatusBySeason(profileId, showId);
+    const result = await episodesService.updateNextEpisodeWatchStatus(profileId, showId, seasonId, episodeId, status);
 
-      showService.invalidateProfileCache(profileId);
+    res.status(200).json({
+      message: 'Successfully updated the episode watch status',
+      result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
-      const nextUnwatchedEpisodes = await Show.getNextUnwatchedEpisodesForProfile(profileId);
-      res.status(200).json({
-        message: 'Successfully updated the episode watch status',
-        result: { nextUnwatchedEpisodes: nextUnwatchedEpisodes },
-      });
-    } else {
-      throw new BadRequestError('No next episode watch status was updated');
-    }
+// GET /api/v1/accounts/:accountId/profiles/:profileId/seasons/:seasonId/episodes
+export const getEpisodesForSeason = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { profileId } = req.params as AccountAndProfileIdsParams;
+    const { seasonId } = req.params;
+
+    const episodes = await episodesService.getEpisodesForSeason(profileId, Number(seasonId));
+
+    res.status(200).json({
+      message: 'Successfully retrieved episodes for the season',
+      results: episodes,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET /api/v1/accounts/:accountId/profiles/:profileId/episodes/upcoming
+export const getUpcomingEpisodes = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { profileId } = req.params as AccountAndProfileIdsParams;
+
+    const episodes = await episodesService.getUpcomingEpisodesForProfile(profileId);
+
+    res.status(200).json({
+      message: 'Successfully retrieved upcoming episodes',
+      results: episodes,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET /api/v1/accounts/:accountId/profiles/:profileId/episodes/recent
+export const getRecentEpisodes = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { profileId } = req.params as AccountAndProfileIdsParams;
+
+    const episodes = await episodesService.getRecentEpisodesForProfile(profileId);
+
+    res.status(200).json({
+      message: 'Successfully retrieved recent episodes',
+      results: episodes,
+    });
   } catch (error) {
     next(error);
   }

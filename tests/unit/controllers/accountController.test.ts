@@ -6,8 +6,8 @@ import {
   getProfile,
   getProfiles,
 } from '@controllers/accountController';
+import * as episodesDb from '@db/episodesDb';
 import Account from '@models/account';
-import Episode from '@models/episode';
 import Movie from '@models/movie';
 import Profile from '@models/profile';
 import Show from '@models/show';
@@ -16,10 +16,13 @@ jest.mock('@models/profile');
 jest.mock('@models/account');
 jest.mock('@models/show');
 jest.mock('@models/movie');
-jest.mock('@models/episode');
 jest.mock('@utils/imageUtility', () => ({
   getProfileImage: jest.fn().mockReturnValue('mock-profile-image-url.jpg'),
   getAccountImage: jest.fn().mockReturnValue('mock-account-image-url.jpg'),
+}));
+jest.mock('@db/episodesDb', () => ({
+  getUpcomingEpisodesForProfile: jest.fn(),
+  getRecentEpisodesForProfile: jest.fn(),
 }));
 
 describe('accountController', () => {
@@ -420,8 +423,8 @@ describe('accountController', () => {
 
       (Profile.findById as jest.Mock).mockResolvedValue(mockProfile);
       (Show.getAllShowsForProfile as jest.Mock).mockResolvedValue(mockShows);
-      (Episode.getUpcomingEpisodesForProfile as jest.Mock).mockResolvedValue(mockUpcomingEpisodes);
-      (Episode.getRecentEpisodesForProfile as jest.Mock).mockResolvedValue(mockRecentEpisodes);
+      (episodesDb.getUpcomingEpisodesForProfile as jest.Mock).mockResolvedValue(mockUpcomingEpisodes);
+      (episodesDb.getRecentEpisodesForProfile as jest.Mock).mockResolvedValue(mockRecentEpisodes);
       (Show.getNextUnwatchedEpisodesForProfile as jest.Mock).mockResolvedValue(mockNextUnwatchedEpisodes);
       (Movie.getAllMoviesForProfile as jest.Mock).mockResolvedValue(mockMovies);
       (Movie.getRecentMovieReleasesForProfile as jest.Mock).mockResolvedValue(mockRecentMovies);
@@ -431,8 +434,8 @@ describe('accountController', () => {
 
       expect(Profile.findById).toHaveBeenCalledWith(12);
       expect(Show.getAllShowsForProfile).toHaveBeenCalledWith('12');
-      expect(Episode.getUpcomingEpisodesForProfile).toHaveBeenCalledWith('12');
-      expect(Episode.getRecentEpisodesForProfile).toHaveBeenCalledWith('12');
+      expect(episodesDb.getUpcomingEpisodesForProfile).toHaveBeenCalledWith('12');
+      expect(episodesDb.getRecentEpisodesForProfile).toHaveBeenCalledWith('12');
       expect(Show.getNextUnwatchedEpisodesForProfile).toHaveBeenCalledWith('12');
       expect(Movie.getAllMoviesForProfile).toHaveBeenCalledWith('12');
       expect(Movie.getRecentMovieReleasesForProfile).toHaveBeenCalledWith('12');

@@ -1,5 +1,5 @@
+import * as episodesDb from '../db/episodesDb';
 import { cliLogger } from '../logger/logger';
-import Episode from '../models/episode';
 import Season from '../models/season';
 import { ChangeItem, ContentUpdates } from '../types/contentTypes';
 import { filterUniqueSeasonIds, sleep } from '../utils/changesUtility';
@@ -70,25 +70,25 @@ export async function processSeasonChanges(
 
         // Update each episode
         for (const episodeData of episodes) {
-          const updatedEpisode = new Episode(
-            episodeData.id,
-            content.id,
-            updatedSeason.id!,
-            episodeData.episode_number,
-            episodeData.episode_type || 'standard',
-            episodeData.season_number,
-            episodeData.name,
-            episodeData.overview,
-            episodeData.air_date,
-            episodeData.runtime || 0,
-            episodeData.still_path,
+          const episode = await episodesDb.updateEpisode(
+            episodesDb.createEpisode(
+              episodeData.id,
+              content.id,
+              updatedSeason.id!,
+              episodeData.episode_number,
+              episodeData.episode_type || 'standard',
+              episodeData.season_number,
+              episodeData.name,
+              episodeData.overview,
+              episodeData.air_date,
+              episodeData.runtime || 0,
+              episodeData.still_path,
+            ),
           );
-
-          await updatedEpisode.update();
 
           // Add this episode to all profiles that have the show
           for (const profileId of profileIds) {
-            await updatedEpisode.saveFavorite(profileId);
+            await episodesDb.saveFavorite(profileId, episode.id!);
           }
         }
 

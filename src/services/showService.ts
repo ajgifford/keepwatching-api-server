@@ -1,7 +1,7 @@
+import * as episodesDb from '../db/episodesDb';
 import { cliLogger } from '../logger/logger';
 import { BadRequestError } from '../middleware/errorMiddleware';
 import Account from '../models/account';
-import Episode from '../models/episode';
 import Profile from '../models/profile';
 import Season from '../models/season';
 import Show from '../models/show';
@@ -105,8 +105,8 @@ export class ShowService {
         CACHE_KEYS.PROFILE_EPISODES(profileId),
         async () => {
           const [recentEpisodes, upcomingEpisodes, nextUnwatchedEpisodes] = await Promise.all([
-            Episode.getRecentEpisodesForProfile(profileId),
-            Episode.getUpcomingEpisodesForProfile(profileId),
+            episodesDb.getRecentEpisodesForProfile(profileId),
+            episodesDb.getUpcomingEpisodesForProfile(profileId),
             Show.getNextUnwatchedEpisodesForProfile(profileId),
           ]);
 
@@ -246,21 +246,22 @@ export class ShowService {
         await season.saveFavorite(Number(profileId));
 
         for (const responseEpisode of responseData.episodes) {
-          const episode = new Episode(
-            responseEpisode.id,
-            showId,
-            season.id!,
-            responseEpisode.episode_number,
-            responseEpisode.episode_type,
-            responseEpisode.season_number,
-            responseEpisode.name,
-            responseEpisode.overview,
-            responseEpisode.air_date,
-            responseEpisode.runtime,
-            responseEpisode.still_path,
+          const episode = await episodesDb.saveEpisode(
+            episodesDb.createEpisode(
+              responseEpisode.id,
+              showId,
+              season.id!,
+              responseEpisode.episode_number,
+              responseEpisode.episode_type,
+              responseEpisode.season_number,
+              responseEpisode.name,
+              responseEpisode.overview,
+              responseEpisode.air_date,
+              responseEpisode.runtime,
+              responseEpisode.still_path,
+            ),
           );
-          await episode.save();
-          await episode.saveFavorite(Number(profileId));
+          await episodesDb.saveFavorite(Number(profileId), episode.id!);
         }
 
         await new Promise((resolve) => setTimeout(resolve, 200));
