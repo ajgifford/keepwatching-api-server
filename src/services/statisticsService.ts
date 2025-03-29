@@ -1,9 +1,9 @@
 import { BadRequestError } from '../middleware/errorMiddleware';
 import Profile from '../models/profile';
-import { errorService } from './errorService';
-import { showService } from './showService';
-import { getProfileMovieStatistics } from '../controllers/moviesController';
 import { CacheService } from './cacheService';
+import { errorService } from './errorService';
+import { moviesService } from './moviesService';
+import { showService } from './showService';
 
 /**
  * Interface for aggregated account statistics
@@ -63,12 +63,12 @@ export class StatisticsService {
         `profile_${profileId}_statistics`,
         async () => {
           const showStatistics = await showService.getProfileShowStatistics(profileId);
-          const movieStatistics = await getProfileMovieStatistics(profileId);
+          const movieStatistics = await moviesService.getProfileMovieStatistics(profileId);
           const episodeWatchProgress = await showService.getProfileWatchProgress(profileId);
 
           return { showStatistics, movieStatistics, episodeWatchProgress };
         },
-        1800 // 30 minutes TTL
+        1800, // 30 minutes TTL
       );
     } catch (error) {
       throw errorService.handleError(error, `getProfileStatistics(${profileId})`);
@@ -96,7 +96,7 @@ export class StatisticsService {
             profiles.map(async (profile) => {
               const profileId = profile.id!.toString();
               const showStats = await showService.getProfileShowStatistics(profileId);
-              const movieStats = await getProfileMovieStatistics(profileId);
+              const movieStats = await moviesService.getProfileMovieStatistics(profileId);
               const progress = await showService.getProfileWatchProgress(profileId);
 
               return {
@@ -106,7 +106,7 @@ export class StatisticsService {
                 movieStatistics: movieStats,
                 progress,
               };
-            })
+            }),
           );
 
           const aggregatedStats = this.aggregateAccountStatistics(profileStats);
@@ -119,7 +119,7 @@ export class StatisticsService {
             episodeStatistics: aggregatedStats.episodes,
           };
         },
-        3600 // 1 hour TTL
+        3600, // 1 hour TTL
       );
     } catch (error) {
       throw errorService.handleError(error, `getAccountStatistics(${accountId})`);
@@ -186,7 +186,8 @@ export class StatisticsService {
 
       // Genres for movies
       Object.entries(profileStat.movieStatistics.genreDistribution).forEach(([genre, count]) => {
-        aggregate.movies.genreDistribution[genre] = (aggregate.movies.genreDistribution[genre] || 0) + (count as number);
+        aggregate.movies.genreDistribution[genre] =
+          (aggregate.movies.genreDistribution[genre] || 0) + (count as number);
       });
 
       // Streaming services for shows
@@ -297,7 +298,7 @@ export class StatisticsService {
 
   /**
    * Invalidate cached statistics for a profile
-   * 
+   *
    * @param profileId - ID of the profile to invalidate statistics for
    */
   public invalidateProfileStatistics(profileId: string): void {
@@ -306,7 +307,7 @@ export class StatisticsService {
 
   /**
    * Invalidate cached statistics for an account
-   * 
+   *
    * @param accountId - ID of the account to invalidate statistics for
    */
   public invalidateAccountStatistics(accountId: number): void {

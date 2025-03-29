@@ -1,15 +1,15 @@
-import { getProfileMovieStatistics } from '@controllers/moviesController';
-import { BadRequestError, CustomError } from '@middleware/errorMiddleware';
+import { CustomError } from '@middleware/errorMiddleware';
 import Profile from '@models/profile';
 import { CacheService } from '@services/cacheService';
 import { errorService } from '@services/errorService';
+import { moviesService } from '@services/moviesService';
 import { showService } from '@services/showService';
 import { statisticsService } from '@services/statisticsService';
 
 jest.mock('@models/profile');
 jest.mock('@services/showService');
 jest.mock('@services/errorService');
-jest.mock('@controllers/moviesController');
+jest.mock('@services/moviesService');
 jest.mock('@services/cacheService');
 
 describe('statisticsService', () => {
@@ -43,7 +43,7 @@ describe('statisticsService', () => {
       expect(result).toEqual(mockStats);
       // Verify the service methods weren't called because we got a cache hit
       expect(showService.getProfileShowStatistics).not.toHaveBeenCalled();
-      expect(getProfileMovieStatistics).not.toHaveBeenCalled();
+      expect(moviesService.getProfileMovieStatistics).not.toHaveBeenCalled();
       expect(showService.getProfileWatchProgress).not.toHaveBeenCalled();
     });
 
@@ -54,7 +54,7 @@ describe('statisticsService', () => {
 
       (CacheService.prototype.getOrSet as jest.Mock).mockImplementation(async (_key, fn) => fn());
       (showService.getProfileShowStatistics as jest.Mock).mockResolvedValue(mockShowStats);
-      (getProfileMovieStatistics as jest.Mock).mockResolvedValue(mockMovieStats);
+      (moviesService.getProfileMovieStatistics as jest.Mock).mockResolvedValue(mockMovieStats);
       (showService.getProfileWatchProgress as jest.Mock).mockResolvedValue(mockWatchProgress);
 
       const result = await statisticsService.getProfileStatistics('123');
@@ -65,7 +65,7 @@ describe('statisticsService', () => {
         1800,
       );
       expect(showService.getProfileShowStatistics).toHaveBeenCalledWith('123');
-      expect(getProfileMovieStatistics).toHaveBeenCalledWith('123');
+      expect(moviesService.getProfileMovieStatistics).toHaveBeenCalledWith('123');
       expect(showService.getProfileWatchProgress).toHaveBeenCalledWith('123');
       expect(result).toEqual({
         showStatistics: mockShowStats,
@@ -185,7 +185,7 @@ describe('statisticsService', () => {
         .mockResolvedValueOnce(mockProfileStats[0].showStatistics)
         .mockResolvedValueOnce(mockProfileStats[1].showStatistics);
 
-      (getProfileMovieStatistics as jest.Mock)
+      (moviesService.getProfileMovieStatistics as jest.Mock)
         .mockResolvedValueOnce(mockProfileStats[0].movieStatistics)
         .mockResolvedValueOnce(mockProfileStats[1].movieStatistics);
 
@@ -204,7 +204,7 @@ describe('statisticsService', () => {
 
       // Verify we called service methods for each profile
       expect(showService.getProfileShowStatistics).toHaveBeenCalledTimes(2);
-      expect(getProfileMovieStatistics).toHaveBeenCalledTimes(2);
+      expect(moviesService.getProfileMovieStatistics).toHaveBeenCalledTimes(2);
       expect(showService.getProfileWatchProgress).toHaveBeenCalledTimes(2);
 
       // Check the aggregated results
