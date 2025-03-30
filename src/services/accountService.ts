@@ -1,3 +1,4 @@
+import { ACCOUNT_KEYS, PROFILE_KEYS } from '../constants/cacheKeys';
 import { BadRequestError, NotFoundError } from '../middleware/errorMiddleware';
 import Account from '../models/account';
 import Movie from '../models/movie';
@@ -9,7 +10,6 @@ import { episodesService } from './episodesService';
 import { errorService } from './errorService';
 import { moviesService } from './moviesService';
 import { showService } from './showService';
-import { statisticsService } from './statisticsService';
 
 /**
  * Service class for handling account-related business logic
@@ -32,7 +32,7 @@ export class AccountService {
   public async getProfiles(accountId: number) {
     try {
       return await this.cache.getOrSet(
-        `account_${accountId}_profiles`,
+        ACCOUNT_KEYS.profiles(accountId),
         async () => {
           const profiles = await Profile.getAllByAccountId(accountId);
           if (!profiles) {
@@ -45,7 +45,7 @@ export class AccountService {
             image: getProfileImage(profile),
           }));
         },
-        600, // 10 minutes TTL
+        600,
       );
     } catch (error) {
       throw errorService.handleError(error, `getProfiles(${accountId})`);
@@ -62,7 +62,7 @@ export class AccountService {
   public async getProfile(profileId: number) {
     try {
       return await this.cache.getOrSet(
-        `profile_${profileId}_complete`,
+        PROFILE_KEYS.complete(profileId),
         async () => {
           const profile = await Profile.findById(profileId);
           if (!profile) {
@@ -102,7 +102,7 @@ export class AccountService {
             upcomingMovies: upcomingMoviesData,
           };
         },
-        600, // 10 minutes TTL
+        600,
       );
     } catch (error) {
       throw errorService.handleError(error, `getProfile(${profileId})`);
@@ -130,9 +130,6 @@ export class AccountService {
       if (!updatedAccount) {
         throw new BadRequestError('Failed to update the account');
       }
-
-      // Invalidate any account-related caches
-      this.cache.invalidatePattern(`account_${accountId}`);
 
       return {
         id: updatedAccount.account_id,
@@ -163,9 +160,7 @@ export class AccountService {
         throw new BadRequestError('Failed to add a profile');
       }
 
-      // Invalidate account profile caches
-      this.cache.invalidate(`account_${accountId}_profiles`);
-      statisticsService.invalidateAccountStatistics(accountId);
+      this.cache.invalidateAccount(accountId);
 
       return {
         id: profile.id,
@@ -198,9 +193,8 @@ export class AccountService {
         throw new BadRequestError('Failed to update profile');
       }
 
-      // Invalidate any profile-related caches
-      this.cache.invalidatePattern(`profile_${profileId}`);
-      statisticsService.invalidateProfileStatistics(profileId.toString());
+      this.cache.invalidateProfile(profileId);
+      this.cache.invalidateProfileStatistics(profileId);
 
       return {
         id: updatedProfile.id,
@@ -235,10 +229,8 @@ export class AccountService {
         throw new BadRequestError('Failed to delete profile');
       }
 
-      // Invalidate any profile-related caches
-      this.cache.invalidatePattern(`profile_${profileId}`);
-      this.cache.invalidate(`account_${accountId}_profiles`);
-      statisticsService.invalidateAccountStatistics(accountId);
+      this.cache.invalidateProfile(profileId);
+      this.cache.invalidateAccount(accountId);
 
       return true;
     } catch (error) {
@@ -247,5 +239,4 @@ export class AccountService {
   }
 }
 
-// Export a singleton instance for global use
 export const accountService = new AccountService();

@@ -1,3 +1,4 @@
+import { PROFILE_KEYS, SHOW_KEYS } from '../constants/cacheKeys';
 import * as episodesDb from '../db/episodesDb';
 import { cliLogger } from '../logger/logger';
 import { BadRequestError } from '../middleware/errorMiddleware';
@@ -12,18 +13,7 @@ import { getUSWatchProviders } from '../utils/watchProvidersUtility';
 import { CacheService } from './cacheService';
 import { errorService } from './errorService';
 import { getSocketInstance } from './socketService';
-import { statisticsService } from './statisticsService';
 import { getTMDBService } from './tmdbService';
-
-// Cache invalidation constants
-const CACHE_KEYS = {
-  PROFILE_SHOWS: (profileId: string) => `profile_${profileId}_shows`,
-  PROFILE_SHOW: (profileId: string, showId: number) => `profile_${profileId}_show_${showId}`,
-  PROFILE_EPISODES: (profileId: string) => `profile_${profileId}_episodes`,
-  PROFILE_RECENT_EPISODES: (profileId: string) => `profile_${profileId}_recent_episodes`,
-  PROFILE_UPCOMING_EPISODES: (profileId: string) => `profile_${profileId}_upcoming_episodes`,
-  PROFILE_UNWATCHED_EPISODES: (profileId: string) => `profile_${profileId}_unwatched_episodes`,
-};
 
 /**
  * Service class for handling show-related business logic
@@ -40,8 +30,7 @@ export class ShowService {
    * Invalidate all caches related to a profile
    */
   public invalidateProfileCache(profileId: string): void {
-    this.cache.invalidatePattern(`profile_${profileId}`);
-    statisticsService.invalidateProfileStatistics(profileId);
+    this.cache.invalidateProfileShows(profileId);
   }
 
   /**
@@ -52,7 +41,8 @@ export class ShowService {
     for (const profile of profiles) {
       this.invalidateProfileCache(String(profile.id!));
     }
-    statisticsService.invalidateAccountStatistics(accountId);
+
+    this.cache.invalidateAccount(accountId);
   }
 
   /**
@@ -63,11 +53,7 @@ export class ShowService {
    */
   public async getShowsForProfile(profileId: string) {
     try {
-      return await this.cache.getOrSet(
-        CACHE_KEYS.PROFILE_SHOWS(profileId),
-        () => Show.getAllShowsForProfile(profileId),
-        600, // 10 minutes TTL
-      );
+      return await this.cache.getOrSet(PROFILE_KEYS.shows(profileId), () => Show.getAllShowsForProfile(profileId), 600);
     } catch (error) {
       throw errorService.handleError(error, `getShowsForProfile(${profileId})`);
     }
@@ -84,9 +70,9 @@ export class ShowService {
   public async getShowDetailsForProfile(profileId: string, showId: string) {
     try {
       const show = await this.cache.getOrSet(
-        `profile_${profileId}_show_details_${showId}`,
+        SHOW_KEYS.details(profileId, showId),
         () => Show.getShowDetailsForProfile(profileId, showId),
-        600, // 10 minutes TTL
+        600,
       );
 
       errorService.assertExists(show, 'Show', showId);
@@ -105,7 +91,7 @@ export class ShowService {
   public async getEpisodesForProfile(profileId: string) {
     try {
       return await this.cache.getOrSet(
-        CACHE_KEYS.PROFILE_EPISODES(profileId),
+        PROFILE_KEYS.episodes(profileId),
         async () => {
           const [recentEpisodes, upcomingEpisodes, nextUnwatchedEpisodes] = await Promise.all([
             episodesDb.getRecentEpisodesForProfile(profileId),
@@ -119,7 +105,7 @@ export class ShowService {
             nextUnwatchedEpisodes,
           };
         },
-        300, // 5 minutes TTL
+        300,
       );
     } catch (error) {
       throw errorService.handleError(error, `getEpisodesForProfile(${profileId})`);
@@ -352,9 +338,9 @@ export class ShowService {
         );
       }
 
-      this.cache.invalidate(CACHE_KEYS.PROFILE_SHOW(profileId, showId));
-      this.cache.invalidate(CACHE_KEYS.PROFILE_SHOWS(profileId));
-      this.cache.invalidate(CACHE_KEYS.PROFILE_UNWATCHED_EPISODES(profileId));
+      this.cache.invalidate(SHOW_KEYS.details(profileId, showId));
+      this.cache.invalidate(PROFILE_KEYS.shows(profileId));
+      this.cache.invalidate(PROFILE_KEYS.nextUnwatchedEpisodes(profileId));
 
       return success;
     } catch (error) {
@@ -375,6 +361,9 @@ export class ShowService {
 
         if (watchStatus === 'WATCHED') {
           await Show.updateWatchStatus(String(profileId), showId, 'WATCHING');
+          this.cache.invalidate(SHOW_KEYS.details(profileId, showId));
+          this.cache.invalidate(PROFILE_KEYS.shows(profileId));
+          this.cache.invalidate(PROFILE_KEYS.nextUnwatchedEpisodes(profileId));
         }
       }
     } catch (error) {
@@ -395,7 +384,7 @@ export class ShowService {
       errorService.assertExists(show, 'Show', showId);
 
       return await this.cache.getOrSet(
-        `recommendations_${showId}`,
+        SHOW_KEYS.recommendations(showId),
         async () => {
           const tmdbService = getTMDBService();
           const response = await tmdbService.getShowRecommendations(show.tmdb_id);
@@ -440,7 +429,7 @@ export class ShowService {
       errorService.assertExists(show, 'Show', showId);
 
       return await this.cache.getOrSet(
-        `similarShows_${showId}`,
+        SHOW_KEYS.similar(showId),
         async () => {
           const tmdbService = getTMDBService();
           const response = await tmdbService.getSimilarShows(show.tmdb_id);
@@ -481,44 +470,33 @@ export class ShowService {
   public async getProfileShowStatistics(profileId: string) {
     try {
       return await this.cache.getOrSet(
-        `profile_${profileId}_show_stats`,
+        PROFILE_KEYS.showStatistics(profileId),
         async () => {
           const shows = await Show.getAllShowsForProfile(profileId);
 
-          // Calculate basic statistics
           const total = shows.length;
           const watched = shows.filter((s) => s.watch_status === 'WATCHED').length;
           const watching = shows.filter((s) => s.watch_status === 'WATCHING').length;
           const notWatched = shows.filter((s) => s.watch_status === 'NOT_WATCHED').length;
 
-          // Get genre distribution
           const genreCounts: Record<string, number> = {};
           shows.forEach((show) => {
             if (show.genres && typeof show.genres === 'string') {
-              // Split the comma-separated string into an array
               const genreArray = show.genres.split(',').map((genre) => genre.trim());
-
-              // Count occurrences of each genre
               genreArray.forEach((genre: string) => {
                 if (genre) {
-                  // Skip empty strings
                   genreCounts[genre] = (genreCounts[genre] || 0) + 1;
                 }
               });
             }
           });
 
-          // Get streaming service distribution
           const serviceCounts: Record<string, number> = {};
           shows.forEach((show) => {
             if (show.streaming_services && typeof show.streaming_services === 'string') {
-              // Split the comma-separated string into an array
               const serviceArray = show.streaming_services.split(',').map((service) => service.trim());
-
-              // Count occurrences of each service
               serviceArray.forEach((service: string) => {
                 if (service) {
-                  // Skip empty strings
                   serviceCounts[service] = (serviceCounts[service] || 0) + 1;
                 }
               });
@@ -549,14 +527,13 @@ export class ShowService {
   public async getProfileWatchProgress(profileId: string) {
     try {
       return await this.cache.getOrSet(
-        `profile_${profileId}_watch_progress`,
+        PROFILE_KEYS.watchProgress(profileId),
         async () => {
           const shows = await Show.getAllShowsForProfile(profileId);
 
           let totalEpisodes = 0;
           let watchedEpisodes = 0;
 
-          // For each show, get season data with episode counts
           const showsProgress = await Promise.all(
             shows.map(async (show) => {
               const seasons = await Season.getSeasonsForShow(profileId, show.show_id.toString());
@@ -595,5 +572,4 @@ export class ShowService {
   }
 }
 
-// Export a singleton instance of the service
 export const showService = new ShowService();

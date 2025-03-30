@@ -20,14 +20,12 @@ describe('statisticsService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
-    // Mock the static getInstance method to return our mock CacheService
+
     jest.spyOn(CacheService, 'getInstance').mockReturnValue(mockCacheService as any);
-    
-    // Reset the statisticsService to use our mock CacheService
+
     Object.defineProperty(statisticsService, 'cache', {
       value: mockCacheService,
-      writable: true
+      writable: true,
     });
   });
 
@@ -43,13 +41,9 @@ describe('statisticsService', () => {
 
       const result = await statisticsService.getProfileStatistics('123');
 
-      expect(mockCacheService.getOrSet).toHaveBeenCalledWith(
-        'profile_123_statistics',
-        expect.any(Function),
-        1800,
-      );
+      expect(mockCacheService.getOrSet).toHaveBeenCalledWith('profile_123_statistics', expect.any(Function), 1800);
       expect(result).toEqual(mockStats);
-      // Verify the service methods weren't called because we got a cache hit
+
       expect(showService.getProfileShowStatistics).not.toHaveBeenCalled();
       expect(moviesService.getProfileMovieStatistics).not.toHaveBeenCalled();
       expect(showService.getProfileWatchProgress).not.toHaveBeenCalled();
@@ -67,11 +61,7 @@ describe('statisticsService', () => {
 
       const result = await statisticsService.getProfileStatistics('123');
 
-      expect(mockCacheService.getOrSet).toHaveBeenCalledWith(
-        'profile_123_statistics',
-        expect.any(Function),
-        1800,
-      );
+      expect(mockCacheService.getOrSet).toHaveBeenCalledWith('profile_123_statistics', expect.any(Function), 1800);
       expect(showService.getProfileShowStatistics).toHaveBeenCalledWith('123');
       expect(moviesService.getProfileMovieStatistics).toHaveBeenCalledWith('123');
       expect(showService.getProfileWatchProgress).toHaveBeenCalledWith('123');
@@ -174,13 +164,9 @@ describe('statisticsService', () => {
 
       const result = await statisticsService.getAccountStatistics(123);
 
-      expect(mockCacheService.getOrSet).toHaveBeenCalledWith(
-        'account_123_statistics',
-        expect.any(Function),
-        3600,
-      );
+      expect(mockCacheService.getOrSet).toHaveBeenCalledWith('account_123_statistics', expect.any(Function), 3600);
       expect(result).toEqual(mockStats);
-      // Verify the callback wasn't executed because we got a cache hit
+
       expect(Profile.getAllByAccountId).not.toHaveBeenCalled();
     });
 
@@ -188,7 +174,6 @@ describe('statisticsService', () => {
       mockCacheService.getOrSet.mockImplementation(async (_key, fn) => fn());
       (Profile.getAllByAccountId as jest.Mock).mockResolvedValue(mockProfiles);
 
-      // Mock showService and getProfileMovieStatistics for each profile
       (showService.getProfileShowStatistics as jest.Mock)
         .mockResolvedValueOnce(mockProfileStats[0].showStatistics)
         .mockResolvedValueOnce(mockProfileStats[1].showStatistics);
@@ -203,19 +188,13 @@ describe('statisticsService', () => {
 
       const result = await statisticsService.getAccountStatistics(123);
 
-      expect(mockCacheService.getOrSet).toHaveBeenCalledWith(
-        'account_123_statistics',
-        expect.any(Function),
-        3600,
-      );
+      expect(mockCacheService.getOrSet).toHaveBeenCalledWith('account_123_statistics', expect.any(Function), 3600);
       expect(Profile.getAllByAccountId).toHaveBeenCalledWith(123);
 
-      // Verify we called service methods for each profile
       expect(showService.getProfileShowStatistics).toHaveBeenCalledTimes(2);
       expect(moviesService.getProfileMovieStatistics).toHaveBeenCalledTimes(2);
       expect(showService.getProfileWatchProgress).toHaveBeenCalledTimes(2);
 
-      // Check the aggregated results
       expect(result).toHaveProperty('profileCount', 2);
       expect(result).toHaveProperty('uniqueContent');
       expect(result).toHaveProperty('showStatistics');
@@ -247,18 +226,6 @@ describe('statisticsService', () => {
       await expect(statisticsService.getAccountStatistics(123)).rejects.toThrow('Handled: Failed to get profiles');
 
       expect(errorService.handleError).toHaveBeenCalledWith(error, 'getAccountStatistics(123)');
-    });
-  });
-
-  describe('cache invalidation', () => {
-    it('should invalidate profile statistics', () => {
-      statisticsService.invalidateProfileStatistics('123');
-      expect(mockCacheService.invalidate).toHaveBeenCalledWith('profile_123_statistics');
-    });
-
-    it('should invalidate account statistics', () => {
-      statisticsService.invalidateAccountStatistics(123);
-      expect(mockCacheService.invalidate).toHaveBeenCalledWith('account_123_statistics');
     });
   });
 });

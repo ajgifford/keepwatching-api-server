@@ -31,29 +31,29 @@ describe('AccountService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    // Create a new instance for each test to avoid shared state
     mockCache = {
       getOrSet: jest.fn(),
       get: jest.fn(),
       set: jest.fn(),
       invalidate: jest.fn(),
       invalidatePattern: jest.fn(),
+      invalidateAccount: jest.fn(),
+      invalidateProfile: jest.fn(),
+      invalidateProfileStatistics: jest.fn(),
+      invalidateAccountStatistics: jest.fn(),
       flushAll: jest.fn(),
       getStats: jest.fn(),
       keys: jest.fn(),
     } as any;
 
-    // Use prototype to swap the cache dependency
     Object.setPrototypeOf(accountService, AccountService.prototype);
     (accountService as any).cache = mockCache;
 
     service = accountService;
 
-    // Mock image utility functions
     (getProfileImage as jest.Mock).mockReturnValue('profile-image-url.jpg');
     (getAccountImage as jest.Mock).mockReturnValue('account-image-url.jpg');
 
-    // Mock errorService
     (errorService.handleError as jest.Mock).mockImplementation((error) => {
       throw error;
     });
@@ -219,7 +219,6 @@ describe('AccountService', () => {
 
       expect(Account.findById).toHaveBeenCalledWith(123);
       expect(mockAccount.editAccount).toHaveBeenCalledWith('Updated Account', 2);
-      expect(mockCache.invalidatePattern).toHaveBeenCalledWith('account_123');
       expect(result).toEqual({
         id: 123,
         name: 'Updated Account',
@@ -273,8 +272,7 @@ describe('AccountService', () => {
 
       expect(Profile).toHaveBeenCalledWith(123, 'New Profile');
       expect(mockProfile.save).toHaveBeenCalled();
-      expect(mockCache.invalidate).toHaveBeenCalledWith('account_123_profiles');
-      expect(statisticsService.invalidateAccountStatistics).toHaveBeenCalledWith(123);
+      expect(mockCache.invalidateAccount).toHaveBeenCalledWith(123);
       expect(result).toEqual({
         id: 456,
         name: 'New Profile',
@@ -334,8 +332,8 @@ describe('AccountService', () => {
 
       expect(Profile.findById).toHaveBeenCalledWith(123);
       expect(mockProfile.update).toHaveBeenCalledWith('Updated Profile');
-      expect(mockCache.invalidatePattern).toHaveBeenCalledWith('profile_123');
-      expect(statisticsService.invalidateProfileStatistics).toHaveBeenCalledWith('123');
+      expect(mockCache.invalidateProfile).toHaveBeenCalledWith(123);
+      expect(mockCache.invalidateProfileStatistics).toHaveBeenCalledWith(123);
       expect(result).toEqual({
         id: 123,
         name: 'Updated Profile',
@@ -385,9 +383,8 @@ describe('AccountService', () => {
 
       expect(Profile.findById).toHaveBeenCalledWith(123);
       expect(mockProfile.delete).toHaveBeenCalled();
-      expect(mockCache.invalidatePattern).toHaveBeenCalledWith('profile_123');
-      expect(mockCache.invalidate).toHaveBeenCalledWith('account_1_profiles');
-      expect(statisticsService.invalidateAccountStatistics).toHaveBeenCalledWith(1);
+      expect(mockCache.invalidateProfile).toHaveBeenCalledWith(123);
+      expect(mockCache.invalidateAccount).toHaveBeenCalledWith(1);
       expect(result).toBe(true);
     });
 

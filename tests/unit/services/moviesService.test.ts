@@ -19,22 +19,20 @@ describe('MoviesService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    // Create a mock cache moviesService
     mockCacheService = {
       getOrSet: jest.fn(),
       get: jest.fn(),
       set: jest.fn(),
       invalidate: jest.fn(),
       invalidatePattern: jest.fn(),
+      invalidateProfileMovies: jest.fn(),
       flushAll: jest.fn(),
       getStats: jest.fn(),
       keys: jest.fn(),
     };
 
-    // Mock the static getInstance method to return our mock CacheService
     jest.spyOn(CacheService, 'getInstance').mockReturnValue(mockCacheService);
 
-    // Reset the moviesService to use our mock CacheService
     Object.defineProperty(moviesService, 'cache', {
       value: mockCacheService,
       writable: true,
@@ -133,7 +131,7 @@ describe('MoviesService', () => {
 
       expect(Movie.findByTMDBId).toHaveBeenCalledWith(12345);
       expect(mockMovie.saveFavorite).toHaveBeenCalledWith('123');
-      expect(mockCacheService.invalidatePattern).toHaveBeenCalledWith('profile_123_movie');
+      expect(mockCacheService.invalidateProfileMovies).toHaveBeenCalledWith('123');
       expect(result).toEqual({
         favoritedMovie: mockMovieForProfile,
         recentMovies: mockRecentUpcoming.recentMovies,
@@ -269,7 +267,7 @@ describe('MoviesService', () => {
 
       expect(Movie.findById).toHaveBeenCalledWith(5);
       expect(mockMovie.removeFavorite).toHaveBeenCalledWith('123');
-      expect(mockCacheService.invalidatePattern).toHaveBeenCalledWith('profile_123_movie');
+      expect(mockCacheService.invalidateProfileMovies).toHaveBeenCalledWith('123');
       expect(result).toEqual({
         removedMovie: mockMovie,
         recentMovies: mockRecentUpcoming.recentMovies,
@@ -306,7 +304,7 @@ describe('MoviesService', () => {
       const result = await moviesService.updateMovieWatchStatus('123', 5, 'WATCHED');
 
       expect(Movie.updateWatchStatus).toHaveBeenCalledWith('123', 5, 'WATCHED');
-      expect(mockCacheService.invalidate).toHaveBeenCalledTimes(2);
+      expect(mockCacheService.invalidateProfileMovies).toHaveBeenCalledTimes(1);
       expect(result).toBe(true);
     });
 

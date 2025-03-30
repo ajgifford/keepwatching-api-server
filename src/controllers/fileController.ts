@@ -5,6 +5,7 @@ import uploadFileMiddleware from '../middleware/uploadMiddleware';
 import Account from '../models/account';
 import Profile from '../models/profile';
 import { AccountAndProfileIdsParams, AccountIdParam } from '../schema/accountSchema';
+import { CacheService } from '../services/cacheService';
 import { getAccountImage, getProfileImage } from '../utils/imageUtility';
 import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
@@ -44,15 +45,6 @@ export const uploadAccountImage = asyncHandler(async (req: Request, res: Respons
               }
             }
           });
-
-          // Invalidate any account-related caches
-          try {
-            // Import dynamically to avoid circular dependency
-            const { cacheService } = require('../services/cacheService');
-            cacheService.invalidatePattern(`account_${accountId}`);
-          } catch (e) {
-            // If cacheService is not available, skip invalidation
-          }
         } else {
           throw new BadRequestError('Failed to add/update an account image');
         }
@@ -100,14 +92,8 @@ export const uploadProfileImage = asyncHandler(async (req: Request, res: Respons
             }
           });
 
-          // Invalidate any profile-related caches
-          try {
-            // Import dynamically to avoid circular dependency
-            const { cacheService } = require('../services/cacheService');
-            cacheService.invalidatePattern(`profile_${profileId}`);
-          } catch (e) {
-            // If cacheService is not available, skip invalidation
-          }
+          const cache = CacheService.getInstance();
+          cache.invalidateProfile(profileId);
         } else {
           throw new BadRequestError('Failed to add/update a profile image');
         }

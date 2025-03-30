@@ -1,3 +1,5 @@
+import { ACCOUNT_KEYS, INVALIDATION_PATTERNS, PROFILE_KEYS } from '../constants/cacheKeys';
+import { cliLogger } from '../logger/logger';
 import NodeCache from 'node-cache';
 
 /**
@@ -53,6 +55,9 @@ export class CacheService {
       this.cache.set(key, value, ttl);
       return value;
     } catch (error) {
+      if (error instanceof Error) {
+        cliLogger.error(`Cache miss and fetch error for key ${key}: ${error.message}`);
+      }
       throw error;
     }
   }
@@ -85,9 +90,8 @@ export class CacheService {
    * @param key - Cache key to invalidate
    * @returns Number of items deleted (0 or 1)
    */
-  invalidate(key: string): number {
-    const deleted = this.cache.del(key);
-    return deleted;
+  public invalidate(key: string): number {
+    return this.cache.del(key);
   }
 
   /**
@@ -96,7 +100,7 @@ export class CacheService {
    * @param pattern - String pattern to match against keys
    * @returns Number of items deleted
    */
-  invalidatePattern(pattern: string): number {
+  public invalidatePattern(pattern: string): number {
     const keys = this.cache.keys().filter((key) => key.includes(pattern));
 
     if (keys.length > 0) {
@@ -111,6 +115,7 @@ export class CacheService {
    */
   flushAll(): void {
     this.cache.flushAll();
+    cliLogger.info('Cache completely flushed');
   }
 
   /**
@@ -130,7 +135,90 @@ export class CacheService {
   keys(): string[] {
     return this.cache.keys();
   }
-}
 
-// For backward compatibility with existing code
-export const cacheService = CacheService.getInstance();
+  /**
+   * Invalidates profile statistics cache
+   * @param profileId - ID of the profile to invalidate statistics for
+   */
+  public invalidateProfileStatistics(profileId: string | number): void {
+    this.invalidate(PROFILE_KEYS.statistics(profileId));
+    this.invalidate(PROFILE_KEYS.showStatistics(profileId));
+    this.invalidate(PROFILE_KEYS.movieStatistics(profileId));
+    this.invalidate(PROFILE_KEYS.watchProgress(profileId));
+  }
+
+  /**
+   * Invalidates account statistics cache
+   * @param accountId - ID of the account to invalidate statistics for
+   */
+  public invalidateAccountStatistics(accountId: string | number): void {
+    this.invalidate(ACCOUNT_KEYS.statistics(accountId));
+  }
+
+  /**
+   * Invalidates all cache data for a profile
+   * This is useful when a profile's data changes in a way that affects multiple aspects
+   * @param profileId - ID of the profile to invalidate
+   * @returns Number of keys invalidated
+   */
+  public invalidateProfile(profileId: string | number): number {
+    return this.invalidatePattern(INVALIDATION_PATTERNS.allProfileData(profileId));
+  }
+
+  /**
+   * Invalidates all show-related cache data for a profile
+   * @param profileId - ID of the profile to invalidate
+   * @returns Number of keys invalidated
+   */
+  public invalidateProfileShows(profileId: string | number): number {
+    // Invalidate shows list
+    this.invalidate(PROFILE_KEYS.shows(profileId));
+
+    // Invalidate episode-related data
+    this.invalidate(PROFILE_KEYS.episodes(profileId));
+    this.invalidate(PROFILE_KEYS.nextUnwatchedEpisodes(profileId));
+    this.invalidate(PROFILE_KEYS.recentEpisodes(profileId));
+    this.invalidate(PROFILE_KEYS.upcomingEpisodes(profileId));
+
+    // Invalidate all profile statistics since they're affected by show changes
+    this.invalidateProfileStatistics(profileId);
+
+    // Invalidate all remaining show patterns (details, etc)
+    return this.invalidatePattern(INVALIDATION_PATTERNS.profileShowData(profileId));
+  }
+
+  /**
+   * Invalidates all movie-related cache data for a profile
+   * @param profileId - ID of the profile to invalidate
+   * @returns Number of keys invalidated
+   */
+  public invalidateProfileMovies(profileId: string | number): number {
+    // Invalidate movies list
+    this.invalidate(PROFILE_KEYS.movies(profileId));
+
+    // Invalidate recent/upcoming movies
+    this.invalidate(PROFILE_KEYS.recentUpcomingMovies(profileId));
+
+    // Invalidate all profile statistics since they're affected by movie changes
+    this.invalidateProfileStatistics(profileId);
+
+    // Invalidate all remaining movie patterns
+    return this.invalidatePattern(INVALIDATION_PATTERNS.profileMovieData(profileId));
+  }
+
+  /**
+   * Invalidates all account-related data
+   * @param accountId - ID of the account to invalidate
+   * @returns Number of keys invalidated
+   */
+  public invalidateAccount(accountId: string | number): number {
+    // Invalidate account profiles
+    this.invalidate(ACCOUNT_KEYS.profiles(accountId));
+
+    // Invalidate account statistics
+    this.invalidateAccountStatistics(accountId);
+
+    // Invalidate all remaining account patterns
+    return this.invalidatePattern(INVALIDATION_PATTERNS.allAccountData(accountId));
+  }
+}

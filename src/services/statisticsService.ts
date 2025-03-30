@@ -1,3 +1,4 @@
+import { ACCOUNT_KEYS, PROFILE_KEYS } from '../constants/cacheKeys';
 import { BadRequestError } from '../middleware/errorMiddleware';
 import Profile from '../models/profile';
 import { CacheService } from './cacheService';
@@ -60,7 +61,7 @@ export class StatisticsService {
   public async getProfileStatistics(profileId: string) {
     try {
       return await this.cache.getOrSet(
-        `profile_${profileId}_statistics`,
+        PROFILE_KEYS.statistics(profileId),
         async () => {
           const showStatistics = await showService.getProfileShowStatistics(profileId);
           const movieStatistics = await moviesService.getProfileMovieStatistics(profileId);
@@ -68,7 +69,7 @@ export class StatisticsService {
 
           return { showStatistics, movieStatistics, episodeWatchProgress };
         },
-        1800, // 30 minutes TTL
+        1800,
       );
     } catch (error) {
       throw errorService.handleError(error, `getProfileStatistics(${profileId})`);
@@ -85,7 +86,7 @@ export class StatisticsService {
   public async getAccountStatistics(accountId: number) {
     try {
       return await this.cache.getOrSet(
-        `account_${accountId}_statistics`,
+        ACCOUNT_KEYS.statistics(accountId),
         async () => {
           const profiles = await Profile.getAllByAccountId(accountId);
           if (!profiles || profiles.length === 0) {
@@ -119,7 +120,7 @@ export class StatisticsService {
             episodeStatistics: aggregatedStats.episodes,
           };
         },
-        3600, // 1 hour TTL
+        3600,
       );
     } catch (error) {
       throw errorService.handleError(error, `getAccountStatistics(${accountId})`);
@@ -138,11 +139,9 @@ export class StatisticsService {
       return this.createEmptyAggregateStats();
     }
 
-    // Track unique show and movie IDs
     const uniqueShowIds = new Set<number>();
     const uniqueMovieIds = new Set<number>();
 
-    // Initialize aggregates
     const aggregate = {
       shows: {
         total: 0,
@@ -162,54 +161,44 @@ export class StatisticsService {
       },
     };
 
-    // Combine statistics from all profiles
     profileStats.forEach((profileStat) => {
-      // Shows
       aggregate.shows.total += profileStat.showStatistics.total;
       aggregate.shows.watchStatusCounts.watched += profileStat.showStatistics.watchStatusCounts.watched;
       aggregate.shows.watchStatusCounts.watching += profileStat.showStatistics.watchStatusCounts.watching;
       aggregate.shows.watchStatusCounts.notWatched += profileStat.showStatistics.watchStatusCounts.notWatched;
 
-      // Movies
       aggregate.movies.total += profileStat.movieStatistics.total;
       aggregate.movies.watchStatusCounts.watched += profileStat.movieStatistics.watchStatusCounts.watched;
       aggregate.movies.watchStatusCounts.notWatched += profileStat.movieStatistics.watchStatusCounts.notWatched;
 
-      // Episodes
       aggregate.episodes.totalEpisodes += profileStat.progress.totalEpisodes;
       aggregate.episodes.watchedEpisodes += profileStat.progress.watchedEpisodes;
 
-      // Genres for shows
       Object.entries(profileStat.showStatistics.genreDistribution).forEach(([genre, count]) => {
         aggregate.shows.genreDistribution[genre] = (aggregate.shows.genreDistribution[genre] || 0) + (count as number);
       });
 
-      // Genres for movies
       Object.entries(profileStat.movieStatistics.genreDistribution).forEach(([genre, count]) => {
         aggregate.movies.genreDistribution[genre] =
           (aggregate.movies.genreDistribution[genre] || 0) + (count as number);
       });
 
-      // Streaming services for shows
       Object.entries(profileStat.showStatistics.serviceDistribution).forEach(([service, count]) => {
         aggregate.shows.serviceDistribution[service] =
           (aggregate.shows.serviceDistribution[service] || 0) + (count as number);
       });
 
-      // Streaming services for movies
       Object.entries(profileStat.movieStatistics.serviceDistribution).forEach(([service, count]) => {
         aggregate.movies.serviceDistribution[service] =
           (aggregate.movies.serviceDistribution[service] || 0) + (count as number);
       });
 
-      // Track unique show IDs
       if (profileStat.progress.showsProgress) {
         profileStat.progress.showsProgress.forEach((show: any) => {
           uniqueShowIds.add(show.showId);
         });
       }
 
-      // Track unique movie IDs if available in the data
       if (profileStat.movieStatistics && profileStat.movieStatistics.movies) {
         profileStat.movieStatistics.movies.forEach((movie: any) => {
           if (movie.movie_id) {
@@ -219,7 +208,6 @@ export class StatisticsService {
       }
     });
 
-    // Calculate aggregated watch progress percentages
     const showWatchProgress =
       aggregate.shows.total > 0
         ? Math.round((aggregate.shows.watchStatusCounts.watched / aggregate.shows.total) * 100)
@@ -235,7 +223,6 @@ export class StatisticsService {
         ? Math.round((aggregate.episodes.watchedEpisodes / aggregate.episodes.totalEpisodes) * 100)
         : 0;
 
-    // Create the final result object with proper structure
     return {
       uniqueContent: {
         showCount: uniqueShowIds.size,
@@ -295,25 +282,6 @@ export class StatisticsService {
       },
     };
   }
-
-  /**
-   * Invalidate cached statistics for a profile
-   *
-   * @param profileId - ID of the profile to invalidate statistics for
-   */
-  public invalidateProfileStatistics(profileId: string): void {
-    this.cache.invalidate(`profile_${profileId}_statistics`);
-  }
-
-  /**
-   * Invalidate cached statistics for an account
-   *
-   * @param accountId - ID of the account to invalidate statistics for
-   */
-  public invalidateAccountStatistics(accountId: number): void {
-    this.cache.invalidate(`account_${accountId}_statistics`);
-  }
 }
 
-// Export a singleton instance for global use
 export const statisticsService = new StatisticsService();
