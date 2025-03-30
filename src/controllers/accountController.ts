@@ -6,19 +6,13 @@
  *
  * @module controllers/accountController
  */
-import { getRecentEpisodesForProfile, getUpcomingEpisodesForProfile } from '../db/episodesDb';
-import { BadRequestError, NotFoundError } from '../middleware/errorMiddleware';
-import Account from '../models/account';
-import Movie from '../models/movie';
-import Profile from '../models/profile';
-import Show from '../models/show';
 import {
   AccountAndProfileIdsParams,
   AccountIdParam,
   AccountUpdateParams,
   ProfileNameParam,
 } from '../schema/accountSchema';
-import { getAccountImage, getProfileImage } from '../utils/imageUtility';
+import { accountService } from '../services/accountService';
 import { NextFunction, Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 
@@ -32,15 +26,12 @@ export const getProfiles = asyncHandler(async (req: Request, res: Response, next
   try {
     const { accountId } = req.params as AccountIdParam;
 
-    const profiles = await Profile.getAllByAccountId(Number(accountId));
-    if (profiles) {
-      const responseProfiles = profiles.map((profile) => {
-        return { id: profile.id, name: profile.name, image: getProfileImage(profile) };
-      });
-      res.status(200).json({ message: `Retrieved profiles for account ${accountId}`, results: responseProfiles });
-    } else {
-      throw new BadRequestError('Failed to get all profiles for an account');
-    }
+    const profiles = await accountService.getProfiles(Number(accountId));
+
+    res.status(200).json({
+      message: `Retrieved profiles for account ${accountId}`,
+      results: profiles,
+    });
   } catch (error) {
     next(error);
   }
@@ -56,32 +47,12 @@ export const getProfile = asyncHandler(async (req: Request, res: Response, next:
   try {
     const { profileId } = req.params as AccountAndProfileIdsParams;
 
-    const profile = await Profile.findById(Number(profileId));
-    if (profile) {
-      const shows = await Show.getAllShowsForProfile(profileId);
-      const upcomingEpisodes = await getUpcomingEpisodesForProfile(profileId);
-      const recentEpisodes = await getRecentEpisodesForProfile(profileId);
-      const nextUnwatchedEpisodes = await Show.getNextUnwatchedEpisodesForProfile(profileId);
-      const movies = await Movie.getAllMoviesForProfile(profileId);
-      const recentMovies = await Movie.getRecentMovieReleasesForProfile(profileId);
-      const upcomingMovies = await Movie.getUpcomingMovieReleasesForProfile(profileId);
+    const result = await accountService.getProfile(Number(profileId));
 
-      res.status(200).json({
-        message: `Retrieved profile with id: ${profileId}`,
-        results: {
-          profile: { id: profile.id, name: profile.name, image: getProfileImage(profile) },
-          shows: shows,
-          recentEpisodes: recentEpisodes,
-          upcomingEpisodes: upcomingEpisodes,
-          nextUnwatchedEpisodes: nextUnwatchedEpisodes,
-          movies: movies,
-          recentMovies: recentMovies,
-          upcomingMovies: upcomingMovies,
-        },
-      });
-    } else {
-      throw new NotFoundError('Profile not found');
-    }
+    res.status(200).json({
+      message: `Retrieved profile with id: ${profileId}`,
+      results: result,
+    });
   } catch (error) {
     next(error);
   }
@@ -99,26 +70,12 @@ export const editAccount = asyncHandler(async (req: Request, res: Response, next
     const { accountId } = req.params as AccountIdParam;
     const { name, defaultProfileId }: AccountUpdateParams = req.body;
 
-    const account = await Account.findById(Number(accountId));
-    if (!account) {
-      throw new NotFoundError('Account not found');
-    }
+    const updatedAccount = await accountService.editAccount(Number(accountId), name, Number(defaultProfileId));
 
-    const updatedAccount = await account.editAccount(name, Number(defaultProfileId));
-    if (updatedAccount) {
-      res.status(200).json({
-        message: `Updated account ${accountId}`,
-        result: {
-          id: updatedAccount.account_id,
-          name: updatedAccount.account_name,
-          email: updatedAccount.email,
-          image: getAccountImage(updatedAccount),
-          default_profile_id: updatedAccount.default_profile_id,
-        },
-      });
-    } else {
-      throw new BadRequestError('Failed to update the account');
-    }
+    res.status(200).json({
+      message: `Updated account ${accountId}`,
+      result: updatedAccount,
+    });
   } catch (error) {
     next(error);
   }
@@ -135,17 +92,12 @@ export const addProfile = asyncHandler(async (req: Request, res: Response, next:
     const { accountId } = req.params as AccountIdParam;
     const { name }: ProfileNameParam = req.body;
 
-    const profile = new Profile(Number(accountId), name);
-    await profile.save();
+    const newProfile = await accountService.addProfile(Number(accountId), name);
 
-    if (profile.id) {
-      res.status(201).json({
-        message: 'Profile added successfully',
-        result: { id: profile.id, name: profile.name, image: getProfileImage(profile) },
-      });
-    } else {
-      throw new BadRequestError('Failed to add a profile');
-    }
+    res.status(201).json({
+      message: 'Profile added successfully',
+      result: newProfile,
+    });
   } catch (error) {
     next(error);
   }
@@ -163,24 +115,12 @@ export const editProfile = asyncHandler(async (req: Request, res: Response, next
     const { profileId } = req.params as AccountAndProfileIdsParams;
     const { name }: ProfileNameParam = req.body;
 
-    const profile = await Profile.findById(Number(profileId));
-    if (!profile) {
-      throw new NotFoundError('Profile not found');
-    }
+    const updatedProfile = await accountService.editProfile(Number(profileId), name);
 
-    const updatedProfile = await profile.update(name);
-    if (updatedProfile) {
-      res.status(200).json({
-        message: 'Profile edited successfully',
-        result: {
-          id: updatedProfile.id,
-          name: updatedProfile.name,
-          image: getProfileImage(updatedProfile),
-        },
-      });
-    } else {
-      throw new BadRequestError('Failed to update profile');
-    }
+    res.status(200).json({
+      message: 'Profile edited successfully',
+      result: updatedProfile,
+    });
   } catch (error) {
     next(error);
   }
@@ -197,19 +137,11 @@ export const editProfile = asyncHandler(async (req: Request, res: Response, next
  */
 export const deleteProfile = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { profileId } = req.params as AccountAndProfileIdsParams;
+    const { accountId, profileId } = req.params as AccountAndProfileIdsParams;
 
-    const profile = await Profile.findById(Number(profileId));
-    if (!profile) {
-      throw new NotFoundError('Profile not found');
-    }
+    await accountService.deleteProfile(Number(profileId), Number(accountId));
 
-    const deleted = await profile.delete();
-    if (deleted) {
-      res.status(204).json({ message: 'Profile deleted successfully' });
-    } else {
-      throw new BadRequestError('Failed to delete profile');
-    }
+    res.status(204).json({ message: 'Profile deleted successfully' });
   } catch (error) {
     next(error);
   }
