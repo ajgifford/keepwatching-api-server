@@ -1,4 +1,3 @@
-import { cliLogger } from '../logger/logger';
 import { BadRequestError, NotFoundError } from '../middleware/errorMiddleware';
 import Movie from '../models/movie';
 import { getUSMPARating } from '../utils/contentUtility';
@@ -23,7 +22,7 @@ export class MoviesService {
   private cache: CacheService;
 
   constructor() {
-    this.cache = new CacheService();
+    this.cache = CacheService.getInstance();
   }
 
   /**

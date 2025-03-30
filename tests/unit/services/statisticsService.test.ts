@@ -4,7 +4,7 @@ import { CacheService } from '@services/cacheService';
 import { errorService } from '@services/errorService';
 import { moviesService } from '@services/moviesService';
 import { showService } from '@services/showService';
-import { statisticsService } from '@services/statisticsService';
+import { statisticsService, StatisticsService } from '@services/statisticsService';
 
 jest.mock('@models/profile');
 jest.mock('@services/showService');
@@ -13,14 +13,22 @@ jest.mock('@services/moviesService');
 jest.mock('@services/cacheService');
 
 describe('statisticsService', () => {
-  // Create a partial mock of CacheService
+  const mockCacheService = {
+    getOrSet: jest.fn(),
+    invalidate: jest.fn(),
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    // Instead of trying to mock the entire CacheService class, we'll mock just the methods we need
-    // Mock the specific methods we use in our tests
-    jest.spyOn(CacheService.prototype, 'getOrSet').mockImplementation(jest.fn());
-    jest.spyOn(CacheService.prototype, 'invalidate').mockImplementation(jest.fn());
+    
+    // Mock the static getInstance method to return our mock CacheService
+    jest.spyOn(CacheService, 'getInstance').mockReturnValue(mockCacheService as any);
+    
+    // Reset the statisticsService to use our mock CacheService
+    Object.defineProperty(statisticsService, 'cache', {
+      value: mockCacheService,
+      writable: true
+    });
   });
 
   describe('getProfileStatistics', () => {
@@ -31,11 +39,11 @@ describe('statisticsService', () => {
         episodeWatchProgress: { watchedEpisodes: 20 },
       };
 
-      (CacheService.prototype.getOrSet as jest.Mock).mockResolvedValue(mockStats);
+      mockCacheService.getOrSet.mockResolvedValue(mockStats);
 
       const result = await statisticsService.getProfileStatistics('123');
 
-      expect(CacheService.prototype.getOrSet).toHaveBeenCalledWith(
+      expect(mockCacheService.getOrSet).toHaveBeenCalledWith(
         'profile_123_statistics',
         expect.any(Function),
         1800,
@@ -52,14 +60,14 @@ describe('statisticsService', () => {
       const mockMovieStats = { total: 3 };
       const mockWatchProgress = { watchedEpisodes: 20 };
 
-      (CacheService.prototype.getOrSet as jest.Mock).mockImplementation(async (_key, fn) => fn());
+      mockCacheService.getOrSet.mockImplementation(async (_key, fn) => fn());
       (showService.getProfileShowStatistics as jest.Mock).mockResolvedValue(mockShowStats);
       (moviesService.getProfileMovieStatistics as jest.Mock).mockResolvedValue(mockMovieStats);
       (showService.getProfileWatchProgress as jest.Mock).mockResolvedValue(mockWatchProgress);
 
       const result = await statisticsService.getProfileStatistics('123');
 
-      expect(CacheService.prototype.getOrSet).toHaveBeenCalledWith(
+      expect(mockCacheService.getOrSet).toHaveBeenCalledWith(
         'profile_123_statistics',
         expect.any(Function),
         1800,
@@ -76,7 +84,7 @@ describe('statisticsService', () => {
 
     it('should handle errors when getting profile statistics', async () => {
       const error = new Error('Failed to get show statistics');
-      (CacheService.prototype.getOrSet as jest.Mock).mockImplementation(async (_key, fn) => fn());
+      mockCacheService.getOrSet.mockImplementation(async (_key, fn) => fn());
       (showService.getProfileShowStatistics as jest.Mock).mockRejectedValue(error);
       (errorService.handleError as jest.Mock).mockImplementation((err) => {
         throw new Error(`Handled: ${err.message}`);
@@ -162,11 +170,11 @@ describe('statisticsService', () => {
         episodeStatistics: { watchedEpisodes: 35 },
       };
 
-      (CacheService.prototype.getOrSet as jest.Mock).mockResolvedValue(mockStats);
+      mockCacheService.getOrSet.mockResolvedValue(mockStats);
 
       const result = await statisticsService.getAccountStatistics(123);
 
-      expect(CacheService.prototype.getOrSet).toHaveBeenCalledWith(
+      expect(mockCacheService.getOrSet).toHaveBeenCalledWith(
         'account_123_statistics',
         expect.any(Function),
         3600,
@@ -177,7 +185,7 @@ describe('statisticsService', () => {
     });
 
     it('should fetch and aggregate account statistics on cache miss', async () => {
-      (CacheService.prototype.getOrSet as jest.Mock).mockImplementation(async (_key, fn) => fn());
+      mockCacheService.getOrSet.mockImplementation(async (_key, fn) => fn());
       (Profile.getAllByAccountId as jest.Mock).mockResolvedValue(mockProfiles);
 
       // Mock showService and getProfileMovieStatistics for each profile
@@ -195,7 +203,7 @@ describe('statisticsService', () => {
 
       const result = await statisticsService.getAccountStatistics(123);
 
-      expect(CacheService.prototype.getOrSet).toHaveBeenCalledWith(
+      expect(mockCacheService.getOrSet).toHaveBeenCalledWith(
         'account_123_statistics',
         expect.any(Function),
         3600,
@@ -218,7 +226,7 @@ describe('statisticsService', () => {
     });
 
     it('should throw BadRequestError when no profiles found', async () => {
-      (CacheService.prototype.getOrSet as jest.Mock).mockImplementation(async (_key, fn) => fn());
+      mockCacheService.getOrSet.mockImplementation(async (_key, fn) => fn());
       (Profile.getAllByAccountId as jest.Mock).mockResolvedValue([]);
       (errorService.handleError as jest.Mock).mockImplementation((err) => {
         throw err;
@@ -230,7 +238,7 @@ describe('statisticsService', () => {
 
     it('should handle errors when getting account statistics', async () => {
       const error = new Error('Failed to get profiles');
-      (CacheService.prototype.getOrSet as jest.Mock).mockImplementation(async (_key, fn) => fn());
+      mockCacheService.getOrSet.mockImplementation(async (_key, fn) => fn());
       (Profile.getAllByAccountId as jest.Mock).mockRejectedValue(error);
       (errorService.handleError as jest.Mock).mockImplementation((err) => {
         throw new Error(`Handled: ${err.message}`);
@@ -245,12 +253,12 @@ describe('statisticsService', () => {
   describe('cache invalidation', () => {
     it('should invalidate profile statistics', () => {
       statisticsService.invalidateProfileStatistics('123');
-      expect(CacheService.prototype.invalidate).toHaveBeenCalledWith('profile_123_statistics');
+      expect(mockCacheService.invalidate).toHaveBeenCalledWith('profile_123_statistics');
     });
 
     it('should invalidate account statistics', () => {
       statisticsService.invalidateAccountStatistics(123);
-      expect(CacheService.prototype.invalidate).toHaveBeenCalledWith('account_123_statistics');
+      expect(mockCacheService.invalidate).toHaveBeenCalledWith('account_123_statistics');
     });
   });
 });

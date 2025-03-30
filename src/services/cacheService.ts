@@ -1,5 +1,3 @@
-// src/services/cacheService.ts
-import { cliLogger } from '../logger/logger';
 import NodeCache from 'node-cache';
 
 /**
@@ -7,6 +5,7 @@ import NodeCache from 'node-cache';
  * Provides consistent interface for cache operations with logging and error handling
  */
 export class CacheService {
+  private static instance: CacheService | null = null;
   private cache: NodeCache;
 
   /**
@@ -14,12 +13,23 @@ export class CacheService {
    * @param stdTTL - Standard TTL in seconds (default: 300 - 5 minutes)
    * @param checkperiod - Period in seconds for automatic delete check (default: 600 - 10 minutes)
    */
-  constructor(stdTTL = 300, checkperiod = 600) {
+  private constructor(stdTTL = 300, checkperiod = 600) {
     this.cache = new NodeCache({
       stdTTL,
       checkperiod,
       useClones: false,
     });
+  }
+
+  /**
+   * Gets the singleton instance of CacheService
+   * @returns The singleton CacheService instance
+   */
+  public static getInstance(): CacheService {
+    if (!CacheService.instance) {
+      CacheService.instance = new CacheService();
+    }
+    return CacheService.instance;
   }
 
   /**
@@ -77,9 +87,6 @@ export class CacheService {
    */
   invalidate(key: string): number {
     const deleted = this.cache.del(key);
-    if (deleted > 0) {
-      cliLogger.info(`Invalidated cache key: ${key}`);
-    }
     return deleted;
   }
 
@@ -125,5 +132,5 @@ export class CacheService {
   }
 }
 
-// Export a singleton instance for global use
-export const cacheService = new CacheService();
+// For backward compatibility with existing code
+export const cacheService = CacheService.getInstance();

@@ -1,4 +1,3 @@
-import { BadRequestError } from '@middleware/errorMiddleware';
 import Season from '@models/season';
 import Show from '@models/show';
 import { errorService } from '@services/errorService';

@@ -1,5 +1,3 @@
-// src/services/errorService.ts
-import { httpLogger } from '../logger/logger';
 import { BadRequestError, CustomError, DatabaseError, NotFoundError } from '../middleware/errorMiddleware';
 import { AxiosError } from 'axios';
 

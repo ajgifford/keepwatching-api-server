@@ -33,7 +33,7 @@ export class ShowService {
   private cache: CacheService;
 
   constructor() {
-    this.cache = new CacheService();
+    this.cache = CacheService.getInstance();
   }
 
   /**

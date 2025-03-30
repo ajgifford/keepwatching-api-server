@@ -4,9 +4,6 @@ import Movie from '@models/movie';
 import { errorService } from '@services/errorService';
 import { checkForMovieChanges } from '@services/movieChangesService';
 import { getTMDBService } from '@services/tmdbService';
-import { SUPPORTED_CHANGE_KEYS } from '@utils/changesUtility';
-import { getUSMPARating } from '@utils/contentUtility';
-import { getUSWatchProviders } from '@utils/watchProvidersUtility';
 
 jest.mock('@logger/logger', () => ({
   cliLogger: {

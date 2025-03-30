@@ -48,7 +48,7 @@ export class StatisticsService {
   private cache: CacheService;
 
   constructor() {
-    this.cache = new CacheService();
+    this.cache = CacheService.getInstance();
   }
 
   /**
