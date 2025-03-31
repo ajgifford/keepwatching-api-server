@@ -64,16 +64,21 @@ export const login = asyncHandler(async (req: Request, res: Response, next: Next
 export const googleLogin = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { name, email, uid, photoURL }: GoogleLoginParams = req.body;
-    const googleLogin = await authenticationService.googleLogin(name, email, uid);
-    res.status(201).json({
-      message: googleLogin.message,
+    const googleLoginResult = await authenticationService.googleLogin(name, email, uid);
+
+    const statusCode = googleLoginResult.isNewAccount ? 201 : 200;
+    const message = googleLoginResult.isNewAccount ? 'Account registered successfully' : 'Login successful';
+
+    res.status(statusCode).json({
+      message: message,
       result: {
-        id: googleLogin.account.account_id,
-        name: googleLogin.account.account_name,
-        uid: googleLogin.account.uid,
-        email: googleLogin.account.email,
-        image: getPhotoForGoogleAccount(name, photoURL, googleLogin.account),
-        default_profile_id: googleLogin.account.default_profile_id,
+        id: googleLoginResult.account.account_id,
+        name: googleLoginResult.account.account_name,
+        uid: googleLoginResult.account.uid,
+        email: googleLoginResult.account.email,
+        image: getPhotoForGoogleAccount(name, photoURL, googleLoginResult.account),
+        default_profile_id: googleLoginResult.account.default_profile_id,
+        isNewAccount: googleLoginResult.isNewAccount,
       },
     });
   } catch (error) {
