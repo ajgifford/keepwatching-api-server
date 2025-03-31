@@ -2,7 +2,7 @@ import { httpLogger } from '../logger/logger';
 import { AuthenticationError, ConflictError } from '../middleware/errorMiddleware';
 import Account from '../models/account';
 import { AccountIdParam, AccountParams, GoogleLoginParams, LoginParam } from '../schema/accountSchema';
-import { showService } from '../services/showService';
+import { CacheService } from '../services/cacheService';
 import { getAccountImage, getPhotoForGoogleAccount } from '../utils/imageUtility';
 import { NextFunction, Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
@@ -112,7 +112,8 @@ export const googleLogin = asyncHandler(async (req: Request, res: Response, next
 export const logout = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { accountId }: AccountIdParam = req.body;
-    showService.invalidateAccountCache(Number(accountId));
+    const cache = CacheService.getInstance();
+    cache.invalidateAccount(accountId);
     res.status(200).json({ message: 'Account logged out' });
   } catch (error) {
     next(error);
