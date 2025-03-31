@@ -14,11 +14,15 @@ export interface GoogleLoginResponse {
 }
 
 /**
- * Service class for handling authentication business logic
+ * Service class for managing authentication operations
+ * Handles account login, registration, and logout functionality
  */
 export class AuthenticationService {
   private cache: CacheService;
 
+  /**
+   * Creates a new AuthenticationService instance
+   */
   constructor() {
     this.cache = CacheService.getInstance();
   }
