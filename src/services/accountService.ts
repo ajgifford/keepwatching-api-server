@@ -13,7 +13,6 @@ import { showService } from './showService';
 
 /**
  * Service class for handling account-related business logic
- * This separates the business logic from the controller layer
  */
 export class AccountService {
   private cache: CacheService;

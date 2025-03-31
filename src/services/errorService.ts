@@ -1,4 +1,10 @@
-import { BadRequestError, CustomError, DatabaseError, NotFoundError } from '../middleware/errorMiddleware';
+import {
+  BadRequestError,
+  ConflictError,
+  CustomError,
+  DatabaseError,
+  NotFoundError,
+} from '../middleware/errorMiddleware';
 import { AxiosError } from 'axios';
 
 interface TMDBErrorResponse {
@@ -84,10 +90,30 @@ export class ErrorService {
    * @param entity The entity to check
    * @param entityName The name of the entity for the error message
    * @param id The ID of the entity
+   * @throws NotFoundError if the entity doesn't exits
    */
   public assertExists<T>(entity: T | null | undefined, entityName: string, id: string | number): asserts entity is T {
     if (!entity) {
       throw new NotFoundError(`${entityName} with ID ${id} not found`);
+    }
+  }
+
+  /**
+   * Assert that an entity does not exist, throwing a ConflictError if it does
+   * @param entity The entity to check
+   * @param entityName The name of the entity for the error message
+   * @param fieldName The name of the field on which the entity was searched
+   * @param fieldValue The value of the field on which the entity was searched
+   * @throws ConflictError if the entity exists
+   */
+  public assertNotExists<T>(
+    entity: T | null | undefined,
+    entityName: string,
+    fieldName: string,
+    fieldValue: string,
+  ): asserts entity is T {
+    if (entity) {
+      throw new ConflictError(`${entityName} with ${fieldName} ${fieldValue} already exists`);
     }
   }
 }
