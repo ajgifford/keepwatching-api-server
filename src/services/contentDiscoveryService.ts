@@ -17,14 +17,14 @@ export enum MediaType {
 
 export class ContentDiscoveryService {
   private cache: CacheService;
-  private client: Client;
+  private streamingAvailability: StreamingAvailabilityService;
 
   /**
    * Creates a new ContentDiscoveryService instance
    */
   constructor() {
     this.cache = CacheService.getInstance();
-    this.client = StreamingAvailabilityService.getInstance().getClient();
+    this.streamingAvailability = StreamingAvailabilityService.getInstance();
   }
 
   public async discoverTopContent(
@@ -33,7 +33,7 @@ export class ContentDiscoveryService {
   ): Promise<DiscoverAndSearchResponse> {
     try {
       const topContent = this.cache.getOrSet(DISCOVER_KEYS.top(showType, service), async () => {
-        const data = await this.client.showsApi.getTopShows({
+        const data = await this.streamingAvailability.getClient().showsApi.getTopShows({
           country: 'us',
           service: service,
           showType: showType,
@@ -71,7 +71,7 @@ export class ContentDiscoveryService {
   ): Promise<DiscoverAndSearchResponse> {
     try {
       const changesContent = this.cache.getOrSet(DISCOVER_KEYS.changes(showType, service, changeType), async () => {
-        const data = await this.client.changesApi.getChanges({
+        const data = await this.streamingAvailability.getClient().changesApi.getChanges({
           changeType: changeType,
           itemType: 'show',
           country: 'us',

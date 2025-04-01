@@ -2,7 +2,6 @@ import { Client, Configuration } from 'streaming-availability';
 
 export class StreamingAvailabilityService {
   private static instance: StreamingAvailabilityService | null = null;
-
   private client: Client;
 
   /**
