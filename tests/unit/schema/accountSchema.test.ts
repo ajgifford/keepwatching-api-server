@@ -1,10 +1,10 @@
 import {
+  accountAndProfileIdsParamSchema,
+  accountIdParamSchema,
   accountSchema,
   accountUpdateSchema,
-  loginSchema,
   googleLoginSchema,
-  accountIdParamSchema,
-  accountAndProfileIdsParamSchema,
+  loginSchema,
   profileNameSchema,
 } from '@schema/accountSchema';
 
@@ -227,9 +227,9 @@ describe('accountSchema', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should reject non-numeric profile ID', () => {
+    it('should reject non-numeric IDs', () => {
       const invalidParams = {
-        accountId: '123',
+        accountId: 'xyz',
         profileId: 'abc',
       };
 
@@ -239,6 +239,7 @@ describe('accountSchema', () => {
       if (!result.success) {
         const formattedErrors = result.error.format();
         expect(formattedErrors.profileId?._errors).toContain('Profile ID must be a number');
+        expect(formattedErrors.accountId?._errors).toContain('Account ID must be a number');
       }
     });
   });
