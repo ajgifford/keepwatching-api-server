@@ -1,5 +1,5 @@
+import { DISCOVER_KEYS, SEARCH_KEYS } from '../constants/cacheKeys';
 import { DiscoverChangesQuery, DiscoverTopQuery, DiscoverTrendingQuery } from '../schema/discoverSchema';
-import { SearchParams } from '../schema/searchSchema';
 import { DiscoverAndSearchResponse, DiscoverAndSearchResult } from '../types/discoverAndSearchTypes';
 import { getStreamingPremieredDate, getTMDBItemName, getTMDBPremieredDate, stripPrefix } from '../utils/contentUtility';
 import { generateGenreArrayFromIds } from '../utils/genreUtility';
@@ -8,7 +8,6 @@ import { CacheService } from './cacheService';
 import { errorService } from './errorService';
 import { StreamingAvailabilityService } from './streamingAvailabilityService';
 import { getTMDBService } from './tmdbService';
-import { DISCOVER_KEYS, SEARCH_KEYS } from 'src/constants/cacheKeys';
 import { Client } from 'streaming-availability';
 
 export enum MediaType {
