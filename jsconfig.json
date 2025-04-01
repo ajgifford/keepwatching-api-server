@@ -10,7 +10,8 @@
       "@services/*": ["src/services/*"],
       "@logger/*": ["src/logger/*"],
       "@schema/*": ["src/schema/*"],
-      "@db/*": ["src/db/*"]
+      "@db/*": ["src/db/*"],
+      "@constants/*": ["src/constants/*"]
     }
   }
 }

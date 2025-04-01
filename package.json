@@ -5,17 +5,6 @@
   "main": "dist/index.js",
   "author": "Andy Gifford",
   "private": true,
-  "_moduleAliases": {
-    "@models": "dist/models",
-    "@utils": "dist/utils",
-    "@middleware": "dist/middleware",
-    "@controllers": "dist/controllers",
-    "@routes": "dist/routes",
-    "@services": "dist/services",
-    "@logger": "dist/logger",
-    "@schema": "dist/schema",
-    "@db": "dist/db"
-  },
   "dependencies": {
     "@express-rate-limit/tsconfig": "^1.0.2",
     "axios": "^1.7.9",
