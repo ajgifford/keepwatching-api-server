@@ -1,6 +1,7 @@
 import { DiscoverChangesQuery, DiscoverTopQuery, DiscoverTrendingQuery } from '../schema/discoverSchema';
 import { getTMDBService } from '../services/tmdbService';
 import { DiscoverAndSearchResponse, DiscoverAndSearchResult } from '../types/discoverAndSearchTypes';
+import { getStreamingPremieredDate, getTMDBItemName, getTMDBPremieredDate, stripPrefix } from '../utils/contentUtility';
 import { generateGenreArrayFromIds } from '../utils/genreUtility';
 import { buildTMDBImagePath } from '../utils/imageUtility';
 import { NextFunction, Request, Response } from 'express';
@@ -166,31 +167,3 @@ export const discoverTrendingContent = async (req: Request, res: Response, next:
     next(error);
   }
 };
-
-function stripPrefix(input: string): string {
-  return input.replace(/^(tv\/|movie\/)/, '');
-}
-
-function getStreamingPremieredDate(showType: string, result: { firstAirYear?: any; releaseYear?: any }) {
-  if (showType === 'movie') {
-    return result.releaseYear;
-  } else {
-    return result.firstAirYear;
-  }
-}
-
-function getTMDBPremieredDate(showType: string, result: { first_air_date?: any; release_date?: any }) {
-  if (showType === 'movie') {
-    return result.release_date;
-  } else {
-    return result.first_air_date;
-  }
-}
-
-function getTMDBItemName(searchType: string, result: { name?: any; title?: any }) {
-  if (searchType === 'movie') {
-    return result.title;
-  } else {
-    return result.name;
-  }
-}
