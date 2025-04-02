@@ -1,9 +1,9 @@
 import { UPLOADS_DIR } from '..';
+import { findProfileById, updateProfileImage } from '../db/profileDb';
 import { httpLogger } from '../logger/logger';
 import { BadRequestError } from '../middleware/errorMiddleware';
 import uploadFileMiddleware from '../middleware/uploadMiddleware';
 import Account from '../models/account';
-import Profile from '../models/profile';
 import { AccountAndProfileIdsParams, AccountIdParam } from '../schema/accountSchema';
 import { CacheService } from '../services/cacheService';
 import { getAccountImage, getProfileImage } from '../utils/imageUtility';
@@ -69,16 +69,16 @@ export const uploadProfileImage = asyncHandler(async (req: Request, res: Respons
       res.status(400).send({ message: 'Please upload a file!' });
     } else {
       const profileImage = req.file.filename;
-      const profile = await Profile.findById(Number(profileId));
+      const profile = await findProfileById(Number(profileId));
       if (profile) {
-        const updatedProfile = await profile.updateProfileImage(profileImage);
+        const updatedProfile = await updateProfileImage(profile, profileImage);
         if (updatedProfile) {
           res.status(200).send({
             message: `Uploaded the file successfully: ${profileImage}`,
             result: {
               id: updatedProfile.id,
               name: updatedProfile.name,
-              image: getProfileImage(updatedProfile),
+              image: getProfileImage(updatedProfile.image, updatedProfile.name),
             },
           });
           const filePath = UPLOADS_DIR + '/profiles/' + profile.image;

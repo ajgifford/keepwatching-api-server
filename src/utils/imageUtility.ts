@@ -1,5 +1,4 @@
 import Account from '../models/account';
-import Profile from '../models/profile';
 
 export function buildTMDBImagePath(path: string, size: string = 'w185'): string {
   return `https://image.tmdb.org/t/p/${size}${path}`;
@@ -47,9 +46,9 @@ export function getPhotoForGoogleAccount(name: string, photoURL: string | undefi
   return buildDefaultImagePath(name);
 }
 
-export function getProfileImage(profile: Profile) {
-  if (profile.image) {
-    return buildUploadedImageURL(profile.image, 'profiles');
+export function getProfileImage(image: string | undefined, name: string) {
+  if (image) {
+    return buildUploadedImageURL(image, 'profiles');
   }
-  return buildDefaultImagePath(profile.name);
+  return buildDefaultImagePath(name);
 }

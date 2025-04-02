@@ -1,19 +1,25 @@
+import {
+  createProfile,
+  deleteProfile,
+  findProfileById,
+  getAllProfilesByAccountId,
+  saveProfile,
+  updateProfileName,
+} from '@db/profileDb';
 import { CustomError } from '@middleware/errorMiddleware';
 import Account from '@models/account';
 import Movie from '@models/movie';
-import Profile from '@models/profile';
 import Show from '@models/show';
-import { accountService, AccountService } from '@services/accountService';
+import { AccountService, accountService } from '@services/accountService';
 import { CacheService } from '@services/cacheService';
 import { episodesService } from '@services/episodesService';
 import { errorService } from '@services/errorService';
 import { moviesService } from '@services/moviesService';
 import { showService } from '@services/showService';
-import { statisticsService } from '@services/statisticsService';
 import { getAccountImage, getProfileImage } from '@utils/imageUtility';
 
+jest.mock('@db/profileDb');
 jest.mock('@models/account');
-jest.mock('@models/profile');
 jest.mock('@models/show');
 jest.mock('@models/movie');
 jest.mock('@services/cacheService');
@@ -21,7 +27,6 @@ jest.mock('@services/errorService');
 jest.mock('@services/episodesService');
 jest.mock('@services/moviesService');
 jest.mock('@services/showService');
-jest.mock('@services/statisticsService');
 jest.mock('@utils/imageUtility');
 
 describe('AccountService', () => {
@@ -84,27 +89,27 @@ describe('AccountService', () => {
       ];
 
       mockCache.getOrSet.mockImplementation(async (key, fn) => fn());
-      (Profile.getAllByAccountId as jest.Mock).mockResolvedValue(mockDBProfiles);
+      (getAllProfilesByAccountId as jest.Mock).mockResolvedValue(mockDBProfiles);
 
       const result = await service.getProfiles(123);
 
       expect(mockCache.getOrSet).toHaveBeenCalled();
-      expect(Profile.getAllByAccountId).toHaveBeenCalledWith(123);
+      expect(getAllProfilesByAccountId).toHaveBeenCalledWith(123);
       expect(result).toEqual(expectedProfiles);
     });
 
     it('should throw BadRequestError when profiles cannot be retrieved', async () => {
       mockCache.getOrSet.mockImplementation(async (key, fn) => fn());
-      (Profile.getAllByAccountId as jest.Mock).mockResolvedValue(null);
+      (getAllProfilesByAccountId as jest.Mock).mockResolvedValue(null);
 
       await expect(service.getProfiles(123)).rejects.toThrow(CustomError);
-      expect(Profile.getAllByAccountId).toHaveBeenCalledWith(123);
+      expect(getAllProfilesByAccountId).toHaveBeenCalledWith(123);
     });
 
     it('should handle database errors', async () => {
       const error = new Error('Database error');
       mockCache.getOrSet.mockImplementation(async (key, fn) => fn());
-      (Profile.getAllByAccountId as jest.Mock).mockRejectedValue(error);
+      (getAllProfilesByAccountId as jest.Mock).mockRejectedValue(error);
 
       await expect(service.getProfiles(123)).rejects.toThrow('Database error');
       expect(errorService.handleError).toHaveBeenCalledWith(error, 'getProfiles(123)');
@@ -144,7 +149,7 @@ describe('AccountService', () => {
     it('should fetch and combine profile data when not in cache', async () => {
       mockCache.getOrSet.mockImplementation(async (key, fn) => fn());
 
-      (Profile.findById as jest.Mock).mockResolvedValue(mockProfile);
+      (findProfileById as jest.Mock).mockResolvedValue(mockProfile);
       (showService.getShowsForProfile as jest.Mock).mockResolvedValue(mockShows);
       (moviesService.getMoviesForProfile as jest.Mock).mockResolvedValue(mockMovies);
       (episodesService.getRecentEpisodesForProfile as jest.Mock).mockResolvedValue(mockRecentEpisodes);
@@ -156,7 +161,7 @@ describe('AccountService', () => {
       const result = await service.getProfile(123);
 
       expect(mockCache.getOrSet).toHaveBeenCalled();
-      expect(Profile.findById).toHaveBeenCalledWith(123);
+      expect(findProfileById).toHaveBeenCalledWith(123);
       expect(showService.getShowsForProfile).toHaveBeenCalledWith('123');
       expect(moviesService.getMoviesForProfile).toHaveBeenCalledWith('123');
       expect(episodesService.getRecentEpisodesForProfile).toHaveBeenCalledWith('123');
@@ -177,16 +182,16 @@ describe('AccountService', () => {
 
     it('should throw NotFoundError when profile does not exist', async () => {
       mockCache.getOrSet.mockImplementation(async (key, fn) => fn());
-      (Profile.findById as jest.Mock).mockResolvedValue(null);
+      (findProfileById as jest.Mock).mockResolvedValue(null);
 
       await expect(service.getProfile(999)).rejects.toThrow(CustomError);
-      expect(Profile.findById).toHaveBeenCalledWith(999);
+      expect(findProfileById).toHaveBeenCalledWith(999);
     });
 
     it('should handle database errors', async () => {
       const error = new Error('Database error');
       mockCache.getOrSet.mockImplementation(async (key, fn) => fn());
-      (Profile.findById as jest.Mock).mockRejectedValue(error);
+      (findProfileById as jest.Mock).mockRejectedValue(error);
 
       await expect(service.getProfile(123)).rejects.toThrow('Database error');
       expect(errorService.handleError).toHaveBeenCalledWith(error, 'getProfile(123)');
@@ -256,22 +261,15 @@ describe('AccountService', () => {
 
   describe('addProfile', () => {
     it('should add a profile successfully', async () => {
-      const mockProfile = {
-        account_id: 123,
-        name: 'New Profile',
-        id: undefined,
-        save: jest.fn().mockImplementation(function (this: any) {
-          this.id = 456;
-          return Promise.resolve();
-        }),
-      };
-
-      (Profile as jest.MockedClass<typeof Profile>).mockImplementation(() => mockProfile as any);
+      const mockProfile = { name: 'New Profile', account_id: 1 };
+      const mockSavedProfile = { id: 456, name: 'New Profile', account_id: 1 };
+      (createProfile as jest.Mock).mockResolvedValue(mockProfile);
+      (saveProfile as jest.Mock).mockResolvedValue(mockSavedProfile);
 
       const result = await service.addProfile(123, 'New Profile');
 
-      expect(Profile).toHaveBeenCalledWith(123, 'New Profile');
-      expect(mockProfile.save).toHaveBeenCalled();
+      expect(createProfile).toHaveBeenCalledWith(123, 'New Profile');
+      expect(saveProfile).toHaveBeenCalled();
       expect(mockCache.invalidateAccount).toHaveBeenCalledWith(123);
       expect(result).toEqual({
         id: 456,
@@ -281,31 +279,25 @@ describe('AccountService', () => {
     });
 
     it('should throw BadRequestError when profile creation fails', async () => {
-      const mockProfile = {
-        account_id: 123,
-        name: 'New Profile',
-        id: undefined,
-        save: jest.fn().mockResolvedValue(undefined),
-      };
-
-      (Profile as jest.MockedClass<typeof Profile>).mockImplementation(() => mockProfile as any);
+      const mockProfile = { name: 'New Profile', account_id: 1 };
+      const mockSavedProfile = { id: undefined, name: 'New Profile', account_id: 1 };
+      (createProfile as jest.Mock).mockResolvedValue(mockProfile);
+      (saveProfile as jest.Mock).mockResolvedValue(mockSavedProfile);
 
       await expect(service.addProfile(123, 'New Profile')).rejects.toThrow(CustomError);
-      expect(Profile).toHaveBeenCalledWith(123, 'New Profile');
-      expect(mockProfile.save).toHaveBeenCalled();
+
+      expect(createProfile).toHaveBeenCalledWith(123, 'New Profile');
+      expect(saveProfile).toHaveBeenCalled();
     });
 
     it('should handle database errors', async () => {
       const error = new Error('Database error');
-      const mockProfile = {
-        account_id: 123,
-        name: 'New Profile',
-        save: jest.fn().mockRejectedValue(error),
-      };
-
-      (Profile as jest.MockedClass<typeof Profile>).mockImplementation(() => mockProfile as any);
+      const mockProfile = { name: 'New Profile', account_id: 1 };
+      (createProfile as jest.Mock).mockResolvedValue(mockProfile);
+      (saveProfile as jest.Mock).mockRejectedValue(error);
 
       await expect(service.addProfile(123, 'New Profile')).rejects.toThrow('Database error');
+
       expect(errorService.handleError).toHaveBeenCalledWith(error, 'addProfile(123, New Profile)');
     });
   });
@@ -315,7 +307,6 @@ describe('AccountService', () => {
       id: 123,
       name: 'Original Profile',
       account_id: 1,
-      update: jest.fn(),
     };
 
     const mockUpdatedProfile = {
@@ -325,13 +316,13 @@ describe('AccountService', () => {
     };
 
     it('should update a profile successfully', async () => {
-      (Profile.findById as jest.Mock).mockResolvedValue(mockProfile);
-      mockProfile.update.mockResolvedValue(mockUpdatedProfile);
+      (findProfileById as jest.Mock).mockResolvedValue(mockProfile);
+      (updateProfileName as jest.Mock).mockResolvedValue(mockUpdatedProfile);
 
-      const result = await service.editProfile(123, 'Updated Profile');
+      const result = await service.editProfileName(123, 'Updated Profile');
 
-      expect(Profile.findById).toHaveBeenCalledWith(123);
-      expect(mockProfile.update).toHaveBeenCalledWith('Updated Profile');
+      expect(findProfileById).toHaveBeenCalledWith(123);
+      expect(updateProfileName).toHaveBeenCalledWith(mockProfile, 'Updated Profile');
       expect(mockCache.invalidateProfile).toHaveBeenCalledWith(123);
       expect(mockCache.invalidateProfileStatistics).toHaveBeenCalledWith(123);
       expect(result).toEqual({
@@ -342,27 +333,27 @@ describe('AccountService', () => {
     });
 
     it('should throw NotFoundError when profile does not exist', async () => {
-      (Profile.findById as jest.Mock).mockResolvedValue(null);
+      (findProfileById as jest.Mock).mockResolvedValue(null);
 
-      await expect(service.editProfile(999, 'Test')).rejects.toThrow(CustomError);
-      expect(Profile.findById).toHaveBeenCalledWith(999);
+      await expect(service.editProfileName(999, 'Test')).rejects.toThrow(CustomError);
+      expect(findProfileById).toHaveBeenCalledWith(999);
     });
 
     it('should throw BadRequestError when update fails', async () => {
-      (Profile.findById as jest.Mock).mockResolvedValue(mockProfile);
-      mockProfile.update.mockResolvedValue(null);
+      (findProfileById as jest.Mock).mockResolvedValue(mockProfile);
+      (updateProfileName as jest.Mock).mockResolvedValue(undefined);
 
-      await expect(service.editProfile(123, 'Updated Profile')).rejects.toThrow(CustomError);
-      expect(Profile.findById).toHaveBeenCalledWith(123);
-      expect(mockProfile.update).toHaveBeenCalledWith('Updated Profile');
+      await expect(service.editProfileName(123, 'Updated Profile')).rejects.toThrow(CustomError);
+      expect(findProfileById).toHaveBeenCalledWith(123);
+      expect(updateProfileName).toHaveBeenCalledWith(mockProfile, 'Updated Profile');
     });
 
     it('should handle database errors', async () => {
       const error = new Error('Database error');
-      (Profile.findById as jest.Mock).mockResolvedValue(mockProfile);
-      mockProfile.update.mockRejectedValue(error);
+      (findProfileById as jest.Mock).mockResolvedValue(mockProfile);
+      (updateProfileName as jest.Mock).mockRejectedValue(error);
 
-      await expect(service.editProfile(123, 'Updated Profile')).rejects.toThrow('Database error');
+      await expect(service.editProfileName(123, 'Updated Profile')).rejects.toThrow('Database error');
       expect(errorService.handleError).toHaveBeenCalledWith(error, 'editProfile(123)');
     });
   });
@@ -372,42 +363,41 @@ describe('AccountService', () => {
       id: 123,
       name: 'Profile to Delete',
       account_id: 1,
-      delete: jest.fn(),
     };
 
     it('should delete a profile successfully', async () => {
-      (Profile.findById as jest.Mock).mockResolvedValue(mockProfile);
-      mockProfile.delete.mockResolvedValue(true);
+      (findProfileById as jest.Mock).mockResolvedValue(mockProfile);
+      (deleteProfile as jest.Mock).mockResolvedValue(true);
 
       const result = await service.deleteProfile(123, 1);
 
-      expect(Profile.findById).toHaveBeenCalledWith(123);
-      expect(mockProfile.delete).toHaveBeenCalled();
+      expect(findProfileById).toHaveBeenCalledWith(123);
+      expect(deleteProfile).toHaveBeenCalled();
       expect(mockCache.invalidateProfile).toHaveBeenCalledWith(123);
       expect(mockCache.invalidateAccount).toHaveBeenCalledWith(1);
       expect(result).toBe(true);
     });
 
     it('should throw NotFoundError when profile does not exist', async () => {
-      (Profile.findById as jest.Mock).mockResolvedValue(null);
+      (findProfileById as jest.Mock).mockResolvedValue(null);
 
       await expect(service.deleteProfile(999, 1)).rejects.toThrow(CustomError);
-      expect(Profile.findById).toHaveBeenCalledWith(999);
+      expect(findProfileById).toHaveBeenCalledWith(999);
     });
 
     it('should throw BadRequestError when deletion fails', async () => {
-      (Profile.findById as jest.Mock).mockResolvedValue(mockProfile);
-      mockProfile.delete.mockResolvedValue(false);
+      (findProfileById as jest.Mock).mockResolvedValue(mockProfile);
+      (deleteProfile as jest.Mock).mockResolvedValue(false);
 
       await expect(service.deleteProfile(123, 1)).rejects.toThrow(CustomError);
-      expect(Profile.findById).toHaveBeenCalledWith(123);
-      expect(mockProfile.delete).toHaveBeenCalled();
+      expect(findProfileById).toHaveBeenCalledWith(123);
+      expect(deleteProfile).toHaveBeenCalled();
     });
 
     it('should handle database errors', async () => {
       const error = new Error('Database error');
-      (Profile.findById as jest.Mock).mockResolvedValue(mockProfile);
-      mockProfile.delete.mockRejectedValue(error);
+      (findProfileById as jest.Mock).mockResolvedValue(mockProfile);
+      (deleteProfile as jest.Mock).mockRejectedValue(error);
 
       await expect(service.deleteProfile(123, 1)).rejects.toThrow('Database error');
       expect(errorService.handleError).toHaveBeenCalledWith(error, 'deleteProfile(123)');

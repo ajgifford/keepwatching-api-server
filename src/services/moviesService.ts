@@ -1,7 +1,7 @@
-import { MOVIE_KEYS, PROFILE_KEYS } from '../constants/cacheKeys';
+import { PROFILE_KEYS } from '../constants/cacheKeys';
+import { getAllProfilesByAccountId } from '../db/profileDb';
 import { BadRequestError, NotFoundError } from '../middleware/errorMiddleware';
 import Movie from '../models/movie';
-import Profile from '../models/profile';
 import { getUSMPARating } from '../utils/contentUtility';
 import { getUSWatchProviders } from '../utils/watchProvidersUtility';
 import { CacheService } from './cacheService';
@@ -30,7 +30,7 @@ export class MoviesService {
    * Invalidate all caches related to an account by running through it's profiles
    */
   public async invalidateAccountCache(accountId: number): Promise<void> {
-    const profiles = await Profile.getAllByAccountId(accountId);
+    const profiles = await getAllProfilesByAccountId(accountId);
     for (const profile of profiles) {
       this.invalidateProfileMovieCache(String(profile.id!));
     }

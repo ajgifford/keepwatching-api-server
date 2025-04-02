@@ -1,12 +1,12 @@
+import { getAllProfilesByAccountId } from '@db/profileDb';
 import { CustomError } from '@middleware/errorMiddleware';
-import Profile from '@models/profile';
 import { CacheService } from '@services/cacheService';
 import { errorService } from '@services/errorService';
 import { moviesService } from '@services/moviesService';
 import { showService } from '@services/showService';
-import { statisticsService, StatisticsService } from '@services/statisticsService';
+import { statisticsService } from '@services/statisticsService';
 
-jest.mock('@models/profile');
+jest.mock('@db/profileDb');
 jest.mock('@services/showService');
 jest.mock('@services/errorService');
 jest.mock('@services/moviesService');
@@ -167,12 +167,12 @@ describe('statisticsService', () => {
       expect(mockCacheService.getOrSet).toHaveBeenCalledWith('account_123_statistics', expect.any(Function), 3600);
       expect(result).toEqual(mockStats);
 
-      expect(Profile.getAllByAccountId).not.toHaveBeenCalled();
+      expect(getAllProfilesByAccountId).not.toHaveBeenCalled();
     });
 
     it('should fetch and aggregate account statistics on cache miss', async () => {
       mockCacheService.getOrSet.mockImplementation(async (_key, fn) => fn());
-      (Profile.getAllByAccountId as jest.Mock).mockResolvedValue(mockProfiles);
+      (getAllProfilesByAccountId as jest.Mock).mockResolvedValue(mockProfiles);
 
       (showService.getProfileShowStatistics as jest.Mock)
         .mockResolvedValueOnce(mockProfileStats[0].showStatistics)
@@ -189,7 +189,7 @@ describe('statisticsService', () => {
       const result = await statisticsService.getAccountStatistics(123);
 
       expect(mockCacheService.getOrSet).toHaveBeenCalledWith('account_123_statistics', expect.any(Function), 3600);
-      expect(Profile.getAllByAccountId).toHaveBeenCalledWith(123);
+      expect(getAllProfilesByAccountId).toHaveBeenCalledWith(123);
 
       expect(showService.getProfileShowStatistics).toHaveBeenCalledTimes(2);
       expect(moviesService.getProfileMovieStatistics).toHaveBeenCalledTimes(2);
@@ -206,19 +206,19 @@ describe('statisticsService', () => {
 
     it('should throw BadRequestError when no profiles found', async () => {
       mockCacheService.getOrSet.mockImplementation(async (_key, fn) => fn());
-      (Profile.getAllByAccountId as jest.Mock).mockResolvedValue([]);
+      (getAllProfilesByAccountId as jest.Mock).mockResolvedValue([]);
       (errorService.handleError as jest.Mock).mockImplementation((err) => {
         throw err;
       });
 
       await expect(statisticsService.getAccountStatistics(123)).rejects.toThrow(CustomError);
-      expect(Profile.getAllByAccountId).toHaveBeenCalledWith(123);
+      expect(getAllProfilesByAccountId).toHaveBeenCalledWith(123);
     });
 
     it('should handle errors when getting account statistics', async () => {
       const error = new Error('Failed to get profiles');
       mockCacheService.getOrSet.mockImplementation(async (_key, fn) => fn());
-      (Profile.getAllByAccountId as jest.Mock).mockRejectedValue(error);
+      (getAllProfilesByAccountId as jest.Mock).mockRejectedValue(error);
       (errorService.handleError as jest.Mock).mockImplementation((err) => {
         throw new Error(`Handled: ${err.message}`);
       });

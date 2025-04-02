@@ -108,7 +108,7 @@ export const editProfile = asyncHandler(async (req: Request, res: Response, next
     const { profileId } = req.params as AccountAndProfileIdsParams;
     const { name }: ProfileNameParam = req.body;
 
-    const updatedProfile = await accountService.editProfile(Number(profileId), name);
+    const updatedProfile = await accountService.editProfileName(Number(profileId), name);
 
     res.status(200).json({
       message: 'Profile edited successfully',

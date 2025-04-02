@@ -182,11 +182,11 @@ describe('accountController', () => {
         image: 'profile.jpg',
       };
 
-      (accountService.editProfile as jest.Mock).mockResolvedValue(mockUpdatedProfile);
+      (accountService.editProfileName as jest.Mock).mockResolvedValue(mockUpdatedProfile);
 
       await editProfile(req, res, next);
 
-      expect(accountService.editProfile).toHaveBeenCalledWith(123, 'Updated Profile Name');
+      expect(accountService.editProfileName).toHaveBeenCalledWith(123, 'Updated Profile Name');
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Profile edited successfully',
@@ -198,11 +198,11 @@ describe('accountController', () => {
     it('should handle errors', async () => {
       req.body = { name: 'Updated Profile Name' };
       const error = new Error('Profile not found');
-      (accountService.editProfile as jest.Mock).mockRejectedValue(error);
+      (accountService.editProfileName as jest.Mock).mockRejectedValue(error);
 
       await editProfile(req, res, next);
 
-      expect(accountService.editProfile).toHaveBeenCalledWith(123, 'Updated Profile Name');
+      expect(accountService.editProfileName).toHaveBeenCalledWith(123, 'Updated Profile Name');
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();

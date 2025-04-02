@@ -1,4 +1,12 @@
-import Profile from '@models/profile';
+import {
+  createProfile,
+  deleteProfile,
+  findProfileById,
+  getAllProfilesByAccountId,
+  saveProfile,
+  updateProfileImage,
+  updateProfileName,
+} from '@db/profileDb';
 import { getDbPool } from '@utils/db';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 
@@ -11,7 +19,7 @@ jest.mock('@utils/db', () => {
   };
 });
 
-describe('Profile class', () => {
+describe('profileDb', () => {
   let mockPool: any;
 
   beforeEach(() => {
@@ -19,43 +27,43 @@ describe('Profile class', () => {
     mockPool.execute.mockReset();
   });
 
-  describe('save()', () => {
+  describe('saveProfile()', () => {
     it('save() should insert profile into DB', async () => {
       mockPool.execute.mockResolvedValueOnce([{ insertId: 5 } as ResultSetHeader]);
 
-      const profile = new Profile(1, 'Test Profile');
-      await profile.save();
+      const profile = createProfile(1, 'Test Profile');
+      const savedProfile = await saveProfile(profile);
 
       expect(mockPool.execute).toHaveBeenCalledTimes(1);
       expect(mockPool.execute).toHaveBeenCalledWith('INSERT into profiles (account_id, name) VALUES (?, ?)', [
         1,
         'Test Profile',
       ]);
-      expect(profile.id).toBe(5);
+      expect(savedProfile.id).toBe(5);
     });
 
     it('should throw error when saving a profile fails', async () => {
       const mockError = new Error('DB connection failed');
       mockPool.execute.mockRejectedValue(mockError);
 
-      const profile = new Profile(1, 'Test Profile');
-      await expect(profile.save()).rejects.toThrow('DB connection failed');
+      const profile = createProfile(1, 'Test Profile');
+      await expect(saveProfile(profile)).rejects.toThrow('DB connection failed');
     });
 
     it('should throw error with default message when saving a profile fails', async () => {
       mockPool.execute.mockRejectedValue({});
 
-      const profile = new Profile(1, 'Test Profile');
-      await expect(profile.save()).rejects.toThrow('Unknown database error saving a profile');
+      const profile = createProfile(1, 'Test Profile');
+      await expect(saveProfile(profile)).rejects.toThrow('Unknown database error saving a profile');
     });
   });
 
-  describe('updated()', () => {
+  describe('updateProfileName()', () => {
     it('update() should update profile name', async () => {
       mockPool.execute.mockResolvedValueOnce([{ affectedRows: 1 } as ResultSetHeader]);
 
-      const profile = new Profile(1, 'Test Profile', 5);
-      const updatedProfile = await profile.update('Updated Profile');
+      const profile = createProfile(1, 'Test Profile', 5);
+      const updatedProfile = await updateProfileName(profile, 'Updated Profile');
 
       expect(mockPool.execute).toHaveBeenCalledWith('UPDATE profiles SET name = ? WHERE profile_id = ?', [
         'Updated Profile',
@@ -68,8 +76,8 @@ describe('Profile class', () => {
     it('update() should return null when no rows are affected', async () => {
       mockPool.execute.mockResolvedValueOnce([{ affectedRows: 0 } as ResultSetHeader]);
 
-      const profile = new Profile(1, 'Test Profile', 5);
-      const updatedProfile = await profile.update('Updated Profile');
+      const profile = createProfile(1, 'Test Profile', 5);
+      const updatedProfile = await updateProfileName(profile, 'Updated Profile');
 
       expect(updatedProfile).toBeNull();
     });
@@ -78,24 +86,26 @@ describe('Profile class', () => {
       const mockError = new Error('DB connection failed');
       mockPool.execute.mockRejectedValue(mockError);
 
-      const profile = new Profile(1, 'Test Profile');
-      await expect(profile.update('Error Profile')).rejects.toThrow('DB connection failed');
+      const profile = createProfile(1, 'Test Profile');
+      await expect(updateProfileName(profile, 'Error Profile')).rejects.toThrow('DB connection failed');
     });
 
     it('should throw error with default message when updating a profile fails', async () => {
       mockPool.execute.mockRejectedValue({});
 
-      const profile = new Profile(1, 'Test Profile');
-      await expect(profile.update('Error Profile')).rejects.toThrow('Unknown database error updating a profile');
+      const profile = createProfile(1, 'Test Profile');
+      await expect(updateProfileName(profile, 'Error Profile')).rejects.toThrow(
+        'Unknown database error updating a profile',
+      );
     });
   });
 
-  describe('updateProfileImages()', () => {
+  describe('updateProfileImage()', () => {
     it('updateProfileImage() should update profile image', async () => {
       mockPool.execute.mockResolvedValueOnce([{ affectedRows: 1 } as ResultSetHeader]);
 
-      const profile = new Profile(1, 'Test Profile', 5);
-      const updatedProfile = await profile.updateProfileImage('/path/to/image.jpg');
+      const profile = createProfile(1, 'Test Profile', 5);
+      const updatedProfile = await updateProfileImage(profile, '/path/to/image.jpg');
 
       expect(mockPool.execute).toHaveBeenCalledWith('UPDATE profiles SET image = ? WHERE profile_id = ?', [
         '/path/to/image.jpg',
@@ -108,8 +118,8 @@ describe('Profile class', () => {
     it('updateProfileImage() should return null when no rows are affected', async () => {
       mockPool.execute.mockResolvedValueOnce([{ affectedRows: 0 } as ResultSetHeader]);
 
-      const profile = new Profile(1, 'Test Profile', 5);
-      const updatedProfile = await profile.updateProfileImage('/path/to/image.jpg');
+      const profile = createProfile(1, 'Test Profile', 5);
+      const updatedProfile = await updateProfileImage(profile, '/path/to/image.jpg');
 
       expect(updatedProfile).toBeNull();
     });
@@ -118,26 +128,26 @@ describe('Profile class', () => {
       const mockError = new Error('DB connection failed');
       mockPool.execute.mockRejectedValue(mockError);
 
-      const profile = new Profile(1, 'Test Profile');
-      await expect(profile.updateProfileImage('new image')).rejects.toThrow('DB connection failed');
+      const profile = createProfile(1, 'Test Profile');
+      await expect(updateProfileImage(profile, 'new image')).rejects.toThrow('DB connection failed');
     });
 
     it('should throw error with default message when updating a profile image fails', async () => {
       mockPool.execute.mockRejectedValue({});
 
-      const profile = new Profile(1, 'Test Profile');
-      await expect(profile.updateProfileImage('new image')).rejects.toThrow(
+      const profile = createProfile(1, 'Test Profile');
+      await expect(updateProfileImage(profile, 'new image')).rejects.toThrow(
         'Unknown database error updating a profile image',
       );
     });
   });
 
-  describe('delete()', () => {
+  describe('deleteProfile()', () => {
     it('delete() should delete profile from DB', async () => {
       mockPool.execute.mockResolvedValueOnce([{ affectedRows: 1 } as ResultSetHeader]);
 
-      const profile = new Profile(1, 'Test Profile', 5);
-      const result = await profile.delete();
+      const profile = createProfile(1, 'Test Profile', 5);
+      const result = await deleteProfile(profile);
 
       expect(mockPool.execute).toHaveBeenCalledWith('DELETE FROM profiles WHERE profile_id = ?', [5]);
       expect(result).toBe(true);
@@ -146,8 +156,8 @@ describe('Profile class', () => {
     it('delete() should return false when no rows are affected', async () => {
       mockPool.execute.mockResolvedValueOnce([{ affectedRows: 0 } as ResultSetHeader]);
 
-      const profile = new Profile(1, 'Test Profile', 5);
-      const result = await profile.delete();
+      const profile = createProfile(1, 'Test Profile', 5);
+      const result = await deleteProfile(profile);
 
       expect(result).toBe(false);
     });
@@ -156,19 +166,19 @@ describe('Profile class', () => {
       const mockError = new Error('DB connection failed');
       mockPool.execute.mockRejectedValue(mockError);
 
-      const profile = new Profile(1, 'Test Profile');
-      await expect(profile.delete()).rejects.toThrow('DB connection failed');
+      const profile = createProfile(1, 'Test Profile');
+      await expect(deleteProfile(profile)).rejects.toThrow('DB connection failed');
     });
 
     it('should throw error with default message when deleting a profile fails', async () => {
       mockPool.execute.mockRejectedValue({});
 
-      const profile = new Profile(1, 'Test Profile');
-      await expect(profile.delete()).rejects.toThrow('Unknown database error deleting a profile');
+      const profile = createProfile(1, 'Test Profile');
+      await expect(deleteProfile(profile)).rejects.toThrow('Unknown database error deleting a profile');
     });
   });
 
-  describe('findById()', () => {
+  describe('findProfileById()', () => {
     it('findById() should return a profile object', async () => {
       const mockProfile = {
         profile_id: 5,
@@ -179,7 +189,7 @@ describe('Profile class', () => {
 
       mockPool.execute.mockResolvedValueOnce([[mockProfile] as RowDataPacket[]]);
 
-      const profile = await Profile.findById(5);
+      const profile = await findProfileById(5);
 
       expect(mockPool.execute).toHaveBeenCalledWith('SELECT * FROM profiles WHERE profile_id = ?', [5]);
       expect(profile).not.toBeNull();
@@ -191,7 +201,7 @@ describe('Profile class', () => {
     it('findById() should return null when profile is not found', async () => {
       mockPool.execute.mockResolvedValueOnce([[] as RowDataPacket[]]);
 
-      const profile = await Profile.findById(999);
+      const profile = await findProfileById(999);
 
       expect(profile).toBeNull();
     });
@@ -200,17 +210,17 @@ describe('Profile class', () => {
       const mockError = new Error('DB connection failed');
       mockPool.execute.mockRejectedValue(mockError);
 
-      await expect(Profile.findById(1)).rejects.toThrow('DB connection failed');
+      await expect(findProfileById(1)).rejects.toThrow('DB connection failed');
     });
 
     it('should throw error with default message when finding a profile by id fails', async () => {
       mockPool.execute.mockRejectedValue({});
 
-      await expect(Profile.findById(1)).rejects.toThrow('Unknown database error finding a profile by id');
+      await expect(findProfileById(1)).rejects.toThrow('Unknown database error finding a profile by id');
     });
   });
 
-  describe('getAllByAccountId()', () => {
+  describe('getAllProfilesByAccountId()', () => {
     it('getAllByAccountId() should return an array of profiles', async () => {
       const mockProfiles = [
         { profile_id: 5, account_id: 1, name: 'Profile 1', image: null },
@@ -219,7 +229,7 @@ describe('Profile class', () => {
 
       mockPool.execute.mockResolvedValueOnce([mockProfiles as RowDataPacket[]]);
 
-      const profiles = await Profile.getAllByAccountId(1);
+      const profiles = await getAllProfilesByAccountId(1);
 
       expect(mockPool.execute).toHaveBeenCalledWith('SELECT * FROM profiles WHERE account_id = ?', [1]);
       expect(profiles.length).toBe(2);
@@ -234,13 +244,13 @@ describe('Profile class', () => {
       const mockError = new Error('DB connection failed');
       mockPool.execute.mockRejectedValue(mockError);
 
-      await expect(Profile.getAllByAccountId(1)).rejects.toThrow('DB connection failed');
+      await expect(getAllProfilesByAccountId(1)).rejects.toThrow('DB connection failed');
     });
 
     it('should throw error with default message when getting account profiles fails', async () => {
       mockPool.execute.mockRejectedValue({});
 
-      await expect(Profile.getAllByAccountId(1)).rejects.toThrow(
+      await expect(getAllProfilesByAccountId(1)).rejects.toThrow(
         'Unknown database error getting all profiles by account',
       );
     });
