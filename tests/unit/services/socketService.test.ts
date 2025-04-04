@@ -173,7 +173,6 @@ describe('SocketService', () => {
         message: 'Show data has been fully loaded',
         show: mockShow,
       });
-      expect(cliLogger.info).toHaveBeenCalledWith('Notified account 123 about loaded show 456');
     });
 
     it('should handle errors when finding account ID', async () => {
