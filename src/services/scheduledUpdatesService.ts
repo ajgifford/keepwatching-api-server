@@ -30,8 +30,9 @@ const jobs: Record<string, ScheduledJob> = {
   },
 };
 
-let showUpdatesCallback: (() => void) | null = null;
-let movieUpdatesCallback: (() => void) | null = null;
+type NotificationCallback = () => void;
+let showUpdatesCallback: NotificationCallback | null = null;
+let movieUpdatesCallback: NotificationCallback | null = null;
 
 // Get schedule from environment variables or use defaults
 const getScheduleConfig = () => {
@@ -124,7 +125,10 @@ export async function runMoviesUpdateJob(): Promise<boolean> {
  * @param notifyShowUpdates Callback to notify UI when shows are updated
  * @param notifyMovieUpdates Callback to notify UI when movies are updated
  */
-export function initScheduledJobs(notifyShowUpdates: () => void, notifyMovieUpdates: () => void): void {
+export function initScheduledJobs(
+  notifyShowUpdates: NotificationCallback,
+  notifyMovieUpdates: NotificationCallback,
+): void {
   showUpdatesCallback = notifyShowUpdates;
   movieUpdatesCallback = notifyMovieUpdates;
 

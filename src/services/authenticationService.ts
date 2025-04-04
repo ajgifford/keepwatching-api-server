@@ -3,6 +3,7 @@ import { ForbiddenError } from '../middleware/errorMiddleware';
 import Account from '../models/account';
 import { CacheService } from './cacheService';
 import { errorService } from './errorService';
+import { socketService } from './socketService';
 
 /**
  * Interface representing the response for a Google login operation,
@@ -130,6 +131,7 @@ export class AuthenticationService {
   public async logout(accountId: string): Promise<void> {
     try {
       this.cache.invalidateAccount(accountId);
+      const disconnectedCount = socketService.disconnectUserSockets(accountId);
       cliLogger.info(`User logged out: account ID ${accountId}`);
     } catch (error) {
       throw errorService.handleError(error, `logout(${accountId})`);

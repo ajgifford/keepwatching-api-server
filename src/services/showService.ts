@@ -3,7 +3,6 @@ import * as episodesDb from '../db/episodesDb';
 import { getAllProfilesByAccountId } from '../db/profileDb';
 import { cliLogger } from '../logger/logger';
 import { BadRequestError } from '../middleware/errorMiddleware';
-import Account from '../models/account';
 import Season from '../models/season';
 import Show from '../models/show';
 import { getEpisodeToAirId, getInProduction, getUSNetwork, getUSRating } from '../utils/contentUtility';
@@ -12,7 +11,7 @@ import { filterUSOrEnglishShows } from '../utils/usSearchFilter';
 import { getUSWatchProviders } from '../utils/watchProvidersUtility';
 import { CacheService } from './cacheService';
 import { errorService } from './errorService';
-import { getSocketInstance } from './socketService';
+import { socketService } from './socketService';
 import { getTMDBService } from './tmdbService';
 
 /**
@@ -256,37 +255,10 @@ export class ShowService {
         await new Promise((resolve) => setTimeout(resolve, 200));
       }
 
-      this.notifyShowDataLoaded(profileId, showId);
+      const loadedShow = await Show.getShowForProfile(profileId, showId);
+      await socketService.notifyShowDataLoaded(profileId, showId, loadedShow);
     } catch (error) {
       cliLogger.error('Error fetching seasons and episodes:', error);
-    }
-  }
-
-  /**
-   * Notifies the client that show data has been fully loaded via WebSockets
-   *
-   * @param profileId - ID of the profile that favorited the show
-   * @param showId - ID of the show in the database
-   */
-  private async notifyShowDataLoaded(profileId: string, showId: number): Promise<void> {
-    try {
-      const io = getSocketInstance();
-      if (!io) return;
-
-      const account_id = await Account.findAccountIdByProfileId(profileId);
-      const loadedShow = await Show.getShowForProfile(profileId, showId);
-
-      const sockets = Array.from(io.sockets.sockets.values());
-      const userSocket = sockets.find((socket) => socket.data.accountId === account_id);
-
-      if (userSocket) {
-        userSocket.emit('updateShowFavorite', {
-          message: 'Show data has been fully loaded',
-          show: loadedShow,
-        });
-      }
-    } catch (error) {
-      cliLogger.error('Error notifying show data loaded:', error);
     }
   }
 

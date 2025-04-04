@@ -19,7 +19,7 @@ import seasonsRouter from './routes/seasonsRouter';
 import showsRouter from './routes/showsRouter';
 import statisticsRouter from './routes/statisticsRouter';
 import { initScheduledJobs, shutdownJobs } from './services/scheduledUpdatesService';
-import { setSocketInstance } from './services/socketService';
+import { socketService } from './services/socketService';
 import { loadStreamingService } from './utils/watchProvidersUtility';
 import { getDbPool } from '@utils/db';
 import bodyParser from 'body-parser';
@@ -117,15 +117,13 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 const server = https.createServer(credentials, app);
-export const io = new Server(server, {
+const io = new Server(server, {
   cors: {
     origin: '*',
     methods: ['GET', 'POST'],
     credentials: true,
   },
 });
-
-setSocketInstance(io);
 
 io.use(async (socket, next) => {
   try {
@@ -149,21 +147,8 @@ io.use(async (socket, next) => {
   }
 });
 
-io.on('connection', (socket) => {
-  cliLogger.info(`Client connected: ${socket.data.email} - ${socket.data.userId}`);
-
-  socket.on('disconnect', () => {
-    cliLogger.info(`Client disconnected: ${socket.data.email} - ${socket.data.userId}`);
-  });
-});
-
-function notifyOnShowsUpdate() {
-  io.emit('showsUpdate', { message: 'Show updates made!' });
-}
-
-function notifyOnMoviesUpdate() {
-  io.emit('moviesUpdate', { message: 'Movie updates made!' });
-}
+// Initialize the socket service with our socket.io instance
+socketService.initialize(io);
 
 const startServer = async () => {
   try {
@@ -171,7 +156,10 @@ const startServer = async () => {
     await loadStreamingService();
     cliLogger.info('Data fetched and cached successfully.');
 
-    initScheduledJobs(notifyOnShowsUpdate, notifyOnMoviesUpdate);
+    initScheduledJobs(
+      () => socketService.notifyShowsUpdate(),
+      () => socketService.notifyMoviesUpdate(),
+    );
 
     server.listen(port, () => {
       cliLogger.info(`Server is running on https://localhost:${port}`);

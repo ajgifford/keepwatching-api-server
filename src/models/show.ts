@@ -5,9 +5,6 @@ import { getDbPool } from '../utils/db';
 import Season from './season';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { PoolConnection } from 'mysql2/promise';
-import NodeCache from 'node-cache';
-
-const showCache = new NodeCache({ stdTTL: 900 });
 
 /**
  * Represents a TV show with comprehensive metadata and watch status tracking
@@ -707,17 +704,9 @@ class Show {
    */
   static async getShowForProfile(profileId: string, showId: number): Promise<ProfileShow> {
     try {
-      const cacheKey = `profile_${profileId}_show_${showId}`;
-      const cachedShow = showCache.get<ProfileShow>(cacheKey);
-      if (cachedShow) {
-        return cachedShow;
-      }
-
       const query = 'SELECT * FROM profile_shows where profile_id = ? AND show_id = ?';
       const [shows] = await getDbPool().execute<RowDataPacket[]>(query, [Number(profileId), showId]);
       const result = this.transformRow(shows[0]);
-
-      showCache.set(cacheKey, result);
 
       return result;
     } catch (error) {
