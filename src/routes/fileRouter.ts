@@ -6,7 +6,13 @@ import express from 'express';
 
 const router = express.Router();
 
-router.post('/api/v1/upload/accounts/:accountId', validateSchema(accountIdParamSchema, 'params'), uploadAccountImage);
+router.post(
+  '/api/v1/upload/accounts/:accountId',
+  validateSchema(accountIdParamSchema, 'params'),
+  authorizeAccountAccess,
+  uploadAccountImage,
+);
+
 router.post(
   '/api/v1/upload/accounts/:accountId/profiles/:profileId',
   validateSchema(accountAndProfileIdsParamSchema, 'params'),
