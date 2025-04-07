@@ -20,7 +20,7 @@ const router = express.Router();
 
 router.put(
   '/api/v1/accounts/:accountId',
-  validateSchema(accountUpdateSchema, 'params'),
+  validateSchema(accountIdParamSchema, 'params'),
   authorizeAccountAccess,
   validateRequest(accountUpdateSchema),
   editAccount,
