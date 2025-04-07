@@ -205,7 +205,7 @@ export class AccountService {
       return {
         id: updatedProfile.id,
         name: updatedProfile.name,
-        image: getProfileImage(updatedProfile.image, updateProfileName.name),
+        image: getProfileImage(updatedProfile.image, updatedProfile.name),
       };
     } catch (error) {
       throw errorService.handleError(error, `editProfile(${profileId})`);
