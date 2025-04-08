@@ -1,4 +1,4 @@
-import { dismissNotification, getNotificationsForAccount } from '@db/notificationDb';
+import * as notificationsDb from '@db/notificationsDb';
 import { getDbPool } from '@utils/db';
 import { ResultSetHeader } from 'mysql2';
 
@@ -28,7 +28,7 @@ describe('notificationDb', () => {
       ];
       mockPool.execute.mockResolvedValue([mockRows]);
 
-      const notifications = await getNotificationsForAccount(1);
+      const notifications = await notificationsDb.getNotificationsForAccount(1);
       expect(mockPool.execute).toHaveBeenCalledTimes(1);
       expect(mockPool.execute).toHaveBeenCalledWith(
         'SELECT n.notification_id, n.message, n.start_date, n.end_date FROM notifications n JOIN account_notifications an ON n.notification_id = an.notification_id WHERE an.account_id = ? AND an.dismissed = 0 AND NOW() BETWEEN n.start_date AND n.end_date;',
@@ -41,7 +41,7 @@ describe('notificationDb', () => {
     test('get no notifications for account 2', async () => {
       mockPool.execute.mockResolvedValue([[]]);
 
-      const notifications = await getNotificationsForAccount(2);
+      const notifications = await notificationsDb.getNotificationsForAccount(2);
       expect(mockPool.execute).toHaveBeenCalledTimes(1);
       expect(mockPool.execute).toHaveBeenCalledWith(
         'SELECT n.notification_id, n.message, n.start_date, n.end_date FROM notifications n JOIN account_notifications an ON n.notification_id = an.notification_id WHERE an.account_id = ? AND an.dismissed = 0 AND NOW() BETWEEN n.start_date AND n.end_date;',
@@ -55,13 +55,13 @@ describe('notificationDb', () => {
       const mockError = new Error('DB connection failed');
       mockPool.execute.mockRejectedValue(mockError);
 
-      await expect(getNotificationsForAccount(1)).rejects.toThrow('DB connection failed');
+      await expect(notificationsDb.getNotificationsForAccount(1)).rejects.toThrow('DB connection failed');
     });
 
     test('should throw error with default message when getting notifications fails', async () => {
       mockPool.execute.mockRejectedValue({});
 
-      await expect(getNotificationsForAccount(1)).rejects.toThrow(
+      await expect(notificationsDb.getNotificationsForAccount(1)).rejects.toThrow(
         'Unknown database error getting account notifications',
       );
     });
@@ -71,7 +71,7 @@ describe('notificationDb', () => {
     test('notification dismissed', async () => {
       mockPool.execute.mockResolvedValue([{ affectedRows: 1 } as ResultSetHeader]);
 
-      const updated = await dismissNotification(1, 1);
+      const updated = await notificationsDb.dismissNotification(1, 1);
 
       expect(mockPool.execute).toHaveBeenCalledTimes(1);
       expect(mockPool.execute).toHaveBeenCalledWith(
@@ -84,7 +84,7 @@ describe('notificationDb', () => {
     test('notification not dismissed', async () => {
       mockPool.execute.mockResolvedValueOnce([{ affectedRows: 0 } as ResultSetHeader]);
 
-      const updated = await dismissNotification(2, 1);
+      const updated = await notificationsDb.dismissNotification(2, 1);
       expect(mockPool.execute).toHaveBeenCalledTimes(1);
       expect(mockPool.execute).toHaveBeenCalledWith(
         'UPDATE account_notifications SET dismissed = 1 WHERE notification_id = ? AND account_id = ?;',
@@ -97,13 +97,15 @@ describe('notificationDb', () => {
       const mockError = new Error('DB connection failed');
       mockPool.execute.mockRejectedValue(mockError);
 
-      await expect(dismissNotification(1, 1)).rejects.toThrow('DB connection failed');
+      await expect(notificationsDb.dismissNotification(1, 1)).rejects.toThrow('DB connection failed');
     });
 
     test('should throw error with default message dismissing a notification fails', async () => {
       mockPool.execute.mockRejectedValue({});
 
-      await expect(dismissNotification(1, 1)).rejects.toThrow('Unknown database error dismissing a notification');
+      await expect(notificationsDb.dismissNotification(1, 1)).rejects.toThrow(
+        'Unknown database error dismissing a notification',
+      );
     });
   });
 });
