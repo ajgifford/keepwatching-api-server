@@ -1,5 +1,5 @@
 import { PROFILE_KEYS } from '../constants/cacheKeys';
-import { getAllProfilesByAccountId } from '../db/profileDb';
+import * as profilesDb from '../db/profilesDb';
 import { BadRequestError, NotFoundError } from '../middleware/errorMiddleware';
 import Movie from '../models/movie';
 import { getUSMPARating } from '../utils/contentUtility';
@@ -30,7 +30,7 @@ export class MoviesService {
    * Invalidate all caches related to an account by running through it's profiles
    */
   public async invalidateAccountCache(accountId: number): Promise<void> {
-    const profiles = await getAllProfilesByAccountId(accountId);
+    const profiles = await profilesDb.getAllProfilesByAccountId(accountId);
     for (const profile of profiles) {
       this.invalidateProfileMovieCache(String(profile.id!));
     }

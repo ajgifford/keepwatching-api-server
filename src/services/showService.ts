@@ -1,6 +1,6 @@
 import { PROFILE_KEYS, SHOW_KEYS } from '../constants/cacheKeys';
 import * as episodesDb from '../db/episodesDb';
-import { getAllProfilesByAccountId } from '../db/profileDb';
+import * as profilesDb from '../db/profilesDb';
 import * as seasonsDb from '../db/seasonsDb';
 import { cliLogger } from '../logger/logger';
 import { BadRequestError } from '../middleware/errorMiddleware';
@@ -36,7 +36,7 @@ export class ShowService {
    * Invalidate all caches related to an account by running through it's profiles
    */
   public async invalidateAccountCache(accountId: number): Promise<void> {
-    const profiles = await getAllProfilesByAccountId(accountId);
+    const profiles = await profilesDb.getAllProfilesByAccountId(accountId);
     for (const profile of profiles) {
       this.invalidateProfileCache(String(profile.id!));
     }

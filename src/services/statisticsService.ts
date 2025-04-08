@@ -1,5 +1,5 @@
 import { ACCOUNT_KEYS, PROFILE_KEYS } from '../constants/cacheKeys';
-import { getAllProfilesByAccountId } from '../db/profileDb';
+import * as profilesDb from '../db/profilesDb';
 import { BadRequestError } from '../middleware/errorMiddleware';
 import { CacheService } from './cacheService';
 import { errorService } from './errorService';
@@ -88,7 +88,7 @@ export class StatisticsService {
       return await this.cache.getOrSet(
         ACCOUNT_KEYS.statistics(accountId),
         async () => {
-          const profiles = await getAllProfilesByAccountId(accountId);
+          const profiles = await profilesDb.getAllProfilesByAccountId(accountId);
           if (!profiles || profiles.length === 0) {
             throw new BadRequestError(`No profiles found for account ${accountId}`);
           }

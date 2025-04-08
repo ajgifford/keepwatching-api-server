@@ -1,5 +1,5 @@
 import { UPLOADS_DIR } from '..';
-import { findProfileById, updateProfileImage } from '../db/profileDb';
+import * as profilesDb from '../db/profilesDb';
 import { httpLogger } from '../logger/logger';
 import { BadRequestError } from '../middleware/errorMiddleware';
 import uploadFileMiddleware from '../middleware/uploadMiddleware';
@@ -69,9 +69,9 @@ export const uploadProfileImage = asyncHandler(async (req: Request, res: Respons
       res.status(400).send({ message: 'Please upload a file!' });
     } else {
       const profileImage = req.file.filename;
-      const profile = await findProfileById(Number(profileId));
+      const profile = await profilesDb.findProfileById(Number(profileId));
       if (profile) {
-        const updatedProfile = await updateProfileImage(profile, profileImage);
+        const updatedProfile = await profilesDb.updateProfileImage(profile, profileImage);
         if (updatedProfile) {
           res.status(200).send({
             message: `Uploaded the file successfully: ${profileImage}`,

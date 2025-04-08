@@ -1,12 +1,5 @@
 import { ACCOUNT_KEYS, PROFILE_KEYS } from '../constants/cacheKeys';
-import {
-  createProfile,
-  deleteProfile,
-  findProfileById,
-  getAllProfilesByAccountId,
-  saveProfile,
-  updateProfileName,
-} from '../db/profileDb';
+import * as profilesDb from '../db/profilesDb';
 import { BadRequestError, NotFoundError } from '../middleware/errorMiddleware';
 import Account from '../models/account';
 import Movie from '../models/movie';
@@ -40,7 +33,7 @@ export class AccountService {
       return await this.cache.getOrSet(
         ACCOUNT_KEYS.profiles(accountId),
         async () => {
-          const profiles = await getAllProfilesByAccountId(accountId);
+          const profiles = await profilesDb.getAllProfilesByAccountId(accountId);
           if (!profiles) {
             throw new BadRequestError('Failed to get all profiles for an account');
           }
@@ -70,7 +63,7 @@ export class AccountService {
       return await this.cache.getOrSet(
         PROFILE_KEYS.complete(profileId),
         async () => {
-          const profile = await findProfileById(profileId);
+          const profile = await profilesDb.findProfileById(profileId);
           if (!profile) {
             throw new NotFoundError('Profile not found');
           }
@@ -159,8 +152,8 @@ export class AccountService {
    */
   public async addProfile(accountId: number, name: string) {
     try {
-      const profile = createProfile(accountId, name);
-      const savedProfile = await saveProfile(profile);
+      const profile = profilesDb.createProfile(accountId, name);
+      const savedProfile = await profilesDb.saveProfile(profile);
 
       if (!savedProfile.id) {
         throw new BadRequestError('Failed to add a profile');
@@ -189,12 +182,12 @@ export class AccountService {
    */
   public async editProfileName(profileId: number, name: string) {
     try {
-      const profile = await findProfileById(profileId);
+      const profile = await profilesDb.findProfileById(profileId);
       if (!profile) {
         throw new NotFoundError('Profile not found');
       }
 
-      const updatedProfile = await updateProfileName(profile, name);
+      const updatedProfile = await profilesDb.updateProfileName(profile, name);
       if (!updatedProfile) {
         throw new BadRequestError('Failed to update profile');
       }
@@ -225,12 +218,12 @@ export class AccountService {
    */
   public async deleteProfile(profileId: number, accountId: number) {
     try {
-      const profile = await findProfileById(profileId);
+      const profile = await profilesDb.findProfileById(profileId);
       if (!profile) {
         throw new NotFoundError('Profile not found');
       }
 
-      const deleted = await deleteProfile(profile);
+      const deleted = await profilesDb.deleteProfile(profile);
       if (!deleted) {
         throw new BadRequestError('Failed to delete profile');
       }
