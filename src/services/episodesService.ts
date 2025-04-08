@@ -1,6 +1,6 @@
-import * as episodeDb from '../db/episodesDb';
+import * as episodesDb from '../db/episodesDb';
+import * as seasonsDb from '../db/seasonsDb';
 import { BadRequestError } from '../middleware/errorMiddleware';
-import Season from '../models/season';
 import Show from '../models/show';
 import { errorService } from './errorService';
 import { showService } from './showService';
@@ -20,7 +20,7 @@ export class EpisodesService {
    */
   public async updateEpisodeWatchStatus(profileId: string, episodeId: number, status: string) {
     try {
-      const success = await episodeDb.updateWatchStatus(profileId, episodeId, status);
+      const success = await episodesDb.updateWatchStatus(profileId, episodeId, status);
       if (!success) {
         throw new BadRequestError('No episode watch status was updated');
       }
@@ -55,13 +55,13 @@ export class EpisodesService {
     status: string,
   ) {
     try {
-      const success = await episodeDb.updateWatchStatus(profileId, episodeId, status);
+      const success = await episodesDb.updateWatchStatus(profileId, episodeId, status);
       if (!success) {
         throw new BadRequestError('No next episode watch status was updated');
       }
 
       // Update related season and show statuses based on episode change
-      await Season.updateWatchStatusByEpisode(profileId, seasonId);
+      await seasonsDb.updateWatchStatusByEpisode(profileId, seasonId);
       await Show.updateWatchStatusBySeason(profileId, showId);
 
       // Invalidate cache for the profile to ensure fresh data
@@ -87,7 +87,7 @@ export class EpisodesService {
    */
   public async getEpisodesForSeason(profileId: string, seasonId: number) {
     try {
-      return await episodeDb.getEpisodesForSeason(profileId, seasonId);
+      return await episodesDb.getEpisodesForSeason(profileId, seasonId);
     } catch (error) {
       throw errorService.handleError(error, `getEpisodesForSeason(${profileId}, ${seasonId})`);
     }
@@ -101,7 +101,7 @@ export class EpisodesService {
    */
   public async getUpcomingEpisodesForProfile(profileId: string) {
     try {
-      return await episodeDb.getUpcomingEpisodesForProfile(profileId);
+      return await episodesDb.getUpcomingEpisodesForProfile(profileId);
     } catch (error) {
       throw errorService.handleError(error, `getUpcomingEpisodesForProfile(${profileId})`);
     }
@@ -115,7 +115,7 @@ export class EpisodesService {
    */
   public async getRecentEpisodesForProfile(profileId: string) {
     try {
-      return await episodeDb.getRecentEpisodesForProfile(profileId);
+      return await episodesDb.getRecentEpisodesForProfile(profileId);
     } catch (error) {
       throw errorService.handleError(error, `getRecentEpisodesForProfile(${profileId})`);
     }

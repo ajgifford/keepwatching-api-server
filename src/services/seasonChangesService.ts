@@ -1,6 +1,6 @@
 import * as episodesDb from '../db/episodesDb';
+import * as seasonsDb from '../db/seasonsDb';
 import { cliLogger } from '../logger/logger';
-import Season from '../models/season';
 import { ChangeItem, ContentUpdates } from '../types/contentTypes';
 import { filterUniqueSeasonIds, sleep } from '../utils/changesUtility';
 import { checkSeasonForEpisodeChanges } from './episodeChangesService';
@@ -41,7 +41,7 @@ export async function processSeasonChanges(
       }
 
       // Create Season object with updated data
-      const updatedSeason = new Season(
+      const updatedSeason = seasonsDb.createSeason(
         content.id,
         seasonInfo.id,
         seasonInfo.name,
@@ -53,11 +53,11 @@ export async function processSeasonChanges(
       );
 
       // Update the season in our database
-      await updatedSeason.update();
+      await seasonsDb.updateSeason(updatedSeason);
 
       // Add this season to all profiles that have the show
       for (const profileId of profileIds) {
-        await updatedSeason.saveFavorite(profileId);
+        await seasonsDb.saveFavorite(profileId, updatedSeason.id!);
       }
 
       // Check if there are episode changes for this season

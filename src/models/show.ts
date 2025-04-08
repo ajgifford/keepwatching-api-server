@@ -1,8 +1,8 @@
+import * as seasonsDb from '../db/seasonsDb';
 import { DatabaseError } from '../middleware/errorMiddleware';
 import { ContentUpdates } from '../types/contentTypes';
 import { ContinueWatchingShow, NextEpisode, ProfileShow, ProfileShowWithSeasons } from '../types/showTypes';
 import { getDbPool } from '../utils/db';
-import Season from './season';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { PoolConnection } from 'mysql2/promise';
 
@@ -766,7 +766,7 @@ class Show {
       }
 
       const show = this.transformRow(rows[0]) as ProfileShowWithSeasons;
-      const seasons = await Season.getSeasonsForShow(profileId, show_id);
+      const seasons = await seasonsDb.getSeasonsForShow(profileId, show_id);
       show.seasons = seasons;
 
       return show;

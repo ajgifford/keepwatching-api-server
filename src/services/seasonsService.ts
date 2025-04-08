@@ -1,5 +1,5 @@
+import * as seasonsDb from '../db/seasonsDb';
 import { BadRequestError } from '../middleware/errorMiddleware';
-import Season from '../models/season';
 import Show from '../models/show';
 import { errorService } from './errorService';
 import { showService } from './showService';
@@ -26,14 +26,14 @@ export class SeasonsService {
   ) {
     try {
       const success = recursive
-        ? await Season.updateAllWatchStatuses(profileId, seasonId, status)
-        : await Season.updateWatchStatus(profileId, seasonId, status);
+        ? await seasonsDb.updateAllWatchStatuses(profileId, seasonId, status)
+        : await seasonsDb.updateWatchStatus(profileId, seasonId, status);
 
       if (!success) {
         throw new BadRequestError('No season watch status was updated');
       }
 
-      const showId = await Season.getShowIdForSeason(seasonId);
+      const showId = await seasonsDb.getShowIdForSeason(seasonId);
       if (showId) {
         await Show.updateWatchStatusBySeason(profileId, showId);
 
@@ -58,7 +58,7 @@ export class SeasonsService {
    */
   public async getSeasonsForShow(profileId: string, showId: string) {
     try {
-      return await Season.getSeasonsForShow(profileId, showId);
+      return await seasonsDb.getSeasonsForShow(profileId, showId);
     } catch (error) {
       throw errorService.handleError(error, `getSeasonsForShow(${profileId}, ${showId})`);
     }
@@ -73,12 +73,12 @@ export class SeasonsService {
    */
   public async updateSeasonWatchStatusForNewEpisodes(profileId: string, seasonId: number): Promise<void> {
     try {
-      const seasonWatchStatus = await Season.getWatchStatus(profileId, seasonId);
+      const seasonWatchStatus = await seasonsDb.getWatchStatus(profileId, seasonId);
 
       if (seasonWatchStatus === 'WATCHED') {
-        await Season.updateWatchStatus(profileId, seasonId, 'WATCHING');
+        await seasonsDb.updateWatchStatus(profileId, seasonId, 'WATCHING');
 
-        const seasonShowId = await Season.getShowIdForSeason(seasonId);
+        const seasonShowId = await seasonsDb.getShowIdForSeason(seasonId);
         if (seasonShowId) {
           const showWatchStatus = await Show.getWatchStatus(profileId, seasonShowId);
           if (showWatchStatus === 'WATCHED') {

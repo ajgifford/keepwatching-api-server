@@ -1,9 +1,9 @@
 import { PROFILE_KEYS, SHOW_KEYS } from '../constants/cacheKeys';
 import * as episodesDb from '../db/episodesDb';
 import { getAllProfilesByAccountId } from '../db/profileDb';
+import * as seasonsDb from '../db/seasonsDb';
 import { cliLogger } from '../logger/logger';
 import { BadRequestError } from '../middleware/errorMiddleware';
-import Season from '../models/season';
 import Show from '../models/show';
 import { getEpisodeToAirId, getInProduction, getUSNetwork, getUSRating } from '../utils/contentUtility';
 import { generateGenreArrayFromIds } from '../utils/genreUtility';
@@ -220,7 +220,7 @@ export class ShowService {
       for (const responseSeason of validSeasons) {
         const responseData = await tmdbService.getSeasonDetails(show.id, responseSeason.season_number);
 
-        const season = new Season(
+        const season = seasonsDb.createSeason(
           showId,
           responseSeason.id,
           responseSeason.name,
@@ -230,8 +230,8 @@ export class ShowService {
           responseSeason.poster_path,
           responseSeason.episode_count,
         );
-        await season.save();
-        await season.saveFavorite(Number(profileId));
+        await seasonsDb.saveSeason(season);
+        await seasonsDb.saveFavorite(Number(profileId), season.id!);
 
         for (const responseEpisode of responseData.episodes) {
           const episode = await episodesDb.saveEpisode(
@@ -508,7 +508,7 @@ export class ShowService {
 
           const showsProgress = await Promise.all(
             shows.map(async (show) => {
-              const seasons = await Season.getSeasonsForShow(profileId, show.show_id.toString());
+              const seasons = await seasonsDb.getSeasonsForShow(profileId, show.show_id.toString());
 
               const showEpisodeCount = seasons.reduce((sum, season) => sum + season.episodes.length, 0);
               const showWatchedCount = seasons.reduce((sum, season) => {
