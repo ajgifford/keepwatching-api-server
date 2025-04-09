@@ -1,7 +1,7 @@
 import { ACCOUNT_KEYS, PROFILE_KEYS } from '../constants/cacheKeys';
+import * as accountsDb from '../db/accountsDb';
 import * as profilesDb from '../db/profilesDb';
 import { BadRequestError, NotFoundError } from '../middleware/errorMiddleware';
-import Account from '../models/account';
 import Movie from '../models/movie';
 import Show from '../models/show';
 import { getAccountImage, getProfileImage } from '../utils/imageUtility';
@@ -120,21 +120,21 @@ export class AccountService {
    */
   public async editAccount(accountId: number, name: string, defaultProfileId: number) {
     try {
-      const account = await Account.findById(accountId);
+      const account = await accountsDb.findAccountById(accountId);
       if (!account) {
         throw new NotFoundError('Account not found');
       }
 
-      const updatedAccount = await account.editAccount(name, defaultProfileId);
+      const updatedAccount = await accountsDb.editAccount(accountId, name, defaultProfileId);
       if (!updatedAccount) {
         throw new BadRequestError('Failed to update the account');
       }
 
       return {
-        id: updatedAccount.account_id,
-        name: updatedAccount.account_name,
+        id: updatedAccount.id,
+        name: updatedAccount.name,
         email: updatedAccount.email,
-        image: getAccountImage(updatedAccount),
+        image: getAccountImage(updatedAccount.image, updatedAccount.name),
         default_profile_id: updatedAccount.default_profile_id,
       };
     } catch (error) {

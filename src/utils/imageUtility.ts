@@ -1,5 +1,3 @@
-import Account from '../models/account';
-
 export function buildTMDBImagePath(path: string, size: string = 'w185'): string {
   return `https://image.tmdb.org/t/p/${size}${path}`;
 }
@@ -25,20 +23,9 @@ export function buildProfileImageName(id: string, mimetype: string) {
   return `profileImage_${id}_${Date.now()}.${extension}`;
 }
 
-export function buildUploadedImageURL(image: string, folder: string) {
-  return `${process.env.KW_HOST}/uploads/${folder}/${image}`;
-}
-
-export function getAccountImage(account: Account) {
-  if (account.image) {
-    return buildUploadedImageURL(account.image, 'accounts');
-  }
-  return buildDefaultImagePath(account.account_name);
-}
-
-export function getPhotoForGoogleAccount(name: string, photoURL: string | undefined, account: Account) {
-  if (account.image) {
-    return buildUploadedImageURL(account.image, 'accounts');
+export function getPhotoForGoogleAccount(name: string, photoURL: string | undefined, image: string | undefined) {
+  if (image) {
+    return buildUploadedImageURL(image, 'accounts');
   }
   if (photoURL) {
     return photoURL;
@@ -46,9 +33,21 @@ export function getPhotoForGoogleAccount(name: string, photoURL: string | undefi
   return buildDefaultImagePath(name);
 }
 
+export function getAccountImage(image: string | undefined, name: string) {
+  return getImage(image, name, 'accounts');
+}
+
 export function getProfileImage(image: string | undefined, name: string) {
+  return getImage(image, name, 'profiles');
+}
+
+function getImage(image: string | undefined, name: string, folder: string) {
   if (image) {
-    return buildUploadedImageURL(image, 'profiles');
+    return buildUploadedImageURL(image, folder);
   }
   return buildDefaultImagePath(name);
+}
+
+function buildUploadedImageURL(image: string, folder: string) {
+  return `${process.env.KW_HOST}/uploads/${folder}/${image}`;
 }

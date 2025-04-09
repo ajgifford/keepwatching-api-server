@@ -1,9 +1,9 @@
 import { UPLOADS_DIR } from '..';
+import * as accountsDb from '../db/accountsDb';
 import * as profilesDb from '../db/profilesDb';
 import { httpLogger } from '../logger/logger';
 import { BadRequestError } from '../middleware/errorMiddleware';
 import uploadFileMiddleware from '../middleware/uploadMiddleware';
-import Account from '../models/account';
 import { AccountAndProfileIdsParams, AccountIdParam } from '../schema/accountSchema';
 import { CacheService } from '../services/cacheService';
 import { getAccountImage, getProfileImage } from '../utils/imageUtility';
@@ -21,17 +21,17 @@ export const uploadAccountImage = asyncHandler(async (req: Request, res: Respons
       res.status(400).send({ message: 'Please upload a file!' });
     } else {
       const accountImage = req.file.filename;
-      const account = await Account.findById(Number(accountId));
+      const account = await accountsDb.findAccountById(Number(accountId));
       if (account) {
-        const updatedAccount = await account.updateAccountImage(accountImage);
+        const updatedAccount = await accountsDb.updateAccountImage(Number(accountId), accountImage);
         if (updatedAccount) {
           res.status(200).send({
             message: `Uploaded the file successfully: ${accountImage}`,
             result: {
-              id: account.account_id,
-              name: account.account_name,
+              id: account.id,
+              name: account.name,
               email: account.email,
-              image: getAccountImage(updatedAccount),
+              image: getAccountImage(updatedAccount.image, updatedAccount.name),
               default_profile_id: account.default_profile_id,
             },
           });

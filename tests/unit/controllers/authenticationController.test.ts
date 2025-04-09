@@ -11,11 +11,12 @@ describe('AuthenticationController', () => {
   let next: jest.Mock;
 
   const mockAccount = {
-    account_id: 1,
-    account_name: 'Test User',
+    id: 1,
+    name: 'Test User',
     email: 'test@example.com',
     uid: 'test-uid-123',
     default_profile_id: 101,
+    image: 'account-image.png',
   };
 
   beforeEach(() => {
@@ -50,7 +51,7 @@ describe('AuthenticationController', () => {
       await register(req, res, next);
 
       expect(authenticationService.register).toHaveBeenCalledWith('Test User', 'test@example.com', 'test-uid-123');
-      expect(getAccountImage).toHaveBeenCalledWith(mockAccount);
+      expect(getAccountImage).toHaveBeenCalledWith('account-image.png', 'Test User');
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Account registered successfully',
@@ -96,7 +97,7 @@ describe('AuthenticationController', () => {
       await login(req, res, next);
 
       expect(authenticationService.login).toHaveBeenCalledWith('test-uid-123');
-      expect(getAccountImage).toHaveBeenCalledWith(mockAccount);
+      expect(getAccountImage).toHaveBeenCalledWith('account-image.png', 'Test User');
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Login successful',
@@ -140,7 +141,7 @@ describe('AuthenticationController', () => {
 
       const googleAccount = {
         ...mockAccount,
-        account_name: 'Google User',
+        name: 'Google User',
         email: 'google@example.com',
         uid: 'google-uid-123',
       };
@@ -162,7 +163,7 @@ describe('AuthenticationController', () => {
       expect(getPhotoForGoogleAccount).toHaveBeenCalledWith(
         'Google User',
         'https://example.com/photo.jpg',
-        googleAccount,
+        'account-image.png',
       );
 
       expect(res.status).toHaveBeenCalledWith(201);
@@ -191,7 +192,7 @@ describe('AuthenticationController', () => {
 
       const googleAccount = {
         ...mockAccount,
-        account_name: 'Google User',
+        name: 'Google User',
         email: 'google@example.com',
         uid: 'google-uid-123',
       };
@@ -213,7 +214,7 @@ describe('AuthenticationController', () => {
       expect(getPhotoForGoogleAccount).toHaveBeenCalledWith(
         'Google User',
         'https://example.com/photo.jpg',
-        googleAccount,
+        'account-image.png',
       );
 
       expect(res.status).toHaveBeenCalledWith(200);

@@ -1,6 +1,7 @@
+import * as accountsDb from '../db/accountsDb';
+import { Account } from '../db/accountsDb';
 import { cliLogger, httpLogger } from '../logger/logger';
 import { ForbiddenError } from '../middleware/errorMiddleware';
-import Account from '../models/account';
 import { CacheService } from './cacheService';
 import { errorService } from './errorService';
 import { socketService } from './socketService';
@@ -37,7 +38,7 @@ export class AuthenticationService {
    */
   public async login(uid: string): Promise<Account> {
     try {
-      const account = await Account.findByUID(uid);
+      const account = await accountsDb.findAccountByUID(uid);
       errorService.assertExists(account, 'Account', uid);
 
       httpLogger.info(`User logged in: ${account.email}`, { userId: account.uid });
@@ -60,14 +61,14 @@ export class AuthenticationService {
    */
   public async register(name: string, email: string, uid: string): Promise<Account> {
     try {
-      const existingAccountByEmail = await Account.findByEmail(email);
+      const existingAccountByEmail = await accountsDb.findAccountByEmail(email);
       errorService.assertNotExists(existingAccountByEmail, 'Account', 'email', email);
 
-      const existingAccountByUID = await Account.findByUID(uid);
+      const existingAccountByUID = await accountsDb.findAccountByUID(uid);
       errorService.assertNotExists(existingAccountByUID, 'Account', 'uid', uid);
 
-      const account = new Account(name, email, uid);
-      await account.register();
+      const account = accountsDb.createAccount(name, email, uid);
+      await accountsDb.registerAccount(account);
 
       httpLogger.info(`New user registered: ${email}`, { userId: uid });
       cliLogger.info(`New account created: ${email}`);
@@ -89,7 +90,7 @@ export class AuthenticationService {
    */
   public async googleLogin(name: string, email: string, uid: string): Promise<GoogleLoginResponse> {
     try {
-      const existingAccount = await Account.findByUID(uid);
+      const existingAccount = await accountsDb.findAccountByUID(uid);
 
       if (existingAccount) {
         httpLogger.info(`User logged in via Google: ${existingAccount.email}`, { userId: existingAccount.uid });
@@ -101,15 +102,15 @@ export class AuthenticationService {
         };
       }
 
-      const existingEmailAccount = await Account.findByEmail(email);
+      const existingEmailAccount = await accountsDb.findAccountByEmail(email);
       if (existingEmailAccount) {
         throw new ForbiddenError(
           `An account with email ${email} already exists but is not linked to this Google account`,
         );
       }
 
-      const newAccount = new Account(name, email, uid);
-      await newAccount.register();
+      const newAccount = accountsDb.createAccount(name, email, uid);
+      await accountsDb.registerAccount(newAccount);
 
       httpLogger.info(`New user registered via Google: ${email}`, { userId: uid });
       cliLogger.info(`Google authentication: new account created for ${email}`);

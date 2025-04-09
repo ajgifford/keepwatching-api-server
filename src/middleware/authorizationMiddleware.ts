@@ -1,4 +1,4 @@
-import Account from '../models/account';
+import * as accountsDb from '../db/accountsDb';
 import { ForbiddenError, UnauthorizedError } from './errorMiddleware';
 import { NextFunction, Request, Response } from 'express';
 
@@ -12,7 +12,7 @@ export const authorizeAccountAccess = async (req: Request, res: Response, next: 
       return;
     }
 
-    const account = await Account.findById(Number(accountId));
+    const account = await accountsDb.findAccountById(Number(accountId));
 
     if (!account || account.uid !== authenticatedUid) {
       next(new ForbiddenError('You do not have permission to access this account'));
@@ -20,8 +20,8 @@ export const authorizeAccountAccess = async (req: Request, res: Response, next: 
     }
 
     if (profileId) {
-      const profilesAccountId = await Account.findAccountIdByProfileId(profileId);
-      if (!profilesAccountId || account.account_id !== profilesAccountId) {
+      const profilesAccountId = await accountsDb.findAccountIdByProfileId(profileId);
+      if (!profilesAccountId || account.id !== profilesAccountId) {
         next(new ForbiddenError('Access forbidden to this profile, it does not belong to the provided account'));
         return;
       }

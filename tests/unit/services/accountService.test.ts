@@ -1,6 +1,6 @@
+import * as accountsDb from '@db/accountsDb';
 import * as profilesDb from '@db/profilesDb';
 import { CustomError } from '@middleware/errorMiddleware';
-import Account from '@models/account';
 import Movie from '@models/movie';
 import Show from '@models/show';
 import { AccountService, accountService } from '@services/accountService';
@@ -12,7 +12,7 @@ import { showService } from '@services/showService';
 import { getAccountImage, getProfileImage } from '@utils/imageUtility';
 
 jest.mock('@db/profilesDb');
-jest.mock('@models/account');
+jest.mock('@db/accountsDb');
 jest.mock('@models/show');
 jest.mock('@models/movie');
 jest.mock('@services/cacheService');
@@ -193,30 +193,29 @@ describe('AccountService', () => {
 
   describe('editAccount', () => {
     const mockAccount = {
-      account_id: 123,
-      account_name: 'Original Account',
+      id: 123,
+      name: 'Original Account',
       email: 'test@example.com',
       uid: 'uid123',
       default_profile_id: 1,
-      editAccount: jest.fn(),
     };
 
     const mockUpdatedAccount = {
-      account_id: 123,
-      account_name: 'Updated Account',
+      id: 123,
+      name: 'Updated Account',
       email: 'test@example.com',
       uid: 'uid123',
       default_profile_id: 2,
     };
 
     it('should update an account successfully', async () => {
-      (Account.findById as jest.Mock).mockResolvedValue(mockAccount);
-      mockAccount.editAccount.mockResolvedValue(mockUpdatedAccount);
+      (accountsDb.findAccountById as jest.Mock).mockResolvedValue(mockAccount);
+      (accountsDb.editAccount as jest.Mock).mockResolvedValue(mockUpdatedAccount);
 
       const result = await service.editAccount(123, 'Updated Account', 2);
 
-      expect(Account.findById).toHaveBeenCalledWith(123);
-      expect(mockAccount.editAccount).toHaveBeenCalledWith('Updated Account', 2);
+      expect(accountsDb.findAccountById).toHaveBeenCalledWith(123);
+      expect(accountsDb.editAccount).toHaveBeenCalledWith(123, 'Updated Account', 2);
       expect(result).toEqual({
         id: 123,
         name: 'Updated Account',
@@ -227,25 +226,25 @@ describe('AccountService', () => {
     });
 
     it('should throw NotFoundError when account does not exist', async () => {
-      (Account.findById as jest.Mock).mockResolvedValue(null);
+      (accountsDb.findAccountById as jest.Mock).mockResolvedValue(null);
 
       await expect(service.editAccount(999, 'Test', 1)).rejects.toThrow(CustomError);
-      expect(Account.findById).toHaveBeenCalledWith(999);
+      expect(accountsDb.findAccountById).toHaveBeenCalledWith(999);
     });
 
     it('should throw BadRequestError when update fails', async () => {
-      (Account.findById as jest.Mock).mockResolvedValue(mockAccount);
-      mockAccount.editAccount.mockResolvedValue(null);
+      (accountsDb.findAccountById as jest.Mock).mockResolvedValue(mockAccount);
+      (accountsDb.editAccount as jest.Mock).mockResolvedValue(null);
 
       await expect(service.editAccount(123, 'Updated Account', 2)).rejects.toThrow(CustomError);
-      expect(Account.findById).toHaveBeenCalledWith(123);
-      expect(mockAccount.editAccount).toHaveBeenCalledWith('Updated Account', 2);
+      expect(accountsDb.findAccountById).toHaveBeenCalledWith(123);
+      expect(accountsDb.editAccount).toHaveBeenCalledWith(123, 'Updated Account', 2);
     });
 
     it('should handle database errors', async () => {
       const error = new Error('Database error');
-      (Account.findById as jest.Mock).mockResolvedValue(mockAccount);
-      mockAccount.editAccount.mockRejectedValue(error);
+      (accountsDb.findAccountById as jest.Mock).mockResolvedValue(mockAccount);
+      (accountsDb.editAccount as jest.Mock).mockRejectedValue(error);
 
       await expect(service.editAccount(123, 'Updated Account', 2)).rejects.toThrow('Database error');
       expect(errorService.handleError).toHaveBeenCalledWith(error, 'editAccount(123)');

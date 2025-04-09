@@ -33,11 +33,11 @@ export const register = asyncHandler(async (req: Request, res: Response, next: N
     res.status(201).json({
       message: 'Account registered successfully',
       result: {
-        id: account.account_id,
-        name: account.account_name,
+        id: account.id,
+        name: account.name,
         uid: account.uid,
         email: account.email,
-        image: getAccountImage(account),
+        image: getAccountImage(account.image, account.name),
         default_profile_id: account.default_profile_id,
       },
     });
@@ -65,11 +65,11 @@ export const login = asyncHandler(async (req: Request, res: Response, next: Next
     res.status(200).json({
       message: 'Login successful',
       result: {
-        id: account.account_id,
-        name: account.account_name,
+        id: account.id,
+        name: account.name,
         uid: account.uid,
         email: account.email,
-        image: getAccountImage(account),
+        image: getAccountImage(account.image, account.name),
         default_profile_id: account.default_profile_id,
       },
     });
@@ -100,11 +100,11 @@ export const googleLogin = asyncHandler(async (req: Request, res: Response, next
     res.status(statusCode).json({
       message: message,
       result: {
-        id: googleLoginResult.account.account_id,
-        name: googleLoginResult.account.account_name,
+        id: googleLoginResult.account.id,
+        name: googleLoginResult.account.name,
         uid: googleLoginResult.account.uid,
         email: googleLoginResult.account.email,
-        image: getPhotoForGoogleAccount(name, photoURL, googleLoginResult.account),
+        image: getPhotoForGoogleAccount(name, photoURL, googleLoginResult.account.image),
         default_profile_id: googleLoginResult.account.default_profile_id,
         isNewAccount: googleLoginResult.isNewAccount,
       },
