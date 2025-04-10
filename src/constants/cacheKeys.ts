@@ -29,6 +29,9 @@ export const ACCOUNT_KEYS = {
 
 // Profile keys
 export const PROFILE_KEYS = {
+  /** Gets the cache key for a specific profile data */
+  profile: (profileId: number | string) => `${CACHE_KEY_PATTERNS.PROFILE}_${profileId}`,
+
   /** Gets the cache key for profile complete data */
   complete: (profileId: number | string) => `${CACHE_KEY_PATTERNS.PROFILE}_${profileId}_complete`,
 
@@ -51,9 +54,11 @@ export const PROFILE_KEYS = {
   nextUnwatchedEpisodes: (profileId: number | string) =>
     `${CACHE_KEY_PATTERNS.PROFILE}_${profileId}_unwatched_episodes`,
 
-  /** Gets the cache key for profile recent & upcoming movies */
-  recentUpcomingMovies: (profileId: number | string) =>
-    `${CACHE_KEY_PATTERNS.PROFILE}_${profileId}_recent_upcoming_movies`,
+  /** Gets the cache key for profile recent movies */
+  recentMovies: (profileId: number | string) => `${CACHE_KEY_PATTERNS.PROFILE}_${profileId}_recent_movies`,
+
+  /** Gets the cache key for profile upcoming movies */
+  upcomingMovies: (profileId: number | string) => `${CACHE_KEY_PATTERNS.PROFILE}_${profileId}_upcoming_movies`,
 
   /** Gets the cache key for profile statistics */
   statistics: (profileId: number | string) => `${CACHE_KEY_PATTERNS.PROFILE}_${profileId}_statistics`,

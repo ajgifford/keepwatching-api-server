@@ -1,6 +1,6 @@
+import * as moviesDb from '../db/moviesDb';
 import { cliLogger, httpLogger } from '../logger/logger';
 import { ErrorMessages } from '../logger/loggerModel';
-import Movie from '../models/movie';
 import Show from '../models/show';
 import { generateDateRange, sleep } from '../utils/changesUtility';
 import { checkForMovieChanges } from './movieChangesService';
@@ -11,7 +11,7 @@ import { checkForShowChanges } from './showChangesService';
  */
 export async function updateMovies() {
   try {
-    const movies = await Movie.getMoviesForUpdates();
+    const movies = await moviesDb.getMoviesForUpdates();
     cliLogger.info(`Found ${movies.length} movies to check for updates`);
     const { currentDate, pastDate } = generateDateRange(10);
 

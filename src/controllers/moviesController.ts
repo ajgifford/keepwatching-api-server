@@ -91,7 +91,8 @@ export async function getRecentUpcomingForProfile(req: Request, res: Response, n
   try {
     const { profileId } = req.params as AccountAndProfileIdsParams;
 
-    const { recentMovies, upcomingMovies } = await moviesService.getRecentUpcomingMoviesForProfile(profileId);
+    const recentMovies = await moviesService.getRecentMoviesForProfile(profileId);
+    const upcomingMovies = await moviesService.getUpcomingMoviesForProfile(profileId);
 
     res.status(200).json({
       message: 'Successfully retrieved recent & upcoming movies for a profile',

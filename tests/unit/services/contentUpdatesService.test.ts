@@ -1,6 +1,6 @@
+import * as moviesDb from '@db/moviesDb';
 import { cliLogger, httpLogger } from '@logger/logger';
 import { ErrorMessages } from '@logger/loggerModel';
-import Movie from '@models/movie';
 import Show from '@models/show';
 import { updateMovies, updateShows } from '@services/contentUpdatesService';
 import { checkForMovieChanges } from '@services/movieChangesService';
@@ -17,9 +17,7 @@ jest.mock('@logger/logger', () => ({
   },
 }));
 
-jest.mock('@models/movie', () => ({
-  getMoviesForUpdates: jest.fn(),
-}));
+jest.mock('@db/moviesDb');
 
 jest.mock('@models/show', () => ({
   getShowsForUpdates: jest.fn(),
@@ -53,12 +51,12 @@ describe('contentUpdatesService', () => {
         { id: 1, tmdb_id: 101, title: 'Movie 1' },
         { id: 2, tmdb_id: 102, title: 'Movie 2' },
       ];
-      (Movie.getMoviesForUpdates as jest.Mock).mockResolvedValue(mockMovies);
+      (moviesDb.getMoviesForUpdates as jest.Mock).mockResolvedValue(mockMovies);
       (checkForMovieChanges as jest.Mock).mockResolvedValue(undefined);
 
       await updateMovies();
 
-      expect(Movie.getMoviesForUpdates).toHaveBeenCalledTimes(1);
+      expect(moviesDb.getMoviesForUpdates).toHaveBeenCalledTimes(1);
       expect(changesUtility.generateDateRange).toHaveBeenCalledWith(10);
       expect(cliLogger.info).toHaveBeenCalledWith('Found 2 movies to check for updates');
       expect(checkForMovieChanges).toHaveBeenCalledTimes(2);
@@ -69,7 +67,7 @@ describe('contentUpdatesService', () => {
 
     it('should handle error when fetching movies', async () => {
       const error = new Error('Database error');
-      (Movie.getMoviesForUpdates as jest.Mock).mockRejectedValue(error);
+      (moviesDb.getMoviesForUpdates as jest.Mock).mockRejectedValue(error);
 
       await expect(updateMovies()).rejects.toThrow('Database error');
       expect(cliLogger.error).toHaveBeenCalledWith('Unexpected error while checking for movie updates', error);
@@ -85,7 +83,7 @@ describe('contentUpdatesService', () => {
       ];
       const error = new Error('API error');
 
-      (Movie.getMoviesForUpdates as jest.Mock).mockResolvedValue(mockMovies);
+      (moviesDb.getMoviesForUpdates as jest.Mock).mockResolvedValue(mockMovies);
       (checkForMovieChanges as jest.Mock)
         .mockResolvedValueOnce(undefined)
         .mockRejectedValueOnce(error)
@@ -93,7 +91,7 @@ describe('contentUpdatesService', () => {
 
       await updateMovies();
 
-      expect(Movie.getMoviesForUpdates).toHaveBeenCalledTimes(1);
+      expect(moviesDb.getMoviesForUpdates).toHaveBeenCalledTimes(1);
       expect(checkForMovieChanges).toHaveBeenCalledTimes(3);
       expect(cliLogger.error).toHaveBeenCalledWith('Failed to check for changes in movie ID 2', error);
 
@@ -103,11 +101,11 @@ describe('contentUpdatesService', () => {
     });
 
     it('should handle empty movie list', async () => {
-      (Movie.getMoviesForUpdates as jest.Mock).mockResolvedValue([]);
+      (moviesDb.getMoviesForUpdates as jest.Mock).mockResolvedValue([]);
 
       await updateMovies();
 
-      expect(Movie.getMoviesForUpdates).toHaveBeenCalledTimes(1);
+      expect(moviesDb.getMoviesForUpdates).toHaveBeenCalledTimes(1);
       expect(cliLogger.info).toHaveBeenCalledWith('Found 0 movies to check for updates');
       expect(checkForMovieChanges).not.toHaveBeenCalled();
     });

@@ -1,4 +1,5 @@
 import { Change, ContentUpdates } from '../../../src/types/contentTypes';
+import * as moviesDb from '@db/moviesDb';
 import { cliLogger, httpLogger } from '@logger/logger';
 import Movie from '@models/movie';
 import { errorService } from '@services/errorService';
@@ -14,15 +15,7 @@ jest.mock('@logger/logger', () => ({
   },
 }));
 
-jest.mock('@models/movie');
-
-const MockMovie = jest.fn().mockImplementation(() => {
-  return {
-    update: jest.fn().mockResolvedValue(undefined),
-  };
-});
-
-(Movie as unknown as jest.Mock) = MockMovie;
+jest.mock('@db/moviesDb');
 
 jest.mock('@utils/contentUtility', () => ({
   getUSMPARating: jest.fn().mockReturnValue('PG-13'),
@@ -87,7 +80,7 @@ describe('movieChangesService', () => {
 
     expect(mockTMDBService.getMovieChanges).toHaveBeenCalledWith(456, pastDate, currentDate);
     expect(mockTMDBService.getMovieDetails).not.toHaveBeenCalled();
-    expect(Movie as unknown as jest.Mock).not.toHaveBeenCalled();
+    expect(moviesDb.createMovie).not.toHaveBeenCalled();
   });
 
   it('should do nothing when only unsupported changes are detected', async () => {
@@ -114,7 +107,7 @@ describe('movieChangesService', () => {
 
     expect(mockTMDBService.getMovieChanges).toHaveBeenCalledWith(456, pastDate, currentDate);
     expect(mockTMDBService.getMovieDetails).not.toHaveBeenCalled();
-    expect(Movie).not.toHaveBeenCalled();
+    expect(moviesDb.createMovie).not.toHaveBeenCalled();
   });
 
   it('should update movie when supported changes are detected', async () => {
@@ -137,17 +130,11 @@ describe('movieChangesService', () => {
 
     mockTMDBService.getMovieChanges.mockResolvedValue({ changes: supportedChanges });
 
-    const mockMovieInstance = {
-      update: jest.fn().mockResolvedValue(undefined),
-    };
-
-    (Movie as unknown as jest.Mock).mockImplementation(() => mockMovieInstance);
-
     await checkForMovieChanges(mockMovieContent, pastDate, currentDate);
 
     expect(mockTMDBService.getMovieChanges).toHaveBeenCalledWith(456, pastDate, currentDate);
     expect(mockTMDBService.getMovieDetails).toHaveBeenCalledWith(456);
-    expect(Movie as unknown as jest.Mock).toHaveBeenCalledWith(
+    expect(moviesDb.createMovie).toHaveBeenCalledWith(
       456,
       'Updated Movie Title',
       'New overview',
@@ -162,7 +149,7 @@ describe('movieChangesService', () => {
       [28, 12],
     );
 
-    expect(mockMovieInstance.update).toHaveBeenCalled();
+    expect(moviesDb.updateMovie).toHaveBeenCalled();
   });
 
   it('should handle errors from getMovieChanges API', async () => {
@@ -215,47 +202,6 @@ describe('movieChangesService', () => {
     });
   });
 
-  it('should handle errors from movie.update()', async () => {
-    const supportedChanges: Change[] = [
-      {
-        key: 'title',
-        items: [
-          {
-            id: 'abc123',
-            action: 'updated',
-            time: '2023-01-05',
-            iso_639_1: 'en',
-            iso_3166_1: 'US',
-            value: 'Updated Movie Title',
-            original_value: 'Test Movie',
-          },
-        ],
-      },
-    ];
-
-    mockTMDBService.getMovieChanges.mockResolvedValue({ changes: supportedChanges });
-
-    const mockError = new Error('Database update error');
-    const mockMovieInstance = {
-      update: jest.fn().mockRejectedValue(mockError),
-    };
-
-    (Movie as unknown as jest.Mock).mockImplementation(() => mockMovieInstance);
-
-    await expect(checkForMovieChanges(mockMovieContent, pastDate, currentDate)).rejects.toThrow(
-      'Database update error',
-    );
-
-    expect(mockTMDBService.getMovieChanges).toHaveBeenCalledWith(456, pastDate, currentDate);
-    expect(mockTMDBService.getMovieDetails).toHaveBeenCalledWith(456);
-    expect(mockMovieInstance.update).toHaveBeenCalled();
-    expect(cliLogger.error).toHaveBeenCalledWith(`Error checking changes for movie ID 123`, mockError);
-    expect(httpLogger.error).toHaveBeenCalledWith('Unexpected error while checking for movie changes', {
-      error: mockError,
-      movieId: 123,
-    });
-  });
-
   it('should handle multiple supported changes', async () => {
     const supportedChanges: Change[] = [
       {
@@ -290,18 +236,12 @@ describe('movieChangesService', () => {
 
     mockTMDBService.getMovieChanges.mockResolvedValue({ changes: supportedChanges });
 
-    const mockMovieInstance = {
-      update: jest.fn().mockResolvedValue(undefined),
-    };
-
-    (Movie as unknown as jest.Mock).mockImplementation(() => mockMovieInstance);
-
     await checkForMovieChanges(mockMovieContent, pastDate, currentDate);
 
     expect(mockTMDBService.getMovieChanges).toHaveBeenCalledWith(456, pastDate, currentDate);
     expect(mockTMDBService.getMovieDetails).toHaveBeenCalledWith(456);
-    expect(Movie as unknown as jest.Mock).toHaveBeenCalledTimes(1);
-    expect(mockMovieInstance.update).toHaveBeenCalled();
+    expect(moviesDb.createMovie).toHaveBeenCalledTimes(1);
+    expect(moviesDb.updateMovie).toHaveBeenCalled();
   });
 
   it('should handle empty changes array', async () => {
@@ -311,6 +251,43 @@ describe('movieChangesService', () => {
 
     expect(mockTMDBService.getMovieChanges).toHaveBeenCalledWith(456, pastDate, currentDate);
     expect(mockTMDBService.getMovieDetails).not.toHaveBeenCalled();
-    expect(Movie).not.toHaveBeenCalled();
+    expect(moviesDb.createMovie).not.toHaveBeenCalled();
+  });
+
+  it('should handle errors from moviesDb.updateMovie()', async () => {
+    const supportedChanges: Change[] = [
+      {
+        key: 'title',
+        items: [
+          {
+            id: 'abc123',
+            action: 'updated',
+            time: '2023-01-05',
+            iso_639_1: 'en',
+            iso_3166_1: 'US',
+            value: 'Updated Movie Title',
+            original_value: 'Test Movie',
+          },
+        ],
+      },
+    ];
+
+    mockTMDBService.getMovieChanges.mockResolvedValue({ changes: supportedChanges });
+
+    const mockError = new Error('Database update error');
+    (moviesDb.updateMovie as jest.Mock).mockRejectedValue(mockError);
+
+    await expect(checkForMovieChanges(mockMovieContent, pastDate, currentDate)).rejects.toThrow(
+      'Database update error',
+    );
+
+    expect(mockTMDBService.getMovieChanges).toHaveBeenCalledWith(456, pastDate, currentDate);
+    expect(mockTMDBService.getMovieDetails).toHaveBeenCalledWith(456);
+    expect(moviesDb.updateMovie).toHaveBeenCalled();
+    expect(cliLogger.error).toHaveBeenCalledWith(`Error checking changes for movie ID 123`, mockError);
+    expect(httpLogger.error).toHaveBeenCalledWith('Unexpected error while checking for movie changes', {
+      error: mockError,
+      movieId: 123,
+    });
   });
 });

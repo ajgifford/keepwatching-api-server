@@ -1,7 +1,7 @@
 import { PROFILE_KEYS } from '../constants/cacheKeys';
+import * as moviesDb from '../db/moviesDb';
 import * as profilesDb from '../db/profilesDb';
-import { BadRequestError, NotFoundError } from '../middleware/errorMiddleware';
-import Movie from '../models/movie';
+import { BadRequestError } from '../middleware/errorMiddleware';
 import { getUSMPARating } from '../utils/contentUtility';
 import { getUSWatchProviders } from '../utils/watchProvidersUtility';
 import { CacheService } from './cacheService';
@@ -48,7 +48,7 @@ export class MoviesService {
     try {
       return await this.cache.getOrSet(
         PROFILE_KEYS.movies(profileId),
-        () => Movie.getAllMoviesForProfile(profileId),
+        () => moviesDb.getAllMoviesForProfile(profileId),
         600,
       );
     } catch (error) {
@@ -57,27 +57,38 @@ export class MoviesService {
   }
 
   /**
-   * Gets recent and upcoming movies for a profile
+   * Gets recent movie releases for a profile
    *
-   * @param profileId - ID of the profile to get movies for
-   * @returns Object containing recent and upcoming movies arrays
+   * @param profileId - ID of the profile to get recent movies for
+   * @returns Array of recent movie releases
    */
-  public async getRecentUpcomingMoviesForProfile(profileId: string) {
+  public async getRecentMoviesForProfile(profileId: string) {
     try {
       return await this.cache.getOrSet(
-        PROFILE_KEYS.recentUpcomingMovies(profileId),
-        async () => {
-          const [recentMovies, upcomingMovies] = await Promise.all([
-            Movie.getRecentMovieReleasesForProfile(profileId),
-            Movie.getUpcomingMovieReleasesForProfile(profileId),
-          ]);
-
-          return { recentMovies, upcomingMovies };
-        },
-        300,
+        `${PROFILE_KEYS.recentMovies(profileId)}`,
+        () => moviesDb.getRecentMovieReleasesForProfile(profileId),
+        300, // 5 minutes TTL
       );
     } catch (error) {
-      throw errorService.handleError(error, `getRecentUpcomingMoviesForProfile(${profileId})`);
+      throw errorService.handleError(error, `getRecentMoviesForProfile(${profileId})`);
+    }
+  }
+
+  /**
+   * Gets upcoming movie releases for a profile
+   *
+   * @param profileId - ID of the profile to get upcoming movies for
+   * @returns Array of upcoming movie releases
+   */
+  public async getUpcomingMoviesForProfile(profileId: string) {
+    try {
+      return await this.cache.getOrSet(
+        `${PROFILE_KEYS.upcomingMovies(profileId)}`,
+        () => moviesDb.getUpcomingMovieReleasesForProfile(profileId),
+        300, // 5 minutes TTL
+      );
+    } catch (error) {
+      throw errorService.handleError(error, `getUpcomingMoviesForProfile(${profileId})`);
     }
   }
 
@@ -90,9 +101,9 @@ export class MoviesService {
    */
   public async addMovieToFavorites(profileId: string, movieId: number) {
     try {
-      const existingMovieToFavorite = await Movie.findByTMDBId(movieId);
+      const existingMovieToFavorite = await moviesDb.findMovieByTMDBId(movieId);
       if (existingMovieToFavorite) {
-        return await this.favoriteExistingMovie(existingMovieToFavorite, profileId);
+        return await this.favoriteExistingMovie(movieId, profileId);
       }
 
       return await this.favoriteNewMovie(movieId, profileId);
@@ -108,13 +119,14 @@ export class MoviesService {
    * @param profileId - ID of the profile to add the movie for
    * @returns Object containing the favorited movie and updated recent/upcoming lists
    */
-  private async favoriteExistingMovie(movieToFavorite: Movie, profileId: string) {
-    await movieToFavorite.saveFavorite(profileId);
+  private async favoriteExistingMovie(movieId: number, profileId: string) {
+    await moviesDb.saveFavorite(profileId, movieId);
 
     this.invalidateProfileMovieCache(profileId);
 
-    const newMovie = await Movie.getMovieForProfile(profileId, movieToFavorite.id!);
-    const { recentMovies, upcomingMovies } = await this.getRecentUpcomingMoviesForProfile(profileId);
+    const newMovie = await moviesDb.getMovieForProfile(profileId, movieId);
+    const recentMovies = await this.getRecentMoviesForProfile(profileId);
+    const upcomingMovies = await this.getUpcomingMoviesForProfile(profileId);
 
     return {
       favoritedMovie: newMovie,
@@ -135,7 +147,7 @@ export class MoviesService {
     const tmdbService = getTMDBService();
     const response = await tmdbService.getMovieDetails(movieId);
 
-    const movieToFavorite = new Movie(
+    const movieToFavorite = moviesDb.createMovie(
       response.id,
       response.title,
       response.overview,
@@ -150,15 +162,16 @@ export class MoviesService {
       response.genres.map((genre: { id: any }) => genre.id),
     );
 
-    const saveSuccess = await movieToFavorite.save();
+    const saveSuccess = await moviesDb.saveMovie(movieToFavorite);
     if (!saveSuccess) {
       throw new BadRequestError('Failed to save movie information');
     }
 
-    await movieToFavorite.saveFavorite(profileId);
+    await moviesDb.saveFavorite(profileId, movieId);
 
-    const newMovie = await Movie.getMovieForProfile(profileId, movieToFavorite.id!);
-    const { recentMovies, upcomingMovies } = await this.getRecentUpcomingMoviesForProfile(profileId);
+    const newMovie = await moviesDb.getMovieForProfile(profileId, movieToFavorite.id!);
+    const recentMovies = await this.getRecentMoviesForProfile(profileId);
+    const upcomingMovies = await this.getUpcomingMoviesForProfile(profileId);
 
     this.invalidateProfileMovieCache(profileId);
 
@@ -178,15 +191,14 @@ export class MoviesService {
    */
   public async removeMovieFromFavorites(profileId: string, movieId: number) {
     try {
-      const movieToRemove = await Movie.findById(movieId);
-      if (!movieToRemove) {
-        throw new NotFoundError(`Movie with ID ${movieId} not found`);
-      }
+      const movieToRemove = await moviesDb.findMovieById(movieId);
+      errorService.assertExists(movieToRemove, 'Movie', movieId);
 
-      await movieToRemove.removeFavorite(profileId);
+      await moviesDb.removeFavorite(profileId, movieId);
       this.invalidateProfileMovieCache(profileId);
 
-      const { recentMovies, upcomingMovies } = await this.getRecentUpcomingMoviesForProfile(profileId);
+      const recentMovies = await this.getRecentMoviesForProfile(profileId);
+      const upcomingMovies = await this.getUpcomingMoviesForProfile(profileId);
 
       return {
         removedMovie: movieToRemove,
@@ -208,7 +220,7 @@ export class MoviesService {
    */
   public async updateMovieWatchStatus(profileId: string, movieId: number, status: string) {
     try {
-      const success = await Movie.updateWatchStatus(profileId, movieId, status);
+      const success = await moviesDb.updateWatchStatus(profileId, movieId, status);
 
       if (!success) {
         throw new BadRequestError(
@@ -235,7 +247,7 @@ export class MoviesService {
       return await this.cache.getOrSet(
         PROFILE_KEYS.movieStatistics(profileId),
         async () => {
-          const movies = await Movie.getAllMoviesForProfile(profileId);
+          const movies = await moviesDb.getAllMoviesForProfile(profileId);
 
           const total = movies.length;
           const watched = movies.filter((m) => m.watch_status === 'WATCHED').length;

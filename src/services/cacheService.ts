@@ -197,7 +197,8 @@ export class CacheService {
     this.invalidate(PROFILE_KEYS.movies(profileId));
 
     // Invalidate recent/upcoming movies
-    this.invalidate(PROFILE_KEYS.recentUpcomingMovies(profileId));
+    this.invalidate(PROFILE_KEYS.recentMovies(profileId));
+    this.invalidate(PROFILE_KEYS.upcomingMovies(profileId));
 
     // Invalidate all profile statistics since they're affected by movie changes
     this.invalidateProfileStatistics(profileId);

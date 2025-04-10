@@ -220,17 +220,18 @@ export class ShowService {
       for (const responseSeason of validSeasons) {
         const responseData = await tmdbService.getSeasonDetails(show.id, responseSeason.season_number);
 
-        const season = seasonsDb.createSeason(
-          showId,
-          responseSeason.id,
-          responseSeason.name,
-          responseSeason.overview,
-          responseSeason.season_number,
-          responseSeason.air_date,
-          responseSeason.poster_path,
-          responseSeason.episode_count,
+        const season = await seasonsDb.saveSeason(
+          seasonsDb.createSeason(
+            showId,
+            responseSeason.id,
+            responseSeason.name,
+            responseSeason.overview,
+            responseSeason.season_number,
+            responseSeason.air_date,
+            responseSeason.poster_path,
+            responseSeason.episode_count,
+          ),
         );
-        await seasonsDb.saveSeason(season);
         await seasonsDb.saveFavorite(Number(profileId), season.id!);
 
         for (const responseEpisode of responseData.episodes) {

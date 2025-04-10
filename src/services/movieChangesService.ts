@@ -1,6 +1,6 @@
+import * as moviesDb from '../db/moviesDb';
 import { cliLogger, httpLogger } from '../logger/logger';
 import { ErrorMessages } from '../logger/loggerModel';
-import Movie from '../models/movie';
 import { Change, ContentUpdates } from '../types/contentTypes';
 import { SUPPORTED_CHANGE_KEYS } from '../utils/changesUtility';
 import { getUSMPARating } from '../utils/contentUtility';
@@ -26,7 +26,7 @@ export async function checkForMovieChanges(content: ContentUpdates, pastDate: st
     if (supportedChanges.length > 0) {
       const movieDetails = await tmdbService.getMovieDetails(content.tmdb_id);
 
-      const updatedMovie = new Movie(
+      const updatedMovie = moviesDb.createMovie(
         movieDetails.id,
         movieDetails.title,
         movieDetails.overview,
@@ -41,7 +41,7 @@ export async function checkForMovieChanges(content: ContentUpdates, pastDate: st
         movieDetails.genres.map((genre: { id: any }) => genre.id),
       );
 
-      await updatedMovie.update();
+      await moviesDb.updateMovie(updatedMovie);
     }
   } catch (error) {
     cliLogger.error(`Error checking changes for movie ID ${content.id}`, error);

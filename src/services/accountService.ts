@@ -1,15 +1,20 @@
-import { ACCOUNT_KEYS, PROFILE_KEYS } from '../constants/cacheKeys';
 import * as accountsDb from '../db/accountsDb';
-import * as profilesDb from '../db/profilesDb';
-import { BadRequestError, NotFoundError } from '../middleware/errorMiddleware';
-import Movie from '../models/movie';
-import Show from '../models/show';
-import { getAccountImage, getProfileImage } from '../utils/imageUtility';
+import { Account } from '../db/accountsDb';
+import { cliLogger, httpLogger } from '../logger/logger';
+import { BadRequestError, ForbiddenError, NotFoundError } from '../middleware/errorMiddleware';
+import { getAccountImage } from '../utils/imageUtility';
 import { CacheService } from './cacheService';
-import { episodesService } from './episodesService';
 import { errorService } from './errorService';
-import { moviesService } from './moviesService';
-import { showService } from './showService';
+import { socketService } from './socketService';
+
+/**
+ * Interface representing the response for a Google login operation,
+ * which could be either a login to an existing account or creation of a new account
+ */
+export interface GoogleLoginResponse {
+  account: Account;
+  isNewAccount: boolean;
+}
 
 /**
  * Service class for handling account-related business logic
@@ -22,89 +27,112 @@ export class AccountService {
   }
 
   /**
-   * Retrieves all profiles for a specific account
+   * Authenticates a user by their UID
    *
-   * @param accountId - ID of the account to get profiles for
-   * @returns Array of profile objects with basic information
-   * @throws {BadRequestError} If profiles cannot be retrieved
+   * @param uid - Firebase user ID
+   * @returns The authenticated account
+   * @throws {NotFoundError} If no account exists with the provided UID
    */
-  public async getProfiles(accountId: number) {
+  public async login(uid: string): Promise<Account> {
     try {
-      return await this.cache.getOrSet(
-        ACCOUNT_KEYS.profiles(accountId),
-        async () => {
-          const profiles = await profilesDb.getAllProfilesByAccountId(accountId);
-          if (!profiles) {
-            throw new BadRequestError('Failed to get all profiles for an account');
-          }
+      const account = await accountsDb.findAccountByUID(uid);
+      errorService.assertExists(account, 'Account', uid);
 
-          return profiles.map((profile) => ({
-            id: profile.id,
-            name: profile.name,
-            image: getProfileImage(profile.image, profile.name),
-          }));
-        },
-        600,
-      );
+      httpLogger.info(`User logged in: ${account.email}`, { userId: account.uid });
+      cliLogger.info(`User authenticated: ${account.email}`);
+
+      return account;
     } catch (error) {
-      throw errorService.handleError(error, `getProfiles(${accountId})`);
+      throw errorService.handleError(error, `login(${uid})`);
     }
   }
 
   /**
-   * Retrieves a specific profile with all its associated content
+   * Registers a new account with the provided details
    *
-   * @param profileId - ID of the profile to retrieve
-   * @returns Profile with shows, movies, and episode data
-   * @throws {NotFoundError} If the profile is not found
+   * @param name - Display name for the account
+   * @param email - Email address for the account
+   * @param uid - Firebase user ID
+   * @returns The newly created account
+   * @throws {ConflictError} If an account with the provided email or uid already exists
    */
-  public async getProfile(profileId: number) {
+  public async register(name: string, email: string, uid: string): Promise<Account> {
     try {
-      return await this.cache.getOrSet(
-        PROFILE_KEYS.complete(profileId),
-        async () => {
-          const profile = await profilesDb.findProfileById(profileId);
-          if (!profile) {
-            throw new NotFoundError('Profile not found');
-          }
+      const existingAccountByEmail = await accountsDb.findAccountByEmail(email);
+      errorService.assertNotExists(existingAccountByEmail, 'Account', 'email', email);
 
-          const [
-            shows,
-            movies,
-            recentEpisodes,
-            upcomingEpisodes,
-            nextUnwatchedEpisodes,
-            recentMoviesData,
-            upcomingMoviesData,
-          ] = await Promise.all([
-            showService.getShowsForProfile(profileId.toString()),
-            moviesService.getMoviesForProfile(profileId.toString()),
-            episodesService.getRecentEpisodesForProfile(profileId.toString()),
-            episodesService.getUpcomingEpisodesForProfile(profileId.toString()),
-            Show.getNextUnwatchedEpisodesForProfile(profileId.toString()),
-            Movie.getRecentMovieReleasesForProfile(profileId.toString()),
-            Movie.getUpcomingMovieReleasesForProfile(profileId.toString()),
-          ]);
+      const existingAccountByUID = await accountsDb.findAccountByUID(uid);
+      errorService.assertNotExists(existingAccountByUID, 'Account', 'uid', uid);
 
-          return {
-            profile: {
-              id: profile.id,
-              name: profile.name,
-              image: getProfileImage(profile.image, profile.name),
-            },
-            shows,
-            recentEpisodes,
-            upcomingEpisodes,
-            nextUnwatchedEpisodes,
-            movies,
-            recentMovies: recentMoviesData,
-            upcomingMovies: upcomingMoviesData,
-          };
-        },
-        600,
-      );
+      const account = accountsDb.createAccount(name, email, uid);
+      await accountsDb.registerAccount(account);
+
+      httpLogger.info(`New user registered: ${email}`, { userId: uid });
+      cliLogger.info(`New account created: ${email}`);
+
+      return account;
     } catch (error) {
-      throw errorService.handleError(error, `getProfile(${profileId})`);
+      throw errorService.handleError(error, `register(${name}, ${email}, ${uid})`);
+    }
+  }
+
+  /**
+   * Handles authentication via Google, either logging in an existing user
+   * or creating a new account if the user doesn't exist
+   *
+   * @param name - Display name from Google profile
+   * @param email - Email address from Google profile
+   * @param uid - Firebase user ID
+   * @returns Object containing the account and whether it was newly created
+   */
+  public async googleLogin(name: string, email: string, uid: string): Promise<GoogleLoginResponse> {
+    try {
+      const existingAccount = await accountsDb.findAccountByUID(uid);
+
+      if (existingAccount) {
+        httpLogger.info(`User logged in via Google: ${existingAccount.email}`, { userId: existingAccount.uid });
+        cliLogger.info(`Google authentication: existing user ${existingAccount.email}`);
+
+        return {
+          account: existingAccount,
+          isNewAccount: false,
+        };
+      }
+
+      const existingEmailAccount = await accountsDb.findAccountByEmail(email);
+      if (existingEmailAccount) {
+        throw new ForbiddenError(
+          `An account with email ${email} already exists but is not linked to this Google account`,
+        );
+      }
+
+      const newAccount = accountsDb.createAccount(name, email, uid);
+      await accountsDb.registerAccount(newAccount);
+
+      httpLogger.info(`New user registered via Google: ${email}`, { userId: uid });
+      cliLogger.info(`Google authentication: new account created for ${email}`);
+
+      return {
+        account: newAccount,
+        isNewAccount: true,
+      };
+    } catch (error) {
+      throw errorService.handleError(error, `googleLogin(${name}, ${email}, ${uid})`);
+    }
+  }
+
+  /**
+   * Logs out a user by invalidating their cache
+   *
+   * @param accountId - ID of the account being logged out
+   */
+  public async logout(accountId: string): Promise<void> {
+    try {
+      this.cache.invalidateAccount(accountId);
+      const disconnectedCount = socketService.disconnectUserSockets(accountId);
+      cliLogger.info(`User logged out: account ID ${accountId}`);
+    } catch (error) {
+      throw errorService.handleError(error, `logout(${accountId})`);
     }
   }
 
@@ -139,101 +167,6 @@ export class AccountService {
       };
     } catch (error) {
       throw errorService.handleError(error, `editAccount(${accountId})`);
-    }
-  }
-
-  /**
-   * Creates a new profile for an account
-   *
-   * @param accountId - ID of the account to create a profile for
-   * @param name - Name for the new profile
-   * @returns The newly created profile information
-   * @throws {BadRequestError} If the profile creation fails
-   */
-  public async addProfile(accountId: number, name: string) {
-    try {
-      const profile = profilesDb.createProfile(accountId, name);
-      const savedProfile = await profilesDb.saveProfile(profile);
-
-      if (!savedProfile.id) {
-        throw new BadRequestError('Failed to add a profile');
-      }
-
-      this.cache.invalidateAccount(accountId);
-
-      return {
-        id: savedProfile.id,
-        name: savedProfile.name,
-        image: getProfileImage(savedProfile.image, savedProfile.name),
-      };
-    } catch (error) {
-      throw errorService.handleError(error, `addProfile(${accountId}, ${name})`);
-    }
-  }
-
-  /**
-   * Updates an existing profile's details
-   *
-   * @param profileId - ID of the profile to update
-   * @param name - New name for the profile
-   * @returns Updated profile information
-   * @throws {NotFoundError} If the profile is not found
-   * @throws {BadRequestError} If the profile update fails
-   */
-  public async editProfileName(profileId: number, name: string) {
-    try {
-      const profile = await profilesDb.findProfileById(profileId);
-      if (!profile) {
-        throw new NotFoundError('Profile not found');
-      }
-
-      const updatedProfile = await profilesDb.updateProfileName(profile, name);
-      if (!updatedProfile) {
-        throw new BadRequestError('Failed to update profile');
-      }
-
-      this.cache.invalidateProfile(profileId);
-      this.cache.invalidateProfileStatistics(profileId);
-
-      return {
-        id: updatedProfile.id,
-        name: updatedProfile.name,
-        image: getProfileImage(updatedProfile.image, updatedProfile.name),
-      };
-    } catch (error) {
-      throw errorService.handleError(error, `editProfile(${profileId})`);
-    }
-  }
-
-  /**
-   * Deletes a profile from an account
-   *
-   * This action will cascade delete all watch status data for the profile.
-   *
-   * @param profileId - ID of the profile to delete
-   * @param accountId - ID of the account that owns the profile (for cache invalidation)
-   * @returns A boolean indicating if the deletion was successful
-   * @throws {NotFoundError} If the profile is not found
-   * @throws {BadRequestError} If the profile deletion fails
-   */
-  public async deleteProfile(profileId: number, accountId: number) {
-    try {
-      const profile = await profilesDb.findProfileById(profileId);
-      if (!profile) {
-        throw new NotFoundError('Profile not found');
-      }
-
-      const deleted = await profilesDb.deleteProfile(profile);
-      if (!deleted) {
-        throw new BadRequestError('Failed to delete profile');
-      }
-
-      this.cache.invalidateProfile(profileId);
-      this.cache.invalidateAccount(accountId);
-
-      return true;
-    } catch (error) {
-      throw errorService.handleError(error, `deleteProfile(${profileId})`);
     }
   }
 }

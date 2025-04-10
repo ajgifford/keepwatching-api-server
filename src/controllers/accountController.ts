@@ -1,35 +1,41 @@
-/**
- * Account Controller
- *
- * This module contains controller functions for handling account-related operations
- * including profile management and account editing.
- *
- * @module controllers/accountController
- */
 import {
-  AccountAndProfileIdsParams,
   AccountIdParam,
+  AccountParams,
   AccountUpdateParams,
-  ProfileNameParam,
+  GoogleLoginParams,
+  LoginParam,
 } from '../schema/accountSchema';
 import { accountService } from '../services/accountService';
+import { getAccountImage, getPhotoForGoogleAccount } from '../utils/imageUtility';
 import { NextFunction, Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 
 /**
- * Retrieves all profiles for a specific account.
+ * Register a new account
  *
- * @route GET /api/v1/accounts/:id/profiles
+ * Creates a new user account with the provided details
+ *
+ * @route POST /api/v1/authentication/register
+ * @param {Request} req - Express request containing name, email, and uid in body
+ * @param {Response} res - Express response
+ * @param {NextFunction} next - Express next function
+ * @returns {Response} 201 with new account details on success
  */
-export const getProfiles = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const register = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { accountId } = req.params as AccountIdParam;
+    const { name, email, uid }: AccountParams = req.body;
+    const account = await accountService.register(name, email, uid);
 
-    const profiles = await accountService.getProfiles(Number(accountId));
-
-    res.status(200).json({
-      message: `Retrieved profiles for account ${accountId}`,
-      results: profiles,
+    res.status(201).json({
+      message: 'Account registered successfully',
+      result: {
+        id: account.id,
+        name: account.name,
+        uid: account.uid,
+        email: account.email,
+        image: getAccountImage(account.image, account.name),
+        default_profile_id: account.default_profile_id,
+      },
     });
   } catch (error) {
     next(error);
@@ -37,20 +43,89 @@ export const getProfiles = asyncHandler(async (req: Request, res: Response, next
 });
 
 /**
- * Retrieves a specific profile with all its associated content (shows, episodes, movies).
+ * Login with existing account
  *
- * @route GET /api/v1/accounts/:id/profiles/:profileId
+ * Authenticates a user with their Firebase UID
+ *
+ * @route POST /api/v1/authentication/login
+ * @param {Request} req - Express request containing uid in body
+ * @param {Response} res - Express response
+ * @param {NextFunction} next - Express next function
+ * @returns {Response} 200 with account details on success
  */
-export const getProfile = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const login = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { profileId } = req.params as AccountAndProfileIdsParams;
-
-    const result = await accountService.getProfile(Number(profileId));
+    const { uid }: LoginParam = req.body;
+    const account = await accountService.login(uid);
 
     res.status(200).json({
-      message: `Retrieved profile with id: ${profileId}`,
-      results: result,
+      message: 'Login successful',
+      result: {
+        id: account.id,
+        name: account.name,
+        uid: account.uid,
+        email: account.email,
+        image: getAccountImage(account.image, account.name),
+        default_profile_id: account.default_profile_id,
+      },
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * Login or register with Google
+ *
+ * Authenticates a user with Google credentials, creating a new account if needed
+ *
+ * @route POST /api/v1/authentication/googleLogin
+ * @param {Request} req - Express request containing name, email, uid, and optional photoURL in body
+ * @param {Response} res - Express response
+ * @param {NextFunction} next - Express next function
+ * @returns {Response} 201 for new accounts, 200 for existing accounts
+ */
+export const googleLogin = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { name, email, uid, photoURL }: GoogleLoginParams = req.body;
+    const googleLoginResult = await accountService.googleLogin(name, email, uid);
+
+    const statusCode = googleLoginResult.isNewAccount ? 201 : 200;
+    const message = googleLoginResult.isNewAccount ? 'Account registered successfully' : 'Login successful';
+
+    res.status(statusCode).json({
+      message: message,
+      result: {
+        id: googleLoginResult.account.id,
+        name: googleLoginResult.account.name,
+        uid: googleLoginResult.account.uid,
+        email: googleLoginResult.account.email,
+        image: getPhotoForGoogleAccount(name, photoURL, googleLoginResult.account.image),
+        default_profile_id: googleLoginResult.account.default_profile_id,
+        isNewAccount: googleLoginResult.isNewAccount,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * Logout user
+ *
+ * Logs out the user by invalidating their cache data
+ *
+ * @route POST /api/v1/authentication/logout
+ * @param {Request} req - Express request containing accountId in body
+ * @param {Response} res - Express response
+ * @param {NextFunction} next - Express next function
+ * @returns {Response} 200 with success message
+ */
+export const logout = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { accountId }: AccountIdParam = req.body;
+    accountService.logout(accountId);
+    res.status(200).json({ message: 'Account logged out' });
   } catch (error) {
     next(error);
   }
@@ -72,67 +147,6 @@ export const editAccount = asyncHandler(async (req: Request, res: Response, next
       message: `Updated account ${accountId}`,
       result: updatedAccount,
     });
-  } catch (error) {
-    next(error);
-  }
-});
-
-/**
- * Creates a new profile for an account.
- *
- * @route POST /api/v1/accounts/:id/profiles
- */
-export const addProfile = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    const { accountId } = req.params as AccountIdParam;
-    const { name }: ProfileNameParam = req.body;
-
-    const newProfile = await accountService.addProfile(Number(accountId), name);
-
-    res.status(201).json({
-      message: 'Profile added successfully',
-      result: newProfile,
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-/**
- * Updates an existing profile's details.
- *
- * @route PUT /api/v1/accounts/:id/profiles/:profileId
- */
-export const editProfile = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    const { profileId } = req.params as AccountAndProfileIdsParams;
-    const { name }: ProfileNameParam = req.body;
-
-    const updatedProfile = await accountService.editProfileName(Number(profileId), name);
-
-    res.status(200).json({
-      message: 'Profile edited successfully',
-      result: updatedProfile,
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-/**
- * Deletes a profile from an account.
- *
- * This action will cascade delete all watch status data for the profile.
- *
- * @route DELETE /api/v1/accounts/:id/profiles/:profileId
- */
-export const deleteProfile = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    const { accountId, profileId } = req.params as AccountAndProfileIdsParams;
-
-    await accountService.deleteProfile(Number(profileId), Number(accountId));
-
-    res.status(204).json({ message: 'Profile deleted successfully' });
   } catch (error) {
     next(error);
   }

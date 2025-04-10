@@ -1,194 +1,65 @@
 import * as accountsDb from '@db/accountsDb';
-import * as profilesDb from '@db/profilesDb';
+import { cliLogger, httpLogger } from '@logger/logger';
 import { CustomError } from '@middleware/errorMiddleware';
-import Movie from '@models/movie';
-import Show from '@models/show';
-import { AccountService, accountService } from '@services/accountService';
+import { accountService } from '@services/accountService';
 import { CacheService } from '@services/cacheService';
-import { episodesService } from '@services/episodesService';
 import { errorService } from '@services/errorService';
-import { moviesService } from '@services/moviesService';
-import { showService } from '@services/showService';
-import { getAccountImage, getProfileImage } from '@utils/imageUtility';
+import { getAccountImage } from '@utils/imageUtility';
 
-jest.mock('@db/profilesDb');
+jest.mock('@logger/logger', () => ({
+  cliLogger: {
+    info: jest.fn(),
+    error: jest.fn(),
+  },
+  httpLogger: {
+    info: jest.fn(),
+    error: jest.fn(),
+  },
+}));
+
 jest.mock('@db/accountsDb');
-jest.mock('@models/show');
-jest.mock('@models/movie');
 jest.mock('@services/cacheService');
 jest.mock('@services/errorService');
-jest.mock('@services/episodesService');
-jest.mock('@services/moviesService');
-jest.mock('@services/showService');
 jest.mock('@utils/imageUtility');
 
 describe('AccountService', () => {
-  let service: AccountService;
-  let mockCache: jest.Mocked<CacheService>;
+  const mockCacheService = {
+    invalidateAccount: jest.fn(),
+  };
+
+  const mockAccount = {
+    account_id: 1,
+    account_name: 'Test User',
+    email: 'test@example.com',
+    uid: 'test-uid-123',
+    default_profile_id: 101,
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
 
-    mockCache = {
-      getOrSet: jest.fn(),
-      get: jest.fn(),
-      set: jest.fn(),
-      invalidate: jest.fn(),
-      invalidatePattern: jest.fn(),
-      invalidateAccount: jest.fn(),
-      invalidateProfile: jest.fn(),
-      invalidateProfileStatistics: jest.fn(),
-      invalidateAccountStatistics: jest.fn(),
-      flushAll: jest.fn(),
-      getStats: jest.fn(),
-      keys: jest.fn(),
-    } as any;
+    jest.spyOn(CacheService, 'getInstance').mockReturnValue(mockCacheService as any);
 
-    Object.setPrototypeOf(accountService, AccountService.prototype);
-    (accountService as any).cache = mockCache;
+    Object.defineProperty(accountService, 'cache', {
+      value: mockCacheService,
+      writable: true,
+    });
 
-    service = accountService;
+    (errorService.assertExists as jest.Mock).mockImplementation((entity) => {
+      if (!entity) throw new Error('Entity not found');
+      return true;
+    });
 
-    (getProfileImage as jest.Mock).mockReturnValue('profile-image-url.jpg');
-    (getAccountImage as jest.Mock).mockReturnValue('account-image-url.jpg');
+    (errorService.assertNotExists as jest.Mock).mockImplementation((entity, entityName, field, value) => {
+      if (entity) throw new Error(`${entityName} with ${field} ${value} already exists`);
+      return true;
+    });
 
     (errorService.handleError as jest.Mock).mockImplementation((error) => {
       throw error;
     });
-  });
 
-  describe('getProfiles', () => {
-    it('should return profiles from cache when available', async () => {
-      const mockProfiles = [
-        { id: 1, name: 'Profile 1', image: 'profile1.jpg' },
-        { id: 2, name: 'Profile 2', image: 'profile2.jpg' },
-      ];
-      mockCache.getOrSet.mockResolvedValue(mockProfiles);
-
-      const result = await service.getProfiles(123);
-
-      expect(mockCache.getOrSet).toHaveBeenCalledWith('account_123_profiles', expect.any(Function), 600);
-      expect(result).toEqual(mockProfiles);
-    });
-
-    it('should fetch profiles from database when not in cache', async () => {
-      const mockDBProfiles = [
-        { id: 1, name: 'Profile 1', account_id: 123 },
-        { id: 2, name: 'Profile 2', account_id: 123 },
-      ];
-      const expectedProfiles = [
-        { id: 1, name: 'Profile 1', image: 'profile-image-url.jpg' },
-        { id: 2, name: 'Profile 2', image: 'profile-image-url.jpg' },
-      ];
-
-      mockCache.getOrSet.mockImplementation(async (key, fn) => fn());
-      (profilesDb.getAllProfilesByAccountId as jest.Mock).mockResolvedValue(mockDBProfiles);
-
-      const result = await service.getProfiles(123);
-
-      expect(mockCache.getOrSet).toHaveBeenCalled();
-      expect(profilesDb.getAllProfilesByAccountId).toHaveBeenCalledWith(123);
-      expect(result).toEqual(expectedProfiles);
-    });
-
-    it('should throw BadRequestError when profiles cannot be retrieved', async () => {
-      mockCache.getOrSet.mockImplementation(async (key, fn) => fn());
-      (profilesDb.getAllProfilesByAccountId as jest.Mock).mockResolvedValue(null);
-
-      await expect(service.getProfiles(123)).rejects.toThrow(CustomError);
-      expect(profilesDb.getAllProfilesByAccountId).toHaveBeenCalledWith(123);
-    });
-
-    it('should handle database errors', async () => {
-      const error = new Error('Database error');
-      mockCache.getOrSet.mockImplementation(async (key, fn) => fn());
-      (profilesDb.getAllProfilesByAccountId as jest.Mock).mockRejectedValue(error);
-
-      await expect(service.getProfiles(123)).rejects.toThrow('Database error');
-      expect(errorService.handleError).toHaveBeenCalledWith(error, 'getProfiles(123)');
-    });
-  });
-
-  describe('getProfile', () => {
-    const mockProfile = { id: 123, name: 'Test Profile', account_id: 1 };
-    const mockShows = [{ show_id: 1, title: 'Test Show' }];
-    const mockMovies = [{ movie_id: 1, title: 'Test Movie' }];
-    const mockRecentEpisodes = [{ id: 1, title: 'Recent Episode' }];
-    const mockUpcomingEpisodes = [{ id: 2, title: 'Upcoming Episode' }];
-    const mockNextUnwatchedEpisodes = [{ show_id: 1, episodes: [{ id: 3 }] }];
-    const mockRecentMovies = [{ movie_id: 2, title: 'Recent Movie' }];
-    const mockUpcomingMovies = [{ movie_id: 3, title: 'Upcoming Movie' }];
-
-    it('should return profile data from cache when available', async () => {
-      const mockProfileData = {
-        profile: { id: 123, name: 'Test Profile', image: 'profile.jpg' },
-        shows: mockShows,
-        movies: mockMovies,
-        recentEpisodes: mockRecentEpisodes,
-        upcomingEpisodes: mockUpcomingEpisodes,
-        nextUnwatchedEpisodes: mockNextUnwatchedEpisodes,
-        recentMovies: mockRecentMovies,
-        upcomingMovies: mockUpcomingMovies,
-      };
-
-      mockCache.getOrSet.mockResolvedValue(mockProfileData);
-
-      const result = await service.getProfile(123);
-
-      expect(mockCache.getOrSet).toHaveBeenCalledWith('profile_123_complete', expect.any(Function), 600);
-      expect(result).toEqual(mockProfileData);
-    });
-
-    it('should fetch and combine profile data when not in cache', async () => {
-      mockCache.getOrSet.mockImplementation(async (key, fn) => fn());
-
-      (profilesDb.findProfileById as jest.Mock).mockResolvedValue(mockProfile);
-      (showService.getShowsForProfile as jest.Mock).mockResolvedValue(mockShows);
-      (moviesService.getMoviesForProfile as jest.Mock).mockResolvedValue(mockMovies);
-      (episodesService.getRecentEpisodesForProfile as jest.Mock).mockResolvedValue(mockRecentEpisodes);
-      (episodesService.getUpcomingEpisodesForProfile as jest.Mock).mockResolvedValue(mockUpcomingEpisodes);
-      (Show.getNextUnwatchedEpisodesForProfile as jest.Mock).mockResolvedValue(mockNextUnwatchedEpisodes);
-      (Movie.getRecentMovieReleasesForProfile as jest.Mock).mockResolvedValue(mockRecentMovies);
-      (Movie.getUpcomingMovieReleasesForProfile as jest.Mock).mockResolvedValue(mockUpcomingMovies);
-
-      const result = await service.getProfile(123);
-
-      expect(mockCache.getOrSet).toHaveBeenCalled();
-      expect(profilesDb.findProfileById).toHaveBeenCalledWith(123);
-      expect(showService.getShowsForProfile).toHaveBeenCalledWith('123');
-      expect(moviesService.getMoviesForProfile).toHaveBeenCalledWith('123');
-      expect(episodesService.getRecentEpisodesForProfile).toHaveBeenCalledWith('123');
-      expect(episodesService.getUpcomingEpisodesForProfile).toHaveBeenCalledWith('123');
-      expect(Show.getNextUnwatchedEpisodesForProfile).toHaveBeenCalledWith('123');
-
-      expect(result).toEqual({
-        profile: { id: 123, name: 'Test Profile', image: 'profile-image-url.jpg' },
-        shows: mockShows,
-        movies: mockMovies,
-        recentEpisodes: mockRecentEpisodes,
-        upcomingEpisodes: mockUpcomingEpisodes,
-        nextUnwatchedEpisodes: mockNextUnwatchedEpisodes,
-        recentMovies: mockRecentMovies,
-        upcomingMovies: mockUpcomingMovies,
-      });
-    });
-
-    it('should throw NotFoundError when profile does not exist', async () => {
-      mockCache.getOrSet.mockImplementation(async (key, fn) => fn());
-      (profilesDb.findProfileById as jest.Mock).mockResolvedValue(null);
-
-      await expect(service.getProfile(999)).rejects.toThrow(CustomError);
-      expect(profilesDb.findProfileById).toHaveBeenCalledWith(999);
-    });
-
-    it('should handle database errors', async () => {
-      const error = new Error('Database error');
-      mockCache.getOrSet.mockImplementation(async (key, fn) => fn());
-      (profilesDb.findProfileById as jest.Mock).mockRejectedValue(error);
-
-      await expect(service.getProfile(123)).rejects.toThrow('Database error');
-      expect(errorService.handleError).toHaveBeenCalledWith(error, 'getProfile(123)');
-    });
+    (getAccountImage as jest.Mock).mockReturnValue('account-image-url.jpg');
   });
 
   describe('editAccount', () => {
@@ -212,7 +83,7 @@ describe('AccountService', () => {
       (accountsDb.findAccountById as jest.Mock).mockResolvedValue(mockAccount);
       (accountsDb.editAccount as jest.Mock).mockResolvedValue(mockUpdatedAccount);
 
-      const result = await service.editAccount(123, 'Updated Account', 2);
+      const result = await accountService.editAccount(123, 'Updated Account', 2);
 
       expect(accountsDb.findAccountById).toHaveBeenCalledWith(123);
       expect(accountsDb.editAccount).toHaveBeenCalledWith(123, 'Updated Account', 2);
@@ -228,7 +99,7 @@ describe('AccountService', () => {
     it('should throw NotFoundError when account does not exist', async () => {
       (accountsDb.findAccountById as jest.Mock).mockResolvedValue(null);
 
-      await expect(service.editAccount(999, 'Test', 1)).rejects.toThrow(CustomError);
+      await expect(accountService.editAccount(999, 'Test', 1)).rejects.toThrow(CustomError);
       expect(accountsDb.findAccountById).toHaveBeenCalledWith(999);
     });
 
@@ -236,7 +107,7 @@ describe('AccountService', () => {
       (accountsDb.findAccountById as jest.Mock).mockResolvedValue(mockAccount);
       (accountsDb.editAccount as jest.Mock).mockResolvedValue(null);
 
-      await expect(service.editAccount(123, 'Updated Account', 2)).rejects.toThrow(CustomError);
+      await expect(accountService.editAccount(123, 'Updated Account', 2)).rejects.toThrow(CustomError);
       expect(accountsDb.findAccountById).toHaveBeenCalledWith(123);
       expect(accountsDb.editAccount).toHaveBeenCalledWith(123, 'Updated Account', 2);
     });
@@ -246,153 +117,200 @@ describe('AccountService', () => {
       (accountsDb.findAccountById as jest.Mock).mockResolvedValue(mockAccount);
       (accountsDb.editAccount as jest.Mock).mockRejectedValue(error);
 
-      await expect(service.editAccount(123, 'Updated Account', 2)).rejects.toThrow('Database error');
+      await expect(accountService.editAccount(123, 'Updated Account', 2)).rejects.toThrow('Database error');
       expect(errorService.handleError).toHaveBeenCalledWith(error, 'editAccount(123)');
     });
   });
 
-  describe('addProfile', () => {
-    it('should add a profile successfully', async () => {
-      const mockProfile = { name: 'New Profile', account_id: 1 };
-      const mockSavedProfile = { id: 456, name: 'New Profile', account_id: 1 };
-      (profilesDb.createProfile as jest.Mock).mockResolvedValue(mockProfile);
-      (profilesDb.saveProfile as jest.Mock).mockResolvedValue(mockSavedProfile);
+  describe('login', () => {
+    it('should successfully login an existing user', async () => {
+      (accountsDb.findAccountByUID as jest.Mock).mockResolvedValue(mockAccount);
 
-      const result = await service.addProfile(123, 'New Profile');
+      const result = await accountService.login('test-uid-123');
 
-      expect(profilesDb.createProfile).toHaveBeenCalledWith(123, 'New Profile');
-      expect(profilesDb.saveProfile).toHaveBeenCalled();
-      expect(mockCache.invalidateAccount).toHaveBeenCalledWith(123);
-      expect(result).toEqual({
-        id: 456,
-        name: 'New Profile',
-        image: 'profile-image-url.jpg',
+      expect(accountsDb.findAccountByUID).toHaveBeenCalledWith('test-uid-123');
+      expect(errorService.assertExists).toHaveBeenCalledWith(mockAccount, 'Account', 'test-uid-123');
+      expect(httpLogger.info).toHaveBeenCalledWith('User logged in: test@example.com', { userId: 'test-uid-123' });
+      expect(result).toEqual(mockAccount);
+    });
+
+    it('should throw error when user does not exist', async () => {
+      (accountsDb.findAccountByUID as jest.Mock).mockResolvedValue(null);
+      (errorService.assertExists as jest.Mock).mockImplementation(() => {
+        throw new Error('Account not found');
       });
+
+      await expect(accountService.login('nonexistent-uid')).rejects.toThrow('Account not found');
+      expect(accountsDb.findAccountByUID).toHaveBeenCalledWith('nonexistent-uid');
+      expect(errorService.assertExists).toHaveBeenCalledWith(null, 'Account', 'nonexistent-uid');
+      expect(httpLogger.info).not.toHaveBeenCalled();
     });
 
-    it('should throw BadRequestError when profile creation fails', async () => {
-      const mockProfile = { name: 'New Profile', account_id: 1 };
-      const mockSavedProfile = { id: undefined, name: 'New Profile', account_id: 1 };
-      (profilesDb.createProfile as jest.Mock).mockResolvedValue(mockProfile);
-      (profilesDb.saveProfile as jest.Mock).mockResolvedValue(mockSavedProfile);
+    it('should handle unexpected errors during login', async () => {
+      const dbError = new Error('Database connection failed');
+      (accountsDb.findAccountByUID as jest.Mock).mockRejectedValue(dbError);
 
-      await expect(service.addProfile(123, 'New Profile')).rejects.toThrow(CustomError);
-
-      expect(profilesDb.createProfile).toHaveBeenCalledWith(123, 'New Profile');
-      expect(profilesDb.saveProfile).toHaveBeenCalled();
-    });
-
-    it('should handle database errors', async () => {
-      const error = new Error('Database error');
-      const mockProfile = { name: 'New Profile', account_id: 1 };
-      (profilesDb.createProfile as jest.Mock).mockResolvedValue(mockProfile);
-      (profilesDb.saveProfile as jest.Mock).mockRejectedValue(error);
-
-      await expect(service.addProfile(123, 'New Profile')).rejects.toThrow('Database error');
-
-      expect(errorService.handleError).toHaveBeenCalledWith(error, 'addProfile(123, New Profile)');
+      await expect(accountService.login('test-uid-123')).rejects.toThrow('Database connection failed');
+      expect(errorService.handleError).toHaveBeenCalledWith(dbError, 'login(test-uid-123)');
     });
   });
 
-  describe('editProfile', () => {
-    const mockProfile = {
-      id: 123,
-      name: 'Original Profile',
-      account_id: 1,
-    };
+  describe('register', () => {
+    it('should successfully register a new user', async () => {
+      (accountsDb.findAccountByEmail as jest.Mock).mockResolvedValue(null);
+      (accountsDb.findAccountByUID as jest.Mock).mockResolvedValue(null);
+      (accountsDb.createAccount as jest.Mock).mockResolvedValue(null);
 
-    const mockUpdatedProfile = {
-      id: 123,
-      name: 'Updated Profile',
-      account_id: 1,
-    };
+      const result = await accountService.register('Test User', 'test@example.com', 'new-uid-123');
 
-    it('should update a profile successfully', async () => {
-      (profilesDb.findProfileById as jest.Mock).mockResolvedValue(mockProfile);
-      (profilesDb.updateProfileName as jest.Mock).mockResolvedValue(mockUpdatedProfile);
+      expect(accountsDb.findAccountByEmail).toHaveBeenCalledWith('test@example.com');
+      expect(accountsDb.findAccountByUID).toHaveBeenCalledWith('new-uid-123');
+      expect(accountsDb.createAccount).toHaveBeenCalledWith('Test User', 'test@example.com', 'new-uid-123');
+      expect(accountsDb.registerAccount).toHaveBeenCalled();
+      expect(httpLogger.info).toHaveBeenCalledWith('New user registered: test@example.com', { userId: 'new-uid-123' });
+    });
 
-      const result = await service.editProfileName(123, 'Updated Profile');
-
-      expect(profilesDb.findProfileById).toHaveBeenCalledWith(123);
-      expect(profilesDb.updateProfileName).toHaveBeenCalledWith(mockProfile, 'Updated Profile');
-      expect(mockCache.invalidateProfile).toHaveBeenCalledWith(123);
-      expect(mockCache.invalidateProfileStatistics).toHaveBeenCalledWith(123);
-      expect(result).toEqual({
-        id: 123,
-        name: 'Updated Profile',
-        image: 'profile-image-url.jpg',
+    it('should throw error when email already exists', async () => {
+      (accountsDb.findAccountByEmail as jest.Mock).mockResolvedValue(mockAccount);
+      (errorService.assertNotExists as jest.Mock).mockImplementation(() => {
+        throw new Error('Account with email test@example.com already exists');
       });
+
+      await expect(accountService.register('Test User', 'test@example.com', 'new-uid-123')).rejects.toThrow(
+        'Account with email test@example.com already exists',
+      );
+
+      expect(accountsDb.findAccountByEmail).toHaveBeenCalledWith('test@example.com');
+      expect(errorService.assertNotExists).toHaveBeenCalledWith(mockAccount, 'Account', 'email', 'test@example.com');
+      expect(accountsDb.findAccountByUID).not.toHaveBeenCalled();
     });
 
-    it('should throw NotFoundError when profile does not exist', async () => {
-      (profilesDb.findProfileById as jest.Mock).mockResolvedValue(null);
+    it('should throw error when UID already exists', async () => {
+      (accountsDb.findAccountByEmail as jest.Mock).mockResolvedValue(null);
+      (accountsDb.findAccountByUID as jest.Mock).mockResolvedValue(mockAccount);
+      (errorService.assertNotExists as jest.Mock)
+        .mockImplementationOnce(() => true)
+        .mockImplementationOnce(() => {
+          throw new Error('Account with uid test-uid-123 already exists');
+        });
 
-      await expect(service.editProfileName(999, 'Test')).rejects.toThrow(CustomError);
-      expect(profilesDb.findProfileById).toHaveBeenCalledWith(999);
+      await expect(accountService.register('Test User', 'new@example.com', 'test-uid-123')).rejects.toThrow(
+        'Account with uid test-uid-123 already exists',
+      );
+
+      expect(accountsDb.findAccountByEmail).toHaveBeenCalledWith('new@example.com');
+      expect(accountsDb.findAccountByUID).toHaveBeenCalledWith('test-uid-123');
+      expect(errorService.assertNotExists).toHaveBeenNthCalledWith(2, mockAccount, 'Account', 'uid', 'test-uid-123');
     });
 
-    it('should throw BadRequestError when update fails', async () => {
-      (profilesDb.findProfileById as jest.Mock).mockResolvedValue(mockProfile);
-      (profilesDb.updateProfileName as jest.Mock).mockResolvedValue(undefined);
+    it('should handle registration failure', async () => {
+      const registerError = new Error('Registration failed');
+      (accountsDb.findAccountByEmail as jest.Mock).mockResolvedValue(null);
+      (accountsDb.findAccountByUID as jest.Mock).mockResolvedValue(null);
+      (accountsDb.registerAccount as jest.Mock).mockRejectedValue(registerError);
 
-      await expect(service.editProfileName(123, 'Updated Profile')).rejects.toThrow(CustomError);
-      expect(profilesDb.findProfileById).toHaveBeenCalledWith(123);
-      expect(profilesDb.updateProfileName).toHaveBeenCalledWith(mockProfile, 'Updated Profile');
-    });
+      await expect(accountService.register('Test User', 'test@example.com', 'new-uid-123')).rejects.toThrow(
+        'Registration failed',
+      );
 
-    it('should handle database errors', async () => {
-      const error = new Error('Database error');
-      (profilesDb.findProfileById as jest.Mock).mockResolvedValue(mockProfile);
-      (profilesDb.updateProfileName as jest.Mock).mockRejectedValue(error);
-
-      await expect(service.editProfileName(123, 'Updated Profile')).rejects.toThrow('Database error');
-      expect(errorService.handleError).toHaveBeenCalledWith(error, 'editProfile(123)');
+      expect(accountsDb.registerAccount).toHaveBeenCalled();
+      expect(errorService.handleError).toHaveBeenCalledWith(
+        registerError,
+        'register(Test User, test@example.com, new-uid-123)',
+      );
     });
   });
 
-  describe('deleteProfile', () => {
-    const mockProfile = {
-      id: 123,
-      name: 'Profile to Delete',
-      account_id: 1,
-    };
+  describe('googleLogin', () => {
+    it('should login existing user with Google credentials', async () => {
+      (accountsDb.findAccountByUID as jest.Mock).mockResolvedValue(mockAccount);
 
-    it('should delete a profile successfully', async () => {
-      (profilesDb.findProfileById as jest.Mock).mockResolvedValue(mockProfile);
-      (profilesDb.deleteProfile as jest.Mock).mockResolvedValue(true);
+      const result = await accountService.googleLogin('Test User', 'test@example.com', 'test-uid-123');
 
-      const result = await service.deleteProfile(123, 1);
+      expect(accountsDb.findAccountByUID).toHaveBeenCalledWith('test-uid-123');
+      expect(accountsDb.findAccountByEmail).not.toHaveBeenCalled();
+      expect(httpLogger.info).toHaveBeenCalledWith('User logged in via Google: test@example.com', {
+        userId: 'test-uid-123',
+      });
 
-      expect(profilesDb.findProfileById).toHaveBeenCalledWith(123);
-      expect(profilesDb.deleteProfile).toHaveBeenCalled();
-      expect(mockCache.invalidateProfile).toHaveBeenCalledWith(123);
-      expect(mockCache.invalidateAccount).toHaveBeenCalledWith(1);
-      expect(result).toBe(true);
+      expect(result).toEqual({
+        account: mockAccount,
+        isNewAccount: false,
+      });
     });
 
-    it('should throw NotFoundError when profile does not exist', async () => {
-      (profilesDb.findProfileById as jest.Mock).mockResolvedValue(null);
+    it('should register new user with Google credentials', async () => {
+      const mockNewAccount = {
+        name: 'Google User',
+        email: 'google@example.com',
+        uid: 'new-google-uid',
+      };
 
-      await expect(service.deleteProfile(999, 1)).rejects.toThrow(CustomError);
-      expect(profilesDb.findProfileById).toHaveBeenCalledWith(999);
+      (accountsDb.findAccountByUID as jest.Mock).mockResolvedValue(null);
+      (accountsDb.findAccountByEmail as jest.Mock).mockResolvedValue(null);
+      (accountsDb.createAccount as jest.Mock).mockReturnValue(mockNewAccount);
+      (accountsDb.registerAccount as jest.Mock).mockResolvedValue(null);
+
+      const result = await accountService.googleLogin('Google User', 'google@example.com', 'new-google-uid');
+
+      expect(accountsDb.findAccountByUID).toHaveBeenCalledWith('new-google-uid');
+      expect(accountsDb.findAccountByEmail).toHaveBeenCalledWith('google@example.com');
+      expect(accountsDb.createAccount).toHaveBeenCalledWith('Google User', 'google@example.com', 'new-google-uid');
+      expect(accountsDb.registerAccount).toHaveBeenCalled();
+
+      expect(result).toEqual({
+        account: mockNewAccount,
+        isNewAccount: true,
+      });
     });
 
-    it('should throw BadRequestError when deletion fails', async () => {
-      (profilesDb.findProfileById as jest.Mock).mockResolvedValue(mockProfile);
-      (profilesDb.deleteProfile as jest.Mock).mockResolvedValue(false);
+    it('should throw error when email is already registered with different auth', async () => {
+      (accountsDb.findAccountByUID as jest.Mock).mockResolvedValue(null);
+      (accountsDb.findAccountByEmail as jest.Mock).mockResolvedValue({
+        ...mockAccount,
+        uid: 'different-auth-uid',
+      });
 
-      await expect(service.deleteProfile(123, 1)).rejects.toThrow(CustomError);
-      expect(profilesDb.findProfileById).toHaveBeenCalledWith(123);
-      expect(profilesDb.deleteProfile).toHaveBeenCalled();
+      await expect(accountService.googleLogin('Google User', 'test@example.com', 'google-uid-123')).rejects.toThrow(
+        CustomError,
+      );
+
+      expect(accountsDb.findAccountByUID).toHaveBeenCalledWith('google-uid-123');
+      expect(accountsDb.findAccountByEmail).toHaveBeenCalledWith('test@example.com');
+      expect(accountsDb.createAccount).not.toHaveBeenCalled();
     });
 
-    it('should handle database errors', async () => {
-      const error = new Error('Database error');
-      (profilesDb.findProfileById as jest.Mock).mockResolvedValue(mockProfile);
-      (profilesDb.deleteProfile as jest.Mock).mockRejectedValue(error);
+    it('should handle errors in Google login process', async () => {
+      const dbError = new Error('Database error');
+      (accountsDb.findAccountByUID as jest.Mock).mockRejectedValue(dbError);
 
-      await expect(service.deleteProfile(123, 1)).rejects.toThrow('Database error');
-      expect(errorService.handleError).toHaveBeenCalledWith(error, 'deleteProfile(123)');
+      await expect(accountService.googleLogin('Google User', 'google@example.com', 'google-uid-123')).rejects.toThrow(
+        'Database error',
+      );
+
+      expect(errorService.handleError).toHaveBeenCalledWith(
+        dbError,
+        'googleLogin(Google User, google@example.com, google-uid-123)',
+      );
+    });
+  });
+
+  describe('logout', () => {
+    it('should invalidate account cache on logout', async () => {
+      await accountService.logout('1');
+
+      expect(mockCacheService.invalidateAccount).toHaveBeenCalledWith('1');
+      expect(cliLogger.info).toHaveBeenCalledWith('User logged out: account ID 1');
+    });
+
+    it('should handle errors during logout', async () => {
+      const cacheError = new Error('Cache invalidation failed');
+      mockCacheService.invalidateAccount.mockImplementation(() => {
+        throw cacheError;
+      });
+
+      await expect(accountService.logout('1')).rejects.toThrow('Cache invalidation failed');
+      expect(errorService.handleError).toHaveBeenCalledWith(cacheError, 'logout(1)');
     });
   });
 });

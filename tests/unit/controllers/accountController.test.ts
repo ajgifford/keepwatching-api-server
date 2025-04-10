@@ -1,17 +1,21 @@
-import {
-  addProfile,
-  deleteProfile,
-  editAccount,
-  editProfile,
-  getProfile,
-  getProfiles,
-} from '@controllers/accountController';
+import { editAccount, googleLogin, login, logout, register } from '@controllers/accountController';
 import { accountService } from '@services/accountService';
+import { getAccountImage, getPhotoForGoogleAccount } from '@utils/imageUtility';
 
 jest.mock('@services/accountService');
+jest.mock('@utils/imageUtility');
 
 describe('accountController', () => {
   let req: any, res: any, next: jest.Mock;
+
+  const mockAccount = {
+    id: 1,
+    name: 'Test User',
+    email: 'test@example.com',
+    uid: 'test-uid-123',
+    default_profile_id: 101,
+    image: 'account-image.png',
+  };
 
   beforeEach(() => {
     req = {
@@ -25,77 +29,233 @@ describe('accountController', () => {
     next = jest.fn();
 
     jest.clearAllMocks();
+
+    (getAccountImage as jest.Mock).mockReturnValue('account-image-url.jpg');
+    (getPhotoForGoogleAccount as jest.Mock).mockReturnValue('google-profile-image-url.jpg');
   });
 
-  describe('getProfiles', () => {
-    it('should return profiles for account', async () => {
-      const mockProfiles = [
-        { id: 11, name: 'Test Profile 1', image: 'profile1.jpg' },
-        { id: 12, name: 'Test Profile 2', image: 'profile2.jpg' },
-      ];
-
-      (accountService.getProfiles as jest.Mock).mockResolvedValue(mockProfiles);
-
-      await getProfiles(req, res, next);
-
-      expect(accountService.getProfiles).toHaveBeenCalledWith(1);
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({
-        message: 'Retrieved profiles for account 1',
-        results: mockProfiles,
-      });
-      expect(next).not.toHaveBeenCalled();
-    });
-
-    it('should handle errors', async () => {
-      const error = new Error('Failed to get profiles');
-      (accountService.getProfiles as jest.Mock).mockRejectedValue(error);
-
-      await getProfiles(req, res, next);
-
-      expect(accountService.getProfiles).toHaveBeenCalledWith(1);
-      expect(next).toHaveBeenCalledWith(error);
-      expect(res.status).not.toHaveBeenCalled();
-      expect(res.json).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('getProfile', () => {
-    it('should retrieve profile with all related content', async () => {
-      const mockProfileData = {
-        profile: { id: 123, name: 'Test Profile', image: 'profile.jpg' },
-        shows: [{ show_id: 1, title: 'Show 1' }],
-        recentEpisodes: [{ episode_id: 1, title: 'Recent Episode' }],
-        upcomingEpisodes: [{ episode_id: 2, title: 'Upcoming Episode' }],
-        nextUnwatchedEpisodes: [{ show_id: 1, episodes: [{ episode_id: 3 }] }],
-        movies: [{ movie_id: 1, title: 'Movie 1' }],
-        recentMovies: [{ movie_id: 2, title: 'Recent Movie' }],
-        upcomingMovies: [{ movie_id: 3, title: 'Upcoming Movie' }],
+  describe('register', () => {
+    it('should register a new account successfully', async () => {
+      req.body = {
+        name: 'Test User',
+        email: 'test@example.com',
+        uid: 'test-uid-123',
       };
 
-      (accountService.getProfile as jest.Mock).mockResolvedValue(mockProfileData);
+      (accountService.register as jest.Mock).mockResolvedValue(mockAccount);
 
-      await getProfile(req, res, next);
+      await register(req, res, next);
 
-      expect(accountService.getProfile).toHaveBeenCalledWith(123);
-      expect(res.status).toHaveBeenCalledWith(200);
+      expect(accountService.register).toHaveBeenCalledWith('Test User', 'test@example.com', 'test-uid-123');
+      expect(getAccountImage).toHaveBeenCalledWith('account-image.png', 'Test User');
+      expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith({
-        message: 'Retrieved profile with id: 123',
-        results: mockProfileData,
+        message: 'Account registered successfully',
+        result: {
+          id: 1,
+          name: 'Test User',
+          uid: 'test-uid-123',
+          email: 'test@example.com',
+          image: 'account-image-url.jpg',
+          default_profile_id: 101,
+        },
       });
       expect(next).not.toHaveBeenCalled();
     });
 
-    it('should handle errors', async () => {
-      const error = new Error('Profile not found');
-      (accountService.getProfile as jest.Mock).mockRejectedValue(error);
+    it('should handle registration errors', async () => {
+      req.body = {
+        name: 'Test User',
+        email: 'test@example.com',
+        uid: 'test-uid-123',
+      };
 
-      await getProfile(req, res, next);
+      const error = new Error('Registration failed');
+      (accountService.register as jest.Mock).mockRejectedValue(error);
 
-      expect(accountService.getProfile).toHaveBeenCalledWith(123);
-      expect(next).toHaveBeenCalledWith(error);
+      await register(req, res, next);
+
+      expect(accountService.register).toHaveBeenCalledWith('Test User', 'test@example.com', 'test-uid-123');
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
+      expect(next).toHaveBeenCalledWith(error);
+    });
+  });
+
+  describe('login', () => {
+    it('should login an existing account successfully', async () => {
+      req.body = {
+        uid: 'test-uid-123',
+      };
+
+      (accountService.login as jest.Mock).mockResolvedValue(mockAccount);
+
+      await login(req, res, next);
+
+      expect(accountService.login).toHaveBeenCalledWith('test-uid-123');
+      expect(getAccountImage).toHaveBeenCalledWith('account-image.png', 'Test User');
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Login successful',
+        result: {
+          id: 1,
+          name: 'Test User',
+          uid: 'test-uid-123',
+          email: 'test@example.com',
+          image: 'account-image-url.jpg',
+          default_profile_id: 101,
+        },
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should handle login errors', async () => {
+      req.body = {
+        uid: 'test-uid-123',
+      };
+
+      const error = new Error('Login failed');
+      (accountService.login as jest.Mock).mockRejectedValue(error);
+
+      await login(req, res, next);
+
+      expect(accountService.login).toHaveBeenCalledWith('test-uid-123');
+      expect(res.status).not.toHaveBeenCalled();
+      expect(res.json).not.toHaveBeenCalled();
+      expect(next).toHaveBeenCalledWith(error);
+    });
+  });
+
+  describe('googleLogin', () => {
+    it('should handle new account registration via Google', async () => {
+      req.body = {
+        name: 'Google User',
+        email: 'google@example.com',
+        uid: 'google-uid-123',
+        photoURL: 'https://example.com/photo.jpg',
+      };
+
+      const googleAccount = {
+        ...mockAccount,
+        name: 'Google User',
+        email: 'google@example.com',
+        uid: 'google-uid-123',
+      };
+
+      (accountService.googleLogin as jest.Mock).mockResolvedValue({
+        message: 'Account registered successfully',
+        account: googleAccount,
+        isNewAccount: true,
+      });
+
+      await googleLogin(req, res, next);
+
+      expect(accountService.googleLogin).toHaveBeenCalledWith('Google User', 'google@example.com', 'google-uid-123');
+
+      expect(getPhotoForGoogleAccount).toHaveBeenCalledWith(
+        'Google User',
+        'https://example.com/photo.jpg',
+        'account-image.png',
+      );
+
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Account registered successfully',
+        result: {
+          id: 1,
+          name: 'Google User',
+          uid: 'google-uid-123',
+          email: 'google@example.com',
+          image: 'google-profile-image-url.jpg',
+          default_profile_id: 101,
+          isNewAccount: true,
+        },
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should handle existing account login via Google', async () => {
+      req.body = {
+        name: 'Google User',
+        email: 'google@example.com',
+        uid: 'google-uid-123',
+        photoURL: 'https://example.com/photo.jpg',
+      };
+
+      const googleAccount = {
+        ...mockAccount,
+        name: 'Google User',
+        email: 'google@example.com',
+        uid: 'google-uid-123',
+      };
+
+      (accountService.googleLogin as jest.Mock).mockResolvedValue({
+        message: 'Login successful',
+        account: googleAccount,
+        isNewAccount: false,
+      });
+
+      await googleLogin(req, res, next);
+
+      expect(accountService.googleLogin).toHaveBeenCalledWith('Google User', 'google@example.com', 'google-uid-123');
+
+      expect(getPhotoForGoogleAccount).toHaveBeenCalledWith(
+        'Google User',
+        'https://example.com/photo.jpg',
+        'account-image.png',
+      );
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Login successful',
+        result: {
+          id: 1,
+          name: 'Google User',
+          uid: 'google-uid-123',
+          email: 'google@example.com',
+          image: 'google-profile-image-url.jpg',
+          default_profile_id: 101,
+          isNewAccount: false,
+        },
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should handle Google login errors', async () => {
+      req.body = {
+        name: 'Google User',
+        email: 'google@example.com',
+        uid: 'google-uid-123',
+        photoURL: 'https://example.com/photo.jpg',
+      };
+
+      const error = new Error('Google login failed');
+      (accountService.googleLogin as jest.Mock).mockRejectedValue(error);
+
+      await googleLogin(req, res, next);
+
+      expect(accountService.googleLogin).toHaveBeenCalledWith('Google User', 'google@example.com', 'google-uid-123');
+
+      expect(res.status).not.toHaveBeenCalled();
+      expect(res.json).not.toHaveBeenCalled();
+      expect(next).toHaveBeenCalledWith(error);
+    });
+  });
+
+  describe('logout', () => {
+    it('should handle logout successfully', async () => {
+      req.body = {
+        accountId: '1',
+      };
+
+      (accountService.logout as jest.Mock).mockResolvedValue(undefined);
+
+      await logout(req, res, next);
+
+      expect(accountService.logout).toHaveBeenCalledWith('1');
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ message: 'Account logged out' });
+      expect(next).not.toHaveBeenCalled();
     });
   });
 
@@ -131,103 +291,6 @@ describe('accountController', () => {
       await editAccount(req, res, next);
 
       expect(accountService.editAccount).toHaveBeenCalledWith(1, 'Updated Account Name', 12);
-      expect(next).toHaveBeenCalledWith(error);
-      expect(res.status).not.toHaveBeenCalled();
-      expect(res.json).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('addProfile', () => {
-    it('should add a profile successfully', async () => {
-      req.body = { name: 'New Profile' };
-      const mockNewProfile = {
-        id: 13,
-        name: 'New Profile',
-        image: 'default-profile.jpg',
-      };
-
-      (accountService.addProfile as jest.Mock).mockResolvedValue(mockNewProfile);
-
-      await addProfile(req, res, next);
-
-      expect(accountService.addProfile).toHaveBeenCalledWith(1, 'New Profile');
-      expect(res.status).toHaveBeenCalledWith(201);
-      expect(res.json).toHaveBeenCalledWith({
-        message: 'Profile added successfully',
-        result: mockNewProfile,
-      });
-      expect(next).not.toHaveBeenCalled();
-    });
-
-    it('should handle errors', async () => {
-      req.body = { name: 'New Profile' };
-      const error = new Error('Failed to add profile');
-      (accountService.addProfile as jest.Mock).mockRejectedValue(error);
-
-      await addProfile(req, res, next);
-
-      expect(accountService.addProfile).toHaveBeenCalledWith(1, 'New Profile');
-      expect(next).toHaveBeenCalledWith(error);
-      expect(res.status).not.toHaveBeenCalled();
-      expect(res.json).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('editProfile', () => {
-    it('should edit a profile successfully', async () => {
-      req.body = { name: 'Updated Profile Name' };
-      const mockUpdatedProfile = {
-        id: 123,
-        name: 'Updated Profile Name',
-        image: 'profile.jpg',
-      };
-
-      (accountService.editProfileName as jest.Mock).mockResolvedValue(mockUpdatedProfile);
-
-      await editProfile(req, res, next);
-
-      expect(accountService.editProfileName).toHaveBeenCalledWith(123, 'Updated Profile Name');
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({
-        message: 'Profile edited successfully',
-        result: mockUpdatedProfile,
-      });
-      expect(next).not.toHaveBeenCalled();
-    });
-
-    it('should handle errors', async () => {
-      req.body = { name: 'Updated Profile Name' };
-      const error = new Error('Profile not found');
-      (accountService.editProfileName as jest.Mock).mockRejectedValue(error);
-
-      await editProfile(req, res, next);
-
-      expect(accountService.editProfileName).toHaveBeenCalledWith(123, 'Updated Profile Name');
-      expect(next).toHaveBeenCalledWith(error);
-      expect(res.status).not.toHaveBeenCalled();
-      expect(res.json).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('deleteProfile', () => {
-    it('should delete a profile successfully', async () => {
-      (accountService.deleteProfile as jest.Mock).mockResolvedValue(true);
-
-      await deleteProfile(req, res, next);
-
-      expect(accountService.deleteProfile).toHaveBeenCalledWith(123, 1);
-      expect(res.status).toHaveBeenCalledWith(204);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Profile deleted successfully' });
-      expect(next).not.toHaveBeenCalled();
-    });
-
-    it('should handle errors', async () => {
-      const error = new Error('Profile not found');
-      (accountService.deleteProfile as jest.Mock).mockRejectedValue(error);
-
-      await deleteProfile(req, res, next);
-
-      expect(accountService.deleteProfile).toHaveBeenCalledWith(123, 1);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();

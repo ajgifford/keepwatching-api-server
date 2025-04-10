@@ -157,29 +157,48 @@ describe('moviesController', () => {
 
   describe('getRecentUpcomingForProfile', () => {
     it('should get recent and upcoming movies', async () => {
-      const mockData = {
-        recentMovies: [{ movie_id: 1, title: 'Recent Movie' }],
-        upcomingMovies: [{ movie_id: 2, title: 'Upcoming Movie' }],
-      };
-      (moviesService.getRecentUpcomingMoviesForProfile as jest.Mock).mockResolvedValue(mockData);
+      const recentMovies = [{ movie_id: 1, title: 'Recent Movie' }];
+      const upcomingMovies = [{ movie_id: 2, title: 'Upcoming Movie' }];
+
+      (moviesService.getRecentMoviesForProfile as jest.Mock).mockResolvedValue(recentMovies);
+      (moviesService.getUpcomingMoviesForProfile as jest.Mock).mockResolvedValue(upcomingMovies);
 
       await getRecentUpcomingForProfile(req, res, next);
 
-      expect(moviesService.getRecentUpcomingMoviesForProfile).toHaveBeenCalledWith('123');
+      expect(moviesService.getRecentMoviesForProfile).toHaveBeenCalledWith('123');
+      expect(moviesService.getUpcomingMoviesForProfile).toHaveBeenCalledWith('123');
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully retrieved recent & upcoming movies for a profile',
-        results: mockData,
+        results: { recentMovies, upcomingMovies },
       });
     });
 
-    it('should handle errors', async () => {
-      const error = new Error('Failed to get recent and upcoming movies');
-      (moviesService.getRecentUpcomingMoviesForProfile as jest.Mock).mockRejectedValue(error);
+    it('should handle errors from getRecentMoviesForProfile', async () => {
+      const error = new Error('Failed to get recent movies');
+      (moviesService.getRecentMoviesForProfile as jest.Mock).mockRejectedValue(error);
+      const upcomingMovies = [{ movie_id: 2, title: 'Upcoming Movie' }];
+      (moviesService.getUpcomingMoviesForProfile as jest.Mock).mockResolvedValue(upcomingMovies);
 
       await getRecentUpcomingForProfile(req, res, next);
 
-      expect(moviesService.getRecentUpcomingMoviesForProfile).toHaveBeenCalledWith('123');
+      expect(moviesService.getRecentMoviesForProfile).toHaveBeenCalledWith('123');
+      expect(moviesService.getUpcomingMoviesForProfile).not.toHaveBeenCalled();
+      expect(next).toHaveBeenCalledWith(error);
+      expect(res.status).not.toHaveBeenCalled();
+      expect(res.json).not.toHaveBeenCalled();
+    });
+
+    it('should handle errors from getUpcomingMoviesForProfile', async () => {
+      const recentMovies = [{ movie_id: 1, title: 'Recent Movie' }];
+      (moviesService.getRecentMoviesForProfile as jest.Mock).mockResolvedValue(recentMovies);
+      const error = new Error('Failed to get upcoming movies');
+      (moviesService.getUpcomingMoviesForProfile as jest.Mock).mockRejectedValue(error);
+
+      await getRecentUpcomingForProfile(req, res, next);
+
+      expect(moviesService.getRecentMoviesForProfile).toHaveBeenCalledWith('123');
+      expect(moviesService.getUpcomingMoviesForProfile).toHaveBeenCalledWith('123');
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
