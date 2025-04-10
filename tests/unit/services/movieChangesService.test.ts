@@ -1,7 +1,6 @@
 import { Change, ContentUpdates } from '../../../src/types/contentTypes';
 import * as moviesDb from '@db/moviesDb';
 import { cliLogger, httpLogger } from '@logger/logger';
-import Movie from '@models/movie';
 import { errorService } from '@services/errorService';
 import { checkForMovieChanges } from '@services/movieChangesService';
 import { getTMDBService } from '@services/tmdbService';
