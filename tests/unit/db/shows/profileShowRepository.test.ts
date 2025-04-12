@@ -1,6 +1,6 @@
 import * as showsDb from '@db/showsDb';
 import { getDbPool } from '@utils/db';
-import { ResultSetHeader, RowDataPacket } from 'mysql2';
+import { RowDataPacket } from 'mysql2';
 
 jest.mock('@utils/db', () => {
   const mockPool = {
