@@ -1,6 +1,6 @@
+import * as showsDb from '../db/showsDb';
 import { cliLogger, httpLogger } from '../logger/logger';
 import { ErrorMessages } from '../logger/loggerModel';
-import Show from '../models/show';
 import { Change, ContentUpdates } from '../types/contentTypes';
 import { SUPPORTED_CHANGE_KEYS } from '../utils/changesUtility';
 import { getEpisodeToAirId, getInProduction, getUSNetwork, getUSRating } from '../utils/contentUtility';
@@ -28,7 +28,7 @@ export async function checkForShowChanges(content: ContentUpdates, pastDate: str
     if (supportedChanges.length > 0) {
       const showDetails = await tmdbService.getShowDetails(content.tmdb_id);
 
-      const updatedShow = new Show(
+      const updatedShow = showsDb.createShow(
         showDetails.id,
         showDetails.name,
         showDetails.overview,
@@ -51,9 +51,9 @@ export async function checkForShowChanges(content: ContentUpdates, pastDate: str
         getUSNetwork(showDetails.networks),
       );
 
-      await updatedShow.update();
+      await showsDb.updateShow(updatedShow);
 
-      const profileIds = await updatedShow.getProfilesForShow();
+      const profileIds = await showsDb.getProfilesForShow(updatedShow.id!);
 
       const seasonChanges = changes.filter((item) => item.key === 'season');
       if (seasonChanges.length > 0) {

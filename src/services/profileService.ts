@@ -7,7 +7,6 @@ import { episodesService } from './episodesService';
 import { errorService } from './errorService';
 import { moviesService } from './moviesService';
 import { showService } from './showService';
-import Show from '@models/show';
 
 /**
  * Service class for handling profile-related business logic
@@ -83,7 +82,7 @@ export class ProfileService {
             moviesService.getMoviesForProfile(profileId.toString()),
             episodesService.getRecentEpisodesForProfile(profileId.toString()),
             episodesService.getUpcomingEpisodesForProfile(profileId.toString()),
-            Show.getNextUnwatchedEpisodesForProfile(profileId.toString()),
+            showService.getNextUnwatchedEpisodesForProfile(profileId.toString()),
             moviesService.getRecentMoviesForProfile(profileId.toString()),
             moviesService.getUpcomingMoviesForProfile(profileId.toString()),
           ]);

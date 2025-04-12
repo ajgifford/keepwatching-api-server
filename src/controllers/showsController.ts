@@ -62,9 +62,11 @@ export async function getProfileEpisodes(req: Request, res: Response, next: Next
 export async function addFavorite(req: Request, res: Response, next: NextFunction) {
   try {
     const { profileId } = req.params as AccountAndProfileIdsParams;
-    const { showId: showId }: AddShowFavoriteParams = req.body;
+    const { showId }: AddShowFavoriteParams = req.body;
 
+    console.log('Marking show as a favorite', showId);
     const result = await showService.addShowToFavorites(profileId, showId);
+    console.log('Show marked as a favorite', result);
 
     res.status(200).json({ message: `Successfully saved show as a favorite`, result });
   } catch (error) {

@@ -1,7 +1,7 @@
 import * as moviesDb from '../db/moviesDb';
+import * as showsDb from '../db/showsDb';
 import { cliLogger, httpLogger } from '../logger/logger';
 import { ErrorMessages } from '../logger/loggerModel';
-import Show from '../models/show';
 import { generateDateRange, sleep } from '../utils/changesUtility';
 import { checkForMovieChanges } from './movieChangesService';
 import { checkForShowChanges } from './showChangesService';
@@ -36,7 +36,7 @@ export async function updateMovies() {
  */
 export async function updateShows() {
   try {
-    const shows = await Show.getShowsForUpdates();
+    const shows = await showsDb.getShowsForUpdates();
     cliLogger.info(`Found ${shows.length} shows to check for updates`);
     const { currentDate, pastDate } = generateDateRange(2);
 

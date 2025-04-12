@@ -1,7 +1,7 @@
 import * as episodesDb from '../db/episodesDb';
 import * as seasonsDb from '../db/seasonsDb';
+import * as showsDb from '../db/showsDb';
 import { BadRequestError } from '../middleware/errorMiddleware';
-import Show from '../models/show';
 import { errorService } from './errorService';
 import { showService } from './showService';
 
@@ -29,7 +29,7 @@ export class EpisodesService {
       showService.invalidateProfileCache(profileId);
 
       // Get fresh data for next unwatched episodes
-      const nextUnwatchedEpisodes = await Show.getNextUnwatchedEpisodesForProfile(profileId);
+      const nextUnwatchedEpisodes = await showsDb.getNextUnwatchedEpisodesForProfile(profileId);
       return { nextUnwatchedEpisodes };
     } catch (error) {
       throw errorService.handleError(error, `updateEpisodeWatchStatus(${profileId}, ${episodeId}, ${status})`);
@@ -62,13 +62,13 @@ export class EpisodesService {
 
       // Update related season and show statuses based on episode change
       await seasonsDb.updateWatchStatusByEpisode(profileId, seasonId);
-      await Show.updateWatchStatusBySeason(profileId, showId);
+      await showsDb.updateWatchStatusBySeason(profileId, showId);
 
       // Invalidate cache for the profile to ensure fresh data
       showService.invalidateProfileCache(profileId);
 
       // Get fresh data for next unwatched episodes
-      const nextUnwatchedEpisodes = await Show.getNextUnwatchedEpisodesForProfile(profileId);
+      const nextUnwatchedEpisodes = await showsDb.getNextUnwatchedEpisodesForProfile(profileId);
       return { nextUnwatchedEpisodes };
     } catch (error) {
       throw errorService.handleError(

@@ -1,6 +1,6 @@
 import * as seasonsDb from '../db/seasonsDb';
+import * as showsDb from '../db/showsDb';
 import { BadRequestError } from '../middleware/errorMiddleware';
-import Show from '../models/show';
 import { errorService } from './errorService';
 import { showService } from './showService';
 
@@ -35,7 +35,7 @@ export class SeasonsService {
 
       const showId = await seasonsDb.getShowIdForSeason(seasonId);
       if (showId) {
-        await Show.updateWatchStatusBySeason(profileId, showId);
+        await showsDb.updateWatchStatusBySeason(profileId, showId);
 
         showService.invalidateProfileCache(profileId);
       }
@@ -80,9 +80,9 @@ export class SeasonsService {
 
         const seasonShowId = await seasonsDb.getShowIdForSeason(seasonId);
         if (seasonShowId) {
-          const showWatchStatus = await Show.getWatchStatus(profileId, seasonShowId);
+          const showWatchStatus = await showsDb.getWatchStatus(profileId, seasonShowId);
           if (showWatchStatus === 'WATCHED') {
-            await Show.updateWatchStatus(profileId, seasonShowId, 'WATCHING');
+            await showsDb.updateWatchStatus(profileId, seasonShowId, 'WATCHING');
           }
         }
       }

@@ -1,6 +1,5 @@
 import * as profilesDb from '@db/profilesDb';
 import { CustomError } from '@middleware/errorMiddleware';
-import Show from '@models/show';
 import { CacheService } from '@services/cacheService';
 import { episodesService } from '@services/episodesService';
 import { errorService } from '@services/errorService';
@@ -10,7 +9,6 @@ import { showService } from '@services/showService';
 import { getProfileImage } from '@utils/imageUtility';
 
 jest.mock('@db/profilesDb');
-jest.mock('@models/show');
 jest.mock('@services/cacheService');
 jest.mock('@services/errorService');
 jest.mock('@services/episodesService');
@@ -142,7 +140,7 @@ describe('ProfileService', () => {
       (moviesService.getMoviesForProfile as jest.Mock).mockResolvedValue(mockMovies);
       (episodesService.getRecentEpisodesForProfile as jest.Mock).mockResolvedValue(mockRecentEpisodes);
       (episodesService.getUpcomingEpisodesForProfile as jest.Mock).mockResolvedValue(mockUpcomingEpisodes);
-      (Show.getNextUnwatchedEpisodesForProfile as jest.Mock).mockResolvedValue(mockNextUnwatchedEpisodes);
+      (showService.getNextUnwatchedEpisodesForProfile as jest.Mock).mockResolvedValue(mockNextUnwatchedEpisodes);
       (moviesService.getRecentMoviesForProfile as jest.Mock).mockResolvedValue(mockRecentMovies);
       (moviesService.getUpcomingMoviesForProfile as jest.Mock).mockResolvedValue(mockUpcomingMovies);
 
@@ -154,7 +152,7 @@ describe('ProfileService', () => {
       expect(moviesService.getMoviesForProfile).toHaveBeenCalledWith('123');
       expect(episodesService.getRecentEpisodesForProfile).toHaveBeenCalledWith('123');
       expect(episodesService.getUpcomingEpisodesForProfile).toHaveBeenCalledWith('123');
-      expect(Show.getNextUnwatchedEpisodesForProfile).toHaveBeenCalledWith('123');
+      expect(showService.getNextUnwatchedEpisodesForProfile).toHaveBeenCalledWith('123');
 
       expect(result).toEqual({
         profile: { id: 123, name: 'Test Profile', image: 'profile-image-url.jpg' },

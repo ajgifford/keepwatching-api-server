@@ -1,7 +1,7 @@
 import * as moviesDb from '@db/moviesDb';
+import * as showsDb from '@db/showsDb';
 import { cliLogger, httpLogger } from '@logger/logger';
 import { ErrorMessages } from '@logger/loggerModel';
-import Show from '@models/show';
 import { updateMovies, updateShows } from '@services/contentUpdatesService';
 import { checkForMovieChanges } from '@services/movieChangesService';
 import { checkForShowChanges } from '@services/showChangesService';
@@ -18,10 +18,7 @@ jest.mock('@logger/logger', () => ({
 }));
 
 jest.mock('@db/moviesDb');
-
-jest.mock('@models/show', () => ({
-  getShowsForUpdates: jest.fn(),
-}));
+jest.mock('@db/showsDb');
 
 jest.mock('@services/movieChangesService', () => ({
   checkForMovieChanges: jest.fn(),
@@ -117,7 +114,7 @@ describe('contentUpdatesService', () => {
         { id: 1, tmdb_id: 201, title: 'Show 1' },
         { id: 2, tmdb_id: 202, title: 'Show 2' },
       ];
-      (Show.getShowsForUpdates as jest.Mock).mockResolvedValue(mockShows);
+      (showsDb.getShowsForUpdates as jest.Mock).mockResolvedValue(mockShows);
       (checkForShowChanges as jest.Mock).mockResolvedValue(undefined);
       (changesUtility.generateDateRange as jest.Mock).mockReturnValue({
         currentDate: '2025-01-01',
@@ -126,7 +123,7 @@ describe('contentUpdatesService', () => {
 
       await updateShows();
 
-      expect(Show.getShowsForUpdates).toHaveBeenCalledTimes(1);
+      expect(showsDb.getShowsForUpdates).toHaveBeenCalledTimes(1);
       expect(changesUtility.generateDateRange).toHaveBeenCalledWith(2);
       expect(cliLogger.info).toHaveBeenCalledWith('Found 2 shows to check for updates');
       expect(checkForShowChanges).toHaveBeenCalledTimes(2);
@@ -137,7 +134,7 @@ describe('contentUpdatesService', () => {
 
     it('should handle error when fetching shows', async () => {
       const error = new Error('Database error');
-      (Show.getShowsForUpdates as jest.Mock).mockRejectedValue(error);
+      (showsDb.getShowsForUpdates as jest.Mock).mockRejectedValue(error);
 
       await expect(updateShows()).rejects.toThrow('Database error');
       expect(cliLogger.error).toHaveBeenCalledWith('Unexpected error while checking for show updates', error);
@@ -153,7 +150,7 @@ describe('contentUpdatesService', () => {
       ];
       const error = new Error('API error');
 
-      (Show.getShowsForUpdates as jest.Mock).mockResolvedValue(mockShows);
+      (showsDb.getShowsForUpdates as jest.Mock).mockResolvedValue(mockShows);
       (checkForShowChanges as jest.Mock)
         .mockResolvedValueOnce(undefined)
         .mockRejectedValueOnce(error)
@@ -166,7 +163,7 @@ describe('contentUpdatesService', () => {
 
       await updateShows();
 
-      expect(Show.getShowsForUpdates).toHaveBeenCalledTimes(1);
+      expect(showsDb.getShowsForUpdates).toHaveBeenCalledTimes(1);
       expect(checkForShowChanges).toHaveBeenCalledTimes(3);
       expect(cliLogger.error).toHaveBeenCalledWith('Failed to check for changes in show ID 2', error);
       expect(checkForShowChanges).toHaveBeenCalledWith(mockShows[0], '2024-12-30', '2025-01-01');
@@ -175,7 +172,7 @@ describe('contentUpdatesService', () => {
     });
 
     it('should handle empty show list', async () => {
-      (Show.getShowsForUpdates as jest.Mock).mockResolvedValue([]);
+      (showsDb.getShowsForUpdates as jest.Mock).mockResolvedValue([]);
       (changesUtility.generateDateRange as jest.Mock).mockReturnValue({
         currentDate: '2025-01-01',
         pastDate: '2024-12-30',
@@ -183,7 +180,7 @@ describe('contentUpdatesService', () => {
 
       await updateShows();
 
-      expect(Show.getShowsForUpdates).toHaveBeenCalledTimes(1);
+      expect(showsDb.getShowsForUpdates).toHaveBeenCalledTimes(1);
       expect(cliLogger.info).toHaveBeenCalledWith('Found 0 shows to check for updates');
       expect(checkForShowChanges).not.toHaveBeenCalled();
     });

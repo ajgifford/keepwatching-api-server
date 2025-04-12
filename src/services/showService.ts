@@ -2,9 +2,10 @@ import { PROFILE_KEYS, SHOW_KEYS } from '../constants/cacheKeys';
 import * as episodesDb from '../db/episodesDb';
 import * as profilesDb from '../db/profilesDb';
 import * as seasonsDb from '../db/seasonsDb';
+import * as showsDb from '../db/showsDb';
 import { cliLogger } from '../logger/logger';
 import { BadRequestError } from '../middleware/errorMiddleware';
-import Show from '../models/show';
+import { ContinueWatchingShow, Show } from '../types/showTypes';
 import { getEpisodeToAirId, getInProduction, getUSNetwork, getUSRating } from '../utils/contentUtility';
 import { generateGenreArrayFromIds } from '../utils/genreUtility';
 import { filterUSOrEnglishShows } from '../utils/usSearchFilter';
@@ -52,7 +53,11 @@ export class ShowService {
    */
   public async getShowsForProfile(profileId: string) {
     try {
-      return await this.cache.getOrSet(PROFILE_KEYS.shows(profileId), () => Show.getAllShowsForProfile(profileId), 600);
+      return await this.cache.getOrSet(
+        PROFILE_KEYS.shows(profileId),
+        () => showsDb.getAllShowsForProfile(profileId),
+        600,
+      );
     } catch (error) {
       throw errorService.handleError(error, `getShowsForProfile(${profileId})`);
     }
@@ -70,7 +75,7 @@ export class ShowService {
     try {
       const show = await this.cache.getOrSet(
         SHOW_KEYS.details(profileId, showId),
-        () => Show.getShowDetailsForProfile(profileId, showId),
+        () => showsDb.getShowWithSeasonsForProfile(profileId, showId),
         600,
       );
 
@@ -95,7 +100,7 @@ export class ShowService {
           const [recentEpisodes, upcomingEpisodes, nextUnwatchedEpisodes] = await Promise.all([
             episodesDb.getRecentEpisodesForProfile(profileId),
             episodesDb.getUpcomingEpisodesForProfile(profileId),
-            Show.getNextUnwatchedEpisodesForProfile(profileId),
+            showsDb.getNextUnwatchedEpisodesForProfile(profileId),
           ]);
 
           return {
@@ -112,6 +117,26 @@ export class ShowService {
   }
 
   /**
+   * Gets the next unwatched episodes for shows a profile has recently watched
+   *
+   * @param profileId - ID of the profile to get next unwatched episodes for
+   * @returns Array of shows with their next unwatched episodes, ordered by most recently watched
+   */
+  public async getNextUnwatchedEpisodesForProfile(profileId: string): Promise<ContinueWatchingShow[]> {
+    try {
+      return await this.cache.getOrSet(
+        PROFILE_KEYS.nextUnwatchedEpisodes(profileId),
+        async () => {
+          return await showsDb.getNextUnwatchedEpisodesForProfile(profileId);
+        },
+        300,
+      );
+    } catch (error) {
+      throw errorService.handleError(error, `getNextUnwatchedEpisodesForProfile(${profileId})`);
+    }
+  }
+
+  /**
    * Adds a show to a profile's favorites
    *
    * @param profileId - ID of the profile to add the show for
@@ -120,11 +145,13 @@ export class ShowService {
    */
   public async addShowToFavorites(profileId: string, showId: number) {
     try {
-      const existingShowToFavorite = await Show.findByTMDBId(showId);
+      const existingShowToFavorite = await showsDb.findShowByTMDBId(showId);
       if (existingShowToFavorite) {
+        console.log('Favorite an existing show');
         return await this.favoriteExistingShow(existingShowToFavorite, profileId);
       }
 
+      console.log('Favorite a new show');
       return await this.favoriteNewShow(showId, profileId);
     } catch (error) {
       throw errorService.handleError(error, `addShowToFavorites(${profileId}, ${showId})`);
@@ -139,11 +166,11 @@ export class ShowService {
    * @returns Object containing the favorited show and updated episode lists
    */
   private async favoriteExistingShow(showToFavorite: Show, profileId: string) {
-    await showToFavorite.saveFavorite(profileId, true);
+    await showsDb.saveFavorite(profileId, showToFavorite.id!, true);
 
     this.invalidateProfileCache(profileId);
 
-    const show = await Show.getShowForProfile(profileId, showToFavorite.id!);
+    const show = await showsDb.getShowForProfile(profileId, showToFavorite.id!);
     const episodeData = await this.getEpisodesForProfile(profileId);
 
     return {
@@ -163,8 +190,9 @@ export class ShowService {
   private async favoriteNewShow(showId: number, profileId: string) {
     const tmdbService = getTMDBService();
     const responseShow = await tmdbService.getShowDetails(showId);
+    console.log('Show details from TMDB', responseShow);
 
-    const newShowToFavorite = new Show(
+    const newShowToFavorite = showsDb.createShow(
       responseShow.id,
       responseShow.name,
       responseShow.overview,
@@ -175,8 +203,8 @@ export class ShowService {
       getUSRating(responseShow.content_ratings),
       undefined,
       getUSWatchProviders(responseShow, 9999),
-      responseShow.number_of_episodes,
       responseShow.number_of_seasons,
+      responseShow.number_of_episodes,
       responseShow.genres.map((genre: { id: any }) => genre.id),
       responseShow.status,
       responseShow.type,
@@ -186,17 +214,21 @@ export class ShowService {
       getEpisodeToAirId(responseShow.next_episode_to_air),
       getUSNetwork(responseShow.networks),
     );
+    console.log('new show created', newShowToFavorite);
 
-    const isSaved = await newShowToFavorite.save();
+    const isSaved = await showsDb.saveShow(newShowToFavorite);
     if (!isSaved) {
       throw new BadRequestError('Failed to save the show as a favorite');
     }
+    console.log('new show saved', newShowToFavorite);
 
-    await newShowToFavorite.saveFavorite(profileId, false);
+    await showsDb.saveFavorite(profileId, showId, false);
     this.invalidateProfileCache(profileId);
+    console.log('new show favorited');
 
     // Start background process to fetch seasons and episodes
-    const show = await Show.getShowForProfile(profileId, newShowToFavorite.id!);
+    const show = await showsDb.getShowForProfile(profileId, newShowToFavorite.id!);
+    console.log('new show fetched', show);
     this.fetchSeasonsAndEpisodes(responseShow, newShowToFavorite.id!, profileId);
 
     return { favoritedShow: show };
@@ -256,7 +288,7 @@ export class ShowService {
         await new Promise((resolve) => setTimeout(resolve, 200));
       }
 
-      const loadedShow = await Show.getShowForProfile(profileId, showId);
+      const loadedShow = await showsDb.getShowForProfile(profileId, showId);
       await socketService.notifyShowDataLoaded(profileId, showId, loadedShow);
     } catch (error) {
       cliLogger.error('Error fetching seasons and episodes:', error);
@@ -272,10 +304,10 @@ export class ShowService {
    */
   public async removeShowFromFavorites(profileId: string, showId: number) {
     try {
-      const showToRemove = await Show.findById(showId);
+      const showToRemove = await showsDb.findShowById(showId);
       errorService.assertExists(showToRemove, 'Show', showId);
 
-      await showToRemove.removeFavorite(profileId);
+      await showsDb.removeFavorite(profileId, showId);
 
       this.invalidateProfileCache(profileId);
 
@@ -302,8 +334,8 @@ export class ShowService {
   public async updateShowWatchStatus(profileId: string, showId: number, status: string, recursive: boolean = false) {
     try {
       const success = recursive
-        ? await Show.updateAllWatchStatuses(profileId, showId, status)
-        : await Show.updateWatchStatus(profileId, showId, status);
+        ? await showsDb.updateAllWatchStatuses(profileId, showId, status)
+        : await showsDb.updateWatchStatus(profileId, showId, status);
 
       if (!success) {
         throw new BadRequestError(
@@ -330,10 +362,10 @@ export class ShowService {
   public async updateShowWatchStatusForNewContent(showId: number, profileIds: number[]): Promise<void> {
     try {
       for (const profileId of profileIds) {
-        const watchStatus = await Show.getWatchStatus(String(profileId), showId);
+        const watchStatus = await showsDb.getWatchStatus(String(profileId), showId);
 
         if (watchStatus === 'WATCHED') {
-          await Show.updateWatchStatus(String(profileId), showId, 'WATCHING');
+          await showsDb.updateWatchStatus(String(profileId), showId, 'WATCHING');
           this.cache.invalidate(SHOW_KEYS.details(profileId, showId));
           this.cache.invalidate(PROFILE_KEYS.shows(profileId));
           this.cache.invalidate(PROFILE_KEYS.nextUnwatchedEpisodes(profileId));
@@ -353,7 +385,7 @@ export class ShowService {
    */
   public async getShowRecommendations(profileId: string, showId: number) {
     try {
-      const show = await Show.findById(showId);
+      const show = await showsDb.findShowById(showId);
       errorService.assertExists(show, 'Show', showId);
 
       return await this.cache.getOrSet(
@@ -363,7 +395,7 @@ export class ShowService {
           const response = await tmdbService.getShowRecommendations(show.tmdb_id);
           const responseShows = filterUSOrEnglishShows(response.results);
 
-          const userShows = await Show.getAllShowsForProfile(profileId);
+          const userShows = await showsDb.getAllShowsForProfile(profileId);
           const userShowIds = new Set(userShows.map((s) => s.tmdb_id));
 
           const recommendations = responseShows.map((rec: any) => ({
@@ -398,7 +430,7 @@ export class ShowService {
    */
   public async getSimilarShows(profileId: string, showId: number) {
     try {
-      const show = await Show.findById(showId);
+      const show = await showsDb.findShowById(showId);
       errorService.assertExists(show, 'Show', showId);
 
       return await this.cache.getOrSet(
@@ -408,7 +440,7 @@ export class ShowService {
           const response = await tmdbService.getSimilarShows(show.tmdb_id);
           const responseShows = filterUSOrEnglishShows(response.results);
 
-          const userShows = await Show.getAllShowsForProfile(profileId);
+          const userShows = await showsDb.getAllShowsForProfile(profileId);
           const userShowIds = new Set(userShows.map((s) => s.tmdb_id));
 
           const similarShows = responseShows.map((rec: any) => ({
@@ -445,7 +477,7 @@ export class ShowService {
       return await this.cache.getOrSet(
         PROFILE_KEYS.showStatistics(profileId),
         async () => {
-          const shows = await Show.getAllShowsForProfile(profileId);
+          const shows = await showsDb.getAllShowsForProfile(profileId);
 
           const total = shows.length;
           const watched = shows.filter((s) => s.watch_status === 'WATCHED').length;
@@ -502,7 +534,7 @@ export class ShowService {
       return await this.cache.getOrSet(
         PROFILE_KEYS.watchProgress(profileId),
         async () => {
-          const shows = await Show.getAllShowsForProfile(profileId);
+          const shows = await showsDb.getAllShowsForProfile(profileId);
 
           let totalEpisodes = 0;
           let watchedEpisodes = 0;
