@@ -21,8 +21,7 @@ export async function saveFavorite(profileId: string, showId: number, saveChildr
   try {
     await transactionHelper.executeInTransaction(async (connection) => {
       const query = 'INSERT IGNORE INTO show_watch_status (profile_id, show_id) VALUES (?,?)';
-      await connection.execute(query, [Number(profileId), showId]);
-      console.log('Saved the show as a favorite in saveFavorite');
+      await connection.execute<ResultSetHeader>(query, [Number(profileId), showId]);
 
       if (saveChildren) {
         const seasonQuery = 'SELECT id FROM seasons WHERE show_id = ?';

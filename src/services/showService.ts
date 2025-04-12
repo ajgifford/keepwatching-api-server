@@ -147,11 +147,9 @@ export class ShowService {
     try {
       const existingShowToFavorite = await showsDb.findShowByTMDBId(showId);
       if (existingShowToFavorite) {
-        console.log('Favorite an existing show');
         return await this.favoriteExistingShow(existingShowToFavorite, profileId);
       }
 
-      console.log('Favorite a new show');
       return await this.favoriteNewShow(showId, profileId);
     } catch (error) {
       throw errorService.handleError(error, `addShowToFavorites(${profileId}, ${showId})`);
@@ -190,7 +188,6 @@ export class ShowService {
   private async favoriteNewShow(showId: number, profileId: string) {
     const tmdbService = getTMDBService();
     const responseShow = await tmdbService.getShowDetails(showId);
-    console.log('Show details from TMDB', responseShow);
 
     const newShowToFavorite = showsDb.createShow(
       responseShow.id,
@@ -214,21 +211,17 @@ export class ShowService {
       getEpisodeToAirId(responseShow.next_episode_to_air),
       getUSNetwork(responseShow.networks),
     );
-    console.log('new show created', newShowToFavorite);
 
     const isSaved = await showsDb.saveShow(newShowToFavorite);
     if (!isSaved) {
       throw new BadRequestError('Failed to save the show as a favorite');
     }
-    console.log('new show saved', newShowToFavorite);
 
-    await showsDb.saveFavorite(profileId, showId, false);
+    await showsDb.saveFavorite(profileId, newShowToFavorite.id!, false);
     this.invalidateProfileCache(profileId);
-    console.log('new show favorited');
 
     // Start background process to fetch seasons and episodes
     const show = await showsDb.getShowForProfile(profileId, newShowToFavorite.id!);
-    console.log('new show fetched', show);
     this.fetchSeasonsAndEpisodes(responseShow, newShowToFavorite.id!, profileId);
 
     return { favoritedShow: show };

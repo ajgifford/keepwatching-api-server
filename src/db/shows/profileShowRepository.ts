@@ -45,10 +45,8 @@ export async function getAllShowsForProfile(profileId: string): Promise<ProfileS
  */
 export async function getShowForProfile(profileId: string, showId: number): Promise<ProfileShow> {
   try {
-    console.log('getShowForProfile > input >> ', profileId, showId);
     const query = 'SELECT * FROM profile_shows WHERE profile_id = ? AND show_id = ?';
     const [shows] = await getDbPool().execute<RowDataPacket[]>(query, [Number(profileId), showId]);
-    console.log('getShowForProfile > results >> ', shows);
     const result = transformRow(shows[0]);
 
     return result;
