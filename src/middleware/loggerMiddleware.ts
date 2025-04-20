@@ -1,6 +1,9 @@
-import { httpLogger } from '../logger/logger';
-import { HTTPMethods, SuccessMessages } from '../logger/loggerModel';
-import { formatHTTPLoggerResponse } from '../logger/loggerUtil';
+import {
+  HTTPMethods,
+  SuccessMessages,
+  formatHTTPLoggerResponse,
+  httpLogger,
+} from '@ajgifford/keepwatching-common-server/logger';
 import { NextFunction, Request, Response } from 'express';
 
 const responseInterceptor = (req: Request, res: Response, next: NextFunction) => {

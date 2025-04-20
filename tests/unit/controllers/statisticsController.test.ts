@@ -1,7 +1,7 @@
+import { statisticsService } from '@ajgifford/keepwatching-common-server/services';
 import { getAccountStatistics, getProfileStatistics } from '@controllers/statisticsController';
-import { statisticsService } from '@services/statisticsService';
 
-jest.mock('@services/statisticsService');
+jest.mock('@ajgifford/keepwatching-common-server/services/statisticsService');
 
 describe('statisticsController', () => {
   let req: any;
@@ -27,9 +27,9 @@ describe('statisticsController', () => {
       const mockStats = {
         showStatistics: { total: 10 },
         movieStatistics: { total: 5 },
-        episodeWatchProgress: { watchedEpisodes: 50 }
+        episodeWatchProgress: { watchedEpisodes: 50 },
       };
-      
+
       (statisticsService.getProfileStatistics as jest.Mock).mockResolvedValue(mockStats);
 
       await getProfileStatistics(req, res, next);
@@ -38,7 +38,7 @@ describe('statisticsController', () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully retrieved profile statistics',
-        results: mockStats
+        results: mockStats,
       });
       expect(next).not.toHaveBeenCalled();
     });
@@ -65,9 +65,9 @@ describe('statisticsController', () => {
         uniqueContent: { showCount: 15, movieCount: 10 },
         showStatistics: { total: 15 },
         movieStatistics: { total: 10 },
-        episodeStatistics: { totalEpisodes: 100, watchedEpisodes: 50 }
+        episodeStatistics: { totalEpisodes: 100, watchedEpisodes: 50 },
       };
-      
+
       (statisticsService.getAccountStatistics as jest.Mock).mockResolvedValue(mockStats);
 
       await getAccountStatistics(req, res, next);
@@ -76,7 +76,7 @@ describe('statisticsController', () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully retrieved account statistics',
-        results: mockStats
+        results: mockStats,
       });
       expect(next).not.toHaveBeenCalled();
     });

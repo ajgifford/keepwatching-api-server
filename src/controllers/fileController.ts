@@ -1,12 +1,10 @@
 import { UPLOADS_DIR } from '..';
-import * as accountsDb from '../db/accountsDb';
-import * as profilesDb from '../db/profilesDb';
-import { httpLogger } from '../logger/logger';
-import { BadRequestError } from '../middleware/errorMiddleware';
 import uploadFileMiddleware from '../middleware/uploadMiddleware';
 import { AccountAndProfileIdsParams, AccountIdParam } from '../schema/accountSchema';
-import { CacheService } from '../services/cacheService';
-import { getAccountImage, getProfileImage } from '../utils/imageUtility';
+import { httpLogger } from '@ajgifford/keepwatching-common-server/logger';
+import { BadRequestError } from '@ajgifford/keepwatching-common-server/middleware/errorMiddleware';
+import { accountService, profileService } from '@ajgifford/keepwatching-common-server/services';
+import { getAccountImage, getProfileImage } from '@ajgifford/keepwatching-common-server/utils';
 import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 import fs from 'fs';
@@ -21,9 +19,9 @@ export const uploadAccountImage = asyncHandler(async (req: Request, res: Respons
       res.status(400).send({ message: 'Please upload a file!' });
     } else {
       const accountImage = req.file.filename;
-      const account = await accountsDb.findAccountById(Number(accountId));
+      const account = await accountService.findAccountById(Number(accountId));
       if (account) {
-        const updatedAccount = await accountsDb.updateAccountImage(Number(accountId), accountImage);
+        const updatedAccount = await accountService.updateAccountImage(Number(accountId), accountImage);
         if (updatedAccount) {
           res.status(200).send({
             message: `Uploaded the file successfully: ${accountImage}`,
@@ -69,9 +67,9 @@ export const uploadProfileImage = asyncHandler(async (req: Request, res: Respons
       res.status(400).send({ message: 'Please upload a file!' });
     } else {
       const profileImage = req.file.filename;
-      const profile = await profilesDb.findProfileById(Number(profileId));
+      const profile = await profileService.findProfileById(Number(profileId));
       if (profile) {
-        const updatedProfile = await profilesDb.updateProfileImage(profile, profileImage);
+        const updatedProfile = await profileService.updateProfileImage(Number(profileId), profileImage);
         if (updatedProfile) {
           res.status(200).send({
             message: `Uploaded the file successfully: ${profileImage}`,
@@ -92,8 +90,7 @@ export const uploadProfileImage = asyncHandler(async (req: Request, res: Respons
             }
           });
 
-          const cache = CacheService.getInstance();
-          cache.invalidateProfile(profileId);
+          profileService.invalidateProfileCache(profileId);
         } else {
           throw new BadRequestError('Failed to add/update a profile image');
         }

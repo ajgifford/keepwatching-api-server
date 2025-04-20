@@ -1,4 +1,4 @@
-import { buildAccountImageName, buildProfileImageName } from '../utils/imageUtility';
+import { buildAccountImageName, buildProfileImageName } from '@ajgifford/keepwatching-common-server/utils';
 import { Request } from 'express';
 import fs from 'fs';
 import multer, { StorageEngine } from 'multer';

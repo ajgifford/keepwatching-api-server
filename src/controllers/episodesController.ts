@@ -1,6 +1,6 @@
 import { AccountAndProfileIdsParams } from '../schema/accountSchema';
 import { EpisodeWatchStatusParams, NextEpisodeWatchStatusParams } from '../schema/episodeSchema';
-import { episodesService } from '../services/episodesService';
+import { episodesService } from '@ajgifford/keepwatching-common-server/services';
 import { NextFunction, Request, Response } from 'express';
 
 // PUT /api/v1/accounts/:accountId/profiles/${profileId}/episodes/watchStatus

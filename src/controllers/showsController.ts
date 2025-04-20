@@ -1,6 +1,6 @@
 import { AccountAndProfileIdsParams } from '../schema/accountSchema';
 import { AddShowFavoriteParams, ShowParams, ShowWatchStatusParams } from '../schema/showSchema';
-import { showService } from '../services/showService';
+import { showService } from '@ajgifford/keepwatching-common-server/services';
 import { NextFunction, Request, Response } from 'express';
 
 /**

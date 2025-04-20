@@ -1,5 +1,5 @@
 import { DiscoverChangesQuery, DiscoverTopQuery, DiscoverTrendingQuery } from '../schema/discoverSchema';
-import { contentDiscoveryService } from '../services/contentDiscoveryService';
+import { contentDiscoveryService } from '@ajgifford/keepwatching-common-server/services';
 import { NextFunction, Request, Response } from 'express';
 
 // GET /api/v1/discover/top

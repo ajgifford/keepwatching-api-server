@@ -1,5 +1,5 @@
 import { SearchParams } from '../schema/searchSchema';
-import { MediaType, contentDiscoveryService } from '../services/contentDiscoveryService';
+import { MediaType, contentDiscoveryService } from '@ajgifford/keepwatching-common-server/services';
 import { NextFunction, Request, Response } from 'express';
 
 // GET /api/v1/search/shows

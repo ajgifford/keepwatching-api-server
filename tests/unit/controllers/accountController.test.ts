@@ -1,9 +1,22 @@
+import { accountService } from '@ajgifford/keepwatching-common-server/services';
+import { getAccountImage, getPhotoForGoogleAccount } from '@ajgifford/keepwatching-common-server/utils';
 import { editAccount, googleLogin, login, logout, register } from '@controllers/accountController';
-import { accountService } from '@services/accountService';
-import { getAccountImage, getPhotoForGoogleAccount } from '@utils/imageUtility';
 
-jest.mock('@services/accountService');
-jest.mock('@utils/imageUtility');
+// Mock the external packages
+jest.mock('@ajgifford/keepwatching-common-server/services', () => ({
+  accountService: {
+    register: jest.fn(),
+    login: jest.fn(),
+    googleLogin: jest.fn(),
+    logout: jest.fn(),
+    editAccount: jest.fn(),
+  },
+}));
+
+jest.mock('@ajgifford/keepwatching-common-server/utils', () => ({
+  getAccountImage: jest.fn(),
+  getPhotoForGoogleAccount: jest.fn(),
+}));
 
 describe('accountController', () => {
   let req: any, res: any, next: jest.Mock;
@@ -143,7 +156,6 @@ describe('accountController', () => {
       };
 
       (accountService.googleLogin as jest.Mock).mockResolvedValue({
-        message: 'Account registered successfully',
         account: googleAccount,
         isNewAccount: true,
       });
@@ -190,7 +202,6 @@ describe('accountController', () => {
       };
 
       (accountService.googleLogin as jest.Mock).mockResolvedValue({
-        message: 'Login successful',
         account: googleAccount,
         isNewAccount: false,
       });

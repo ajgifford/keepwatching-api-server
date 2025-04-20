@@ -2,10 +2,7 @@ import 'module-alias/register';
 
 import 'dotenv/config';
 
-import { cliLogger, httpLogger } from './logger/logger';
-import { ErrorMessages } from './logger/loggerModel';
 import { authenticateUser } from './middleware/authenticationMiddleware';
-import { errorHandler } from './middleware/errorMiddleware';
 import responseInterceptor from './middleware/loggerMiddleware';
 import accountRouter from './routes/accountRouter';
 import discoverRouter from './routes/discoverRouter';
@@ -18,10 +15,11 @@ import searchRouter from './routes/searchRouter';
 import seasonsRouter from './routes/seasonsRouter';
 import showsRouter from './routes/showsRouter';
 import statisticsRouter from './routes/statisticsRouter';
-import { initScheduledJobs, shutdownJobs } from './services/scheduledUpdatesService';
-import { socketService } from './services/socketService';
-import { getDbPool } from './utils/db';
-import { loadStreamingService } from './utils/watchProvidersUtility';
+import { ErrorMessages, cliLogger, httpLogger } from '@ajgifford/keepwatching-common-server/logger';
+import { errorHandler } from '@ajgifford/keepwatching-common-server/middleware/errorMiddleware';
+import { databaseService, socketService } from '@ajgifford/keepwatching-common-server/services';
+import { initScheduledJobs, shutdownJobs } from '@ajgifford/keepwatching-common-server/services';
+import { loadStreamingService } from '@ajgifford/keepwatching-common-server/utils';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
@@ -178,19 +176,15 @@ startServer();
 const gracefulShutdown = (signal: string) => {
   cliLogger.info(`Received ${signal}, starting graceful shutdown...`);
 
-  server.close(() => {
+  server.close(async () => {
     cliLogger.info('HTTP server closed');
 
     shutdownJobs();
 
     try {
-      const pool = getDbPool();
-      if (pool) {
-        cliLogger.info('Closing database connections...');
-        pool.end();
-      }
+      await databaseService.shutdown();
     } catch (err) {
-      cliLogger.error('Error closing database connections', err);
+      cliLogger.error('Error during database shutdown', err);
     }
 
     cliLogger.info('Graceful shutdown complete, exiting process');

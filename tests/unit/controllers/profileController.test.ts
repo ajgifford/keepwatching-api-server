@@ -1,7 +1,7 @@
+import { profileService } from '@ajgifford/keepwatching-common-server/services';
 import { addProfile, deleteProfile, editProfile, getProfile, getProfiles } from '@controllers/profileController';
-import { profileService } from '@services/profileService';
 
-jest.mock('@services/profileService');
+jest.mock('@ajgifford/keepwatching-common-server/services/profileService');
 
 describe('profileController', () => {
   let req: any, res: any, next: jest.Mock;

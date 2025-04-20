@@ -1,7 +1,7 @@
+import { seasonsService } from '@ajgifford/keepwatching-common-server/services';
 import { getSeasonsForShow, updateSeasonWatchStatus } from '@controllers/seasonsController';
-import { seasonsService } from '@services/seasonsService';
 
-jest.mock('@services/seasonsService');
+jest.mock('@ajgifford/keepwatching-common-server/services/seasonsService');
 
 describe('seasonsController', () => {
   let req: any;
@@ -32,7 +32,7 @@ describe('seasonsController', () => {
       expect(seasonsService.updateSeasonWatchStatus).toHaveBeenCalledWith('123', 456, 'WATCHED', false);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
-        message: 'Successfully updated the season watch status'
+        message: 'Successfully updated the season watch status',
       });
       expect(next).not.toHaveBeenCalled();
     });
@@ -46,7 +46,7 @@ describe('seasonsController', () => {
       expect(seasonsService.updateSeasonWatchStatus).toHaveBeenCalledWith('123', 456, 'WATCHED', true);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
-        message: 'Successfully updated the season watch status'
+        message: 'Successfully updated the season watch status',
       });
     });
 
@@ -69,7 +69,7 @@ describe('seasonsController', () => {
       req.params.showId = '200';
       const mockSeasons = [
         { season_id: 1, name: 'Season 1', episodes: [{ episode_id: 101 }, { episode_id: 102 }] },
-        { season_id: 2, name: 'Season 2', episodes: [{ episode_id: 201 }] }
+        { season_id: 2, name: 'Season 2', episodes: [{ episode_id: 201 }] },
       ];
       (seasonsService.getSeasonsForShow as jest.Mock).mockResolvedValue(mockSeasons);
 
@@ -79,7 +79,7 @@ describe('seasonsController', () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully retrieved seasons for the show',
-        results: mockSeasons
+        results: mockSeasons,
       });
       expect(next).not.toHaveBeenCalled();
     });

@@ -1,11 +1,7 @@
-import {
-  discoverChangesContent,
-  discoverTopContent,
-  discoverTrendingContent
-} from '@controllers/discoverController';
-import { contentDiscoveryService } from '@services/contentDiscoveryService';
+import { contentDiscoveryService } from '@ajgifford/keepwatching-common-server/services';
+import { discoverChangesContent, discoverTopContent, discoverTrendingContent } from '@controllers/discoverController';
 
-jest.mock('@services/contentDiscoveryService');
+jest.mock('@ajgifford/keepwatching-common-server/services/contentDiscoveryService');
 
 describe('discoverController', () => {
   let req: any;

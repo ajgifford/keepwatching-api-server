@@ -1,6 +1,6 @@
 import { AccountAndProfileIdsParams } from '../schema/accountSchema';
 import { AddMovieFavoriteParams, MovieWatchStatusParams, RemoveMovieFavoriteParams } from '../schema/movieSchema';
-import { moviesService } from '../services/moviesService';
+import { moviesService } from '@ajgifford/keepwatching-common-server/services';
 import { NextFunction, Request, Response } from 'express';
 
 /**

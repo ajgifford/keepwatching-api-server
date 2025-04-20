@@ -1,7 +1,7 @@
+import { MediaType, contentDiscoveryService } from '@ajgifford/keepwatching-common-server/services';
 import { searchMovies, searchShows } from '@controllers/searchController';
-import { MediaType, contentDiscoveryService } from '@services/contentDiscoveryService';
 
-jest.mock('@services/contentDiscoveryService');
+jest.mock('@ajgifford/keepwatching-common-server/services/contentDiscoveryService');
 
 describe('searchController', () => {
   let req: any;
@@ -40,12 +40,7 @@ describe('searchController', () => {
 
       await searchShows(req, res, next);
 
-      expect(contentDiscoveryService.searchMedia).toHaveBeenCalledWith(
-        MediaType.SHOW,
-        'Breaking Bad',
-        '2008',
-        '2'
-      );
+      expect(contentDiscoveryService.searchMedia).toHaveBeenCalledWith(MediaType.SHOW, 'Breaking Bad', '2008', '2');
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockSearchResults);
       expect(next).not.toHaveBeenCalled();
@@ -68,12 +63,7 @@ describe('searchController', () => {
 
       await searchShows(req, res, next);
 
-      expect(contentDiscoveryService.searchMedia).toHaveBeenCalledWith(
-        MediaType.SHOW,
-        'Breaking Bad',
-        '2008',
-        '1'
-      );
+      expect(contentDiscoveryService.searchMedia).toHaveBeenCalledWith(MediaType.SHOW, 'Breaking Bad', '2008', '1');
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockSearchResults);
     });
@@ -95,12 +85,7 @@ describe('searchController', () => {
 
       await searchShows(req, res, next);
 
-      expect(contentDiscoveryService.searchMedia).toHaveBeenCalledWith(
-        MediaType.SHOW,
-        'Breaking Bad',
-        undefined,
-        '1'
-      );
+      expect(contentDiscoveryService.searchMedia).toHaveBeenCalledWith(MediaType.SHOW, 'Breaking Bad', undefined, '1');
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockSearchResults);
     });
@@ -141,12 +126,7 @@ describe('searchController', () => {
 
       await searchMovies(req, res, next);
 
-      expect(contentDiscoveryService.searchMedia).toHaveBeenCalledWith(
-        MediaType.MOVIE,
-        'Inception',
-        '2010',
-        '2'
-      );
+      expect(contentDiscoveryService.searchMedia).toHaveBeenCalledWith(MediaType.MOVIE, 'Inception', '2010', '2');
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockSearchResults);
       expect(next).not.toHaveBeenCalled();
@@ -169,12 +149,7 @@ describe('searchController', () => {
 
       await searchMovies(req, res, next);
 
-      expect(contentDiscoveryService.searchMedia).toHaveBeenCalledWith(
-        MediaType.MOVIE,
-        'Inception',
-        '2010',
-        '1'
-      );
+      expect(contentDiscoveryService.searchMedia).toHaveBeenCalledWith(MediaType.MOVIE, 'Inception', '2010', '1');
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockSearchResults);
     });
@@ -196,12 +171,7 @@ describe('searchController', () => {
 
       await searchMovies(req, res, next);
 
-      expect(contentDiscoveryService.searchMedia).toHaveBeenCalledWith(
-        MediaType.MOVIE,
-        'Inception',
-        undefined,
-        '1'
-      );
+      expect(contentDiscoveryService.searchMedia).toHaveBeenCalledWith(MediaType.MOVIE, 'Inception', undefined, '1');
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockSearchResults);
     });

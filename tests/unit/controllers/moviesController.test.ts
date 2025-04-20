@@ -1,3 +1,4 @@
+import { moviesService } from '@ajgifford/keepwatching-common-server/services';
 import {
   addFavorite,
   getMovies,
@@ -5,9 +6,8 @@ import {
   removeFavorite,
   updateMovieWatchStatus,
 } from '@controllers/moviesController';
-import { moviesService } from '@services/moviesService';
 
-jest.mock('@services/moviesService');
+jest.mock('@ajgifford/keepwatching-common-server/services/moviesService');
 
 describe('moviesController', () => {
   let req: any;

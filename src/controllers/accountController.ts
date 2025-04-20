@@ -5,8 +5,8 @@ import {
   GoogleLoginParams,
   LoginParam,
 } from '../schema/accountSchema';
-import { accountService } from '../services/accountService';
-import { getAccountImage, getPhotoForGoogleAccount } from '../utils/imageUtility';
+import { accountService } from '@ajgifford/keepwatching-common-server/services';
+import { getAccountImage, getPhotoForGoogleAccount } from '@ajgifford/keepwatching-common-server/utils';
 import { NextFunction, Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 

@@ -1,3 +1,4 @@
+import { episodesService } from '@ajgifford/keepwatching-common-server/services';
 import {
   getEpisodesForSeason,
   getRecentEpisodes,
@@ -5,9 +6,8 @@ import {
   updateEpisodeWatchStatus,
   updateNextEpisodeWatchStatus,
 } from '@controllers/episodesController';
-import { episodesService } from '@services/episodesService';
 
-jest.mock('@services/episodesService');
+jest.mock('@ajgifford/keepwatching-common-server/services/episodesService');
 
 describe('episodesController', () => {
   let req: any;

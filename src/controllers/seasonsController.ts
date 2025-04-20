@@ -1,6 +1,6 @@
 import { AccountAndProfileIdsParams } from '../schema/accountSchema';
 import { SeasonWatchStatusParams } from '../schema/seasonSchema';
-import { seasonsService } from '../services/seasonsService';
+import { seasonsService } from '@ajgifford/keepwatching-common-server/services';
 import { NextFunction, Request, Response } from 'express';
 
 /**

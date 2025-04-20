@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "es2016",
-    "module": "commonjs",
+    "module": "Node16",
     "rootDir": "./src",
     "outDir": "./dist",
     "esModuleInterop": true,
@@ -9,19 +9,14 @@
     "strict": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "moduleResolution": "node",
+    "moduleResolution": "node16",
     "baseUrl": ".",
     "paths": {
-      "@models/*": ["src/models/*"],
-      "@utils/*": ["src/utils/*"],
-      "@middleware/*": ["src/middleware/*"],
       "@controllers/*": ["src/controllers/*"],
+      "@middleware/*": ["src/middleware/*"],
       "@routes/*": ["src/routes/*"],
-      "@services/*": ["src/services/*"],
-      "@logger/*": ["src/logger/*"],
       "@schema/*": ["src/schema/*"],
-      "@db/*": ["src/db/*"],
-      "@constants/*": ["src/constants/*"]
+      "@ajgifford/keepwatching-common-server/*": ["node_modules/@ajgifford/keepwatching-common-server/dist/*"]
     }
   },
   "include": ["src/**/*"],

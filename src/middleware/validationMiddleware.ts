@@ -1,4 +1,4 @@
-import { BadRequestError } from './errorMiddleware';
+import { BadRequestError } from '@ajgifford/keepwatching-common-server/middleware/errorMiddleware';
 import { NextFunction, Request, Response } from 'express';
 import { AnyZodObject, ZodError } from 'zod';
 
