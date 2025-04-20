@@ -6,7 +6,7 @@ import asyncHandler from 'express-async-handler';
 /**
  * Retrieves all profiles for a specific account.
  *
- * @route GET /api/v1/accounts/:id/profiles
+ * @route GET /api/v1/accounts/:accountId/profiles
  */
 export const getProfiles = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -26,7 +26,7 @@ export const getProfiles = asyncHandler(async (req: Request, res: Response, next
 /**
  * Retrieves a specific profile with all its associated content (shows, episodes, movies).
  *
- * @route GET /api/v1/accounts/:id/profiles/:profileId
+ * @route GET /api/v1/accounts/:accountId/profiles/:profileId
  */
 export const getProfile = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -46,7 +46,7 @@ export const getProfile = asyncHandler(async (req: Request, res: Response, next:
 /**
  * Creates a new profile for an account.
  *
- * @route POST /api/v1/accounts/:id/profiles
+ * @route POST /api/v1/accounts/:accountId/profiles
  */
 export const addProfile = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -67,7 +67,7 @@ export const addProfile = asyncHandler(async (req: Request, res: Response, next:
 /**
  * Updates an existing profile's details.
  *
- * @route PUT /api/v1/accounts/:id/profiles/:profileId
+ * @route PUT /api/v1/accounts/:accountId/profiles/:profileId
  */
 export const editProfile = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -90,7 +90,7 @@ export const editProfile = asyncHandler(async (req: Request, res: Response, next
  *
  * This action will cascade delete all watch status data for the profile.
  *
- * @route DELETE /api/v1/accounts/:id/profiles/:profileId
+ * @route DELETE /api/v1/accounts/:accountId/profiles/:profileId
  */
 export const deleteProfile = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {

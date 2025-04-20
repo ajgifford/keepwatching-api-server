@@ -15,7 +15,7 @@ import asyncHandler from 'express-async-handler';
  *
  * Creates a new user account with the provided details
  *
- * @route POST /api/v1/authentication/register
+ * @route POST /api/v1/accounts/register
  * @param {Request} req - Express request containing name, email, and uid in body
  * @param {Response} res - Express response
  * @param {NextFunction} next - Express next function
@@ -47,7 +47,7 @@ export const register = asyncHandler(async (req: Request, res: Response, next: N
  *
  * Authenticates a user with their Firebase UID
  *
- * @route POST /api/v1/authentication/login
+ * @route POST /api/v1/accounts/login
  * @param {Request} req - Express request containing uid in body
  * @param {Response} res - Express response
  * @param {NextFunction} next - Express next function
@@ -79,7 +79,7 @@ export const login = asyncHandler(async (req: Request, res: Response, next: Next
  *
  * Authenticates a user with Google credentials, creating a new account if needed
  *
- * @route POST /api/v1/authentication/googleLogin
+ * @route POST /api/v1/accounts/googleLogin
  * @param {Request} req - Express request containing name, email, uid, and optional photoURL in body
  * @param {Response} res - Express response
  * @param {NextFunction} next - Express next function
@@ -115,7 +115,7 @@ export const googleLogin = asyncHandler(async (req: Request, res: Response, next
  *
  * Logs out the user by invalidating their cache data
  *
- * @route POST /api/v1/authentication/logout
+ * @route POST /api/v1/accounts/logout
  * @param {Request} req - Express request containing accountId in body
  * @param {Response} res - Express response
  * @param {NextFunction} next - Express next function
@@ -134,7 +134,7 @@ export const logout = asyncHandler(async (req: Request, res: Response, next: Nex
 /**
  * Updates an account's details (name and default profile).
  *
- * @route PUT /api/v1/accounts/:id
+ * @route PUT /api/v1/accounts/:accountId
  */
 export const editAccount = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
