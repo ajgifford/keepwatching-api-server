@@ -102,6 +102,3 @@ export async function getRecentUpcomingForProfile(req: Request, res: Response, n
     next(error);
   }
 }
-
-// This function is now moved to the MoviesService class
-export { moviesService };

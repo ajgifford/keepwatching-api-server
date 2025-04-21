@@ -5,12 +5,12 @@ import { httpLogger } from '@ajgifford/keepwatching-common-server/logger';
 import { BadRequestError } from '@ajgifford/keepwatching-common-server/middleware/errorMiddleware';
 import { accountService, profileService } from '@ajgifford/keepwatching-common-server/services';
 import { getAccountImage, getProfileImage } from '@ajgifford/keepwatching-common-server/utils';
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 import fs from 'fs';
 
 // POST /api/v1/upload/accounts/:accountId
-export const uploadAccountImage = asyncHandler(async (req: Request, res: Response) => {
+export const uploadAccountImage = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const { accountId } = req.params as AccountIdParam;
   try {
     await uploadFileMiddleware(req, res);
@@ -50,15 +50,13 @@ export const uploadAccountImage = asyncHandler(async (req: Request, res: Respons
         throw new BadRequestError('Failed to add/update an account image');
       }
     }
-  } catch (err) {
-    res.status(500).send({
-      message: `Could not upload the file: ${req.file?.originalname}. ${err}`,
-    });
+  } catch (error) {
+    next(error);
   }
 });
 
 // POST /api/v1/upload/accounts/:accountId/profiles/:profileId
-export const uploadProfileImage = asyncHandler(async (req: Request, res: Response) => {
+export const uploadProfileImage = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const { profileId } = req.params as AccountAndProfileIdsParams;
   try {
     await uploadFileMiddleware(req, res);
@@ -98,9 +96,7 @@ export const uploadProfileImage = asyncHandler(async (req: Request, res: Respons
         throw new BadRequestError('Failed to add/update a profile image');
       }
     }
-  } catch (err) {
-    res.status(500).send({
-      message: `Could not upload the file: ${req.file?.originalname}. ${err}`,
-    });
+  } catch (error) {
+    next(error);
   }
 });
