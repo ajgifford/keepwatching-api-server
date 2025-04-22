@@ -1,5 +1,8 @@
-import { AccountAndProfileIdsParams } from '../schema/accountSchema';
-import { EpisodeWatchStatusParams, NextEpisodeWatchStatusParams } from '../schema/episodeSchema';
+import { AccountAndProfileIdsParams } from '@ajgifford/keepwatching-common-server/schema/accountSchema';
+import {
+  EpisodeWatchStatusParams,
+  NextEpisodeWatchStatusParams,
+} from '@ajgifford/keepwatching-common-server/schema/episodeSchema';
 import { episodesService } from '@ajgifford/keepwatching-common-server/services';
 import { NextFunction, Request, Response } from 'express';
 

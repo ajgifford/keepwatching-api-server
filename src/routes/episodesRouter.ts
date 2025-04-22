@@ -6,9 +6,12 @@ import {
   updateNextEpisodeWatchStatus,
 } from '../controllers/episodesController';
 import { authorizeAccountAccess } from '../middleware/authorizationMiddleware';
-import { validateRequest, validateSchema } from '../middleware/validationMiddleware';
-import { accountAndProfileIdsParamSchema } from '../schema/accountSchema';
-import { episodeWatchStatusSchema, nextEpisodeWatchStatusSchema } from '../schema/episodeSchema';
+import { validateRequest, validateSchema } from '@ajgifford/keepwatching-common-server/middleware/validationMiddleware';
+import { accountAndProfileIdsParamSchema } from '@ajgifford/keepwatching-common-server/schema/accountSchema';
+import {
+  episodeWatchStatusSchema,
+  nextEpisodeWatchStatusSchema,
+} from '@ajgifford/keepwatching-common-server/schema/episodeSchema';
 import express from 'express';
 
 const router = express.Router();

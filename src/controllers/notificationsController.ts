@@ -1,5 +1,5 @@
-import { AccountIdParam } from '../schema/accountSchema';
-import { DismissParams } from '../schema/notificationsSchema';
+import { AccountIdParam } from '@ajgifford/keepwatching-common-server/schema/accountSchema';
+import { DismissParams } from '@ajgifford/keepwatching-common-server/schema/notificationsSchema';
 import { notificationsService } from '@ajgifford/keepwatching-common-server/services';
 import { NextFunction, Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';

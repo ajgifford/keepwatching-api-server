@@ -4,8 +4,7 @@
     "paths": {
       "@controllers/*": ["src/controllers/*"],
       "@middleware/*": ["src/middleware/*"],
-      "@routes/*": ["src/routes/*"],
-      "@schema/*": ["src/schema/*"]
+      "@routes/*": ["src/routes/*"]
     }
   }
 }

@@ -4,7 +4,7 @@ import {
   AccountUpdateParams,
   GoogleLoginParams,
   LoginParam,
-} from '../schema/accountSchema';
+} from '@ajgifford/keepwatching-common-server/schema/accountSchema';
 import { accountService } from '@ajgifford/keepwatching-common-server/services';
 import { getAccountImage, getPhotoForGoogleAccount } from '@ajgifford/keepwatching-common-server/utils';
 import { NextFunction, Request, Response } from 'express';

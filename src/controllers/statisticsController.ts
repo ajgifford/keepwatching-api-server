@@ -1,4 +1,4 @@
-import { AccountAndProfileIdsParams, AccountIdParam } from '../schema/accountSchema';
+import { AccountAndProfileIdsParams, AccountIdParam } from '@ajgifford/keepwatching-common-server/schema/accountSchema';
 import { statisticsService } from '@ajgifford/keepwatching-common-server/services';
 import { NextFunction, Request, Response } from 'express';
 

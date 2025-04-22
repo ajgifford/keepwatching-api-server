@@ -1,4 +1,8 @@
-import { DiscoverChangesQuery, DiscoverTopQuery, DiscoverTrendingQuery } from '../schema/discoverSchema';
+import {
+  DiscoverChangesQuery,
+  DiscoverTopQuery,
+  DiscoverTrendingQuery,
+} from '@ajgifford/keepwatching-common-server/schema/discoverSchema';
 import { contentDiscoveryService } from '@ajgifford/keepwatching-common-server/services';
 import { NextFunction, Request, Response } from 'express';
 

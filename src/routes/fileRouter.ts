@@ -1,7 +1,10 @@
 import { uploadAccountImage, uploadProfileImage } from '../controllers/fileController';
 import { authorizeAccountAccess } from '../middleware/authorizationMiddleware';
-import { validateSchema } from '../middleware/validationMiddleware';
-import { accountAndProfileIdsParamSchema, accountIdParamSchema } from '../schema/accountSchema';
+import { validateSchema } from '@ajgifford/keepwatching-common-server/middleware/validationMiddleware';
+import {
+  accountAndProfileIdsParamSchema,
+  accountIdParamSchema,
+} from '@ajgifford/keepwatching-common-server/schema/accountSchema';
 import express from 'express';
 
 const router = express.Router();

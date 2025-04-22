@@ -15,7 +15,6 @@
       "@controllers/*": ["src/controllers/*"],
       "@middleware/*": ["src/middleware/*"],
       "@routes/*": ["src/routes/*"],
-      "@schema/*": ["src/schema/*"],
       "@ajgifford/keepwatching-common-server/*": ["node_modules/@ajgifford/keepwatching-common-server/dist/*"]
     }
   },

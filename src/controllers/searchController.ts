@@ -1,4 +1,4 @@
-import { SearchParams } from '../schema/searchSchema';
+import { SearchParams } from '@ajgifford/keepwatching-common-server/schema/searchSchema';
 import { MediaType, contentDiscoveryService } from '@ajgifford/keepwatching-common-server/services';
 import { NextFunction, Request, Response } from 'express';
 

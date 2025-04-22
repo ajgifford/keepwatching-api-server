@@ -1,4 +1,8 @@
-import { AccountAndProfileIdsParams, AccountIdParam, ProfileNameParam } from '../schema/accountSchema';
+import {
+  AccountAndProfileIdsParams,
+  AccountIdParam,
+  ProfileNameParam,
+} from '@ajgifford/keepwatching-common-server/schema/accountSchema';
 import { profileService } from '@ajgifford/keepwatching-common-server/services';
 import { NextFunction, Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
