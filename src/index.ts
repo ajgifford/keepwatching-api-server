@@ -15,6 +15,7 @@ import searchRouter from './routes/searchRouter';
 import seasonsRouter from './routes/seasonsRouter';
 import showsRouter from './routes/showsRouter';
 import statisticsRouter from './routes/statisticsRouter';
+import { getLogDirectory, getUploadDirectory } from './utils/environmentUtil';
 import { ErrorMessages, cliLogger, httpLogger } from '@ajgifford/keepwatching-common-server/logger';
 import { errorHandler } from '@ajgifford/keepwatching-common-server/middleware/errorMiddleware';
 import { databaseService, socketService } from '@ajgifford/keepwatching-common-server/services';
@@ -29,7 +30,6 @@ import admin from 'firebase-admin';
 import fs from 'fs';
 import helmet from 'helmet';
 import https from 'https';
-import path from 'path';
 import { Server } from 'socket.io';
 
 const KEY_PATH = process.env.CERT_KEY_PATH || 'certs/server.key';
@@ -42,9 +42,9 @@ const credentials = {
 
 const app: Express = express();
 const port = process.env.PORT || 3000;
-const DEFAULT_UPLOADS_DIR = path.join(process.cwd(), 'uploads');
-export const UPLOADS_DIR = process.env.UPLOADS_DIR || DEFAULT_UPLOADS_DIR;
-const LOG_DIRECTORY = path.resolve(process.env.LOG_DIR || 'logs');
+
+const UPLOADS_DIR = getUploadDirectory();
+const LOG_DIRECTORY = getLogDirectory();
 
 declare global {
   namespace Express {

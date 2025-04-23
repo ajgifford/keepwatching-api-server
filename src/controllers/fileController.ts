@@ -1,5 +1,5 @@
-import { UPLOADS_DIR } from '..';
 import uploadFileMiddleware from '../middleware/uploadMiddleware';
+import { getUploadDirectory } from '../utils/environmentUtil';
 import { httpLogger } from '@ajgifford/keepwatching-common-server/logger';
 import { BadRequestError } from '@ajgifford/keepwatching-common-server/middleware/errorMiddleware';
 import { AccountAndProfileIdsParams, AccountIdParam } from '@ajgifford/keepwatching-common-server/schema/accountSchema';
@@ -33,7 +33,7 @@ export const uploadAccountImage = asyncHandler(async (req: Request, res: Respons
               default_profile_id: account.default_profile_id,
             },
           });
-          const filePath = UPLOADS_DIR + '/accounts/' + account.image;
+          const filePath = getUploadDirectory() + '/accounts/' + account.image;
           fs.unlink(filePath, (err) => {
             if (err) {
               if (err.code === 'ENOENT') {
@@ -77,7 +77,7 @@ export const uploadProfileImage = asyncHandler(async (req: Request, res: Respons
               image: getProfileImage(updatedProfile.image, updatedProfile.name),
             },
           });
-          const filePath = UPLOADS_DIR + '/profiles/' + profile.image;
+          const filePath = getUploadDirectory() + '/profiles/' + profile.image;
           fs.unlink(filePath, (err) => {
             if (err) {
               if (err.code === 'ENOENT') {
