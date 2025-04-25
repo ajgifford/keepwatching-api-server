@@ -2,7 +2,11 @@ import { SearchParams } from '@ajgifford/keepwatching-common-server/schema/searc
 import { MediaType, contentDiscoveryService } from '@ajgifford/keepwatching-common-server/services';
 import { NextFunction, Request, Response } from 'express';
 
-// GET /api/v1/search/shows
+/**
+ * Search for shows
+ *
+ * @route GET /api/v1/search/shows
+ */
 export const searchShows = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { searchString, year, page = '1' } = req.query as unknown as SearchParams;
@@ -13,7 +17,11 @@ export const searchShows = async (req: Request, res: Response, next: NextFunctio
   }
 };
 
-// GET /api/v1/search/movies
+/**
+ * Search for movies
+ *
+ * @route GET /api/v1/search/movies
+ */
 export const searchMovies = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { searchString, year, page = '1' } = req.query as unknown as SearchParams;

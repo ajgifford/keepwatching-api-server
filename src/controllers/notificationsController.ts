@@ -4,6 +4,11 @@ import { notificationsService } from '@ajgifford/keepwatching-common-server/serv
 import { NextFunction, Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 
+/**
+ * Get notifications for an account
+ *
+ * @route GET /api/v1/accounts/:accountId/notifications
+ */
 export const getNotifications = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { accountId } = req.params as AccountIdParam;
@@ -14,6 +19,11 @@ export const getNotifications = asyncHandler(async (req: Request, res: Response,
   }
 });
 
+/**
+ * Dismiss a notification for an account
+ *
+ * @route POST /api/v1/accounts/:accountId/notifications/dismiss/:notificationId
+ */
 export const dismissNotification = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { accountId, notificationId } = req.params as DismissParams;
