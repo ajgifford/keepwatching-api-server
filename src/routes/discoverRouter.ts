@@ -1,10 +1,10 @@
 import { discoverChangesContent, discoverTopContent, discoverTrendingContent } from '../controllers/discoverController';
-import { validateSchema } from '@ajgifford/keepwatching-common-server/middleware/validationMiddleware';
+import { validateSchema } from '@ajgifford/keepwatching-common-server';
 import {
   discoverChangesQuerySchema,
   discoverTopQuerySchema,
   discoverTrendingQuerySchema,
-} from '@ajgifford/keepwatching-common-server/schema/discoverSchema';
+} from '@ajgifford/keepwatching-common-server/schema';
 import express from 'express';
 
 const router = express.Router();

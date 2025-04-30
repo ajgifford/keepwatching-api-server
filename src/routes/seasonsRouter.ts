@@ -1,8 +1,7 @@
 import { getSeasonsForShow, updateSeasonWatchStatus } from '../controllers/seasonsController';
 import { authorizeAccountAccess } from '../middleware/authorizationMiddleware';
-import { validateRequest, validateSchema } from '@ajgifford/keepwatching-common-server/middleware/validationMiddleware';
-import { accountAndProfileIdsParamSchema } from '@ajgifford/keepwatching-common-server/schema/accountSchema';
-import { seasonWatchStatusSchema } from '@ajgifford/keepwatching-common-server/schema/seasonSchema';
+import { validateRequest, validateSchema } from '@ajgifford/keepwatching-common-server';
+import { accountAndProfileIdsParamSchema, seasonWatchStatusSchema } from '@ajgifford/keepwatching-common-server/schema';
 import express from 'express';
 
 const router = express.Router();

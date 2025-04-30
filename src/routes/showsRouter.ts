@@ -9,13 +9,13 @@ import {
   updateShowWatchStatus,
 } from '../controllers/showsController';
 import { authorizeAccountAccess } from '../middleware/authorizationMiddleware';
-import { validateRequest, validateSchema } from '@ajgifford/keepwatching-common-server/middleware/validationMiddleware';
-import { accountAndProfileIdsParamSchema } from '@ajgifford/keepwatching-common-server/schema/accountSchema';
+import { validateRequest, validateSchema } from '@ajgifford/keepwatching-common-server';
 import {
+  accountAndProfileIdsParamSchema,
   addShowFavoriteSchema,
   showParamsSchema,
   showWatchStatusSchema,
-} from '@ajgifford/keepwatching-common-server/schema/showSchema';
+} from '@ajgifford/keepwatching-common-server/schema';
 import express from 'express';
 
 const router = express.Router();

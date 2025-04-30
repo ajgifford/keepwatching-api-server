@@ -1,8 +1,8 @@
 import uploadFileMiddleware from '../middleware/uploadMiddleware';
 import { getUploadDirectory } from '../utils/environmentUtil';
+import { BadRequestError } from '@ajgifford/keepwatching-common-server/';
 import { httpLogger } from '@ajgifford/keepwatching-common-server/logger';
-import { BadRequestError } from '@ajgifford/keepwatching-common-server/middleware/errorMiddleware';
-import { AccountAndProfileIdsParams, AccountIdParam } from '@ajgifford/keepwatching-common-server/schema/accountSchema';
+import { AccountAndProfileIdsParams, AccountIdParam } from '@ajgifford/keepwatching-common-server/schema';
 import { accountService, profileService } from '@ajgifford/keepwatching-common-server/services';
 import { getAccountImage, getProfileImage } from '@ajgifford/keepwatching-common-server/utils';
 import { NextFunction, Request, Response } from 'express';

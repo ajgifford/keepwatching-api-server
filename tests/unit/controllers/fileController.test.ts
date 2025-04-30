@@ -1,5 +1,5 @@
+import { BadRequestError } from '@ajgifford/keepwatching-common-server';
 import { httpLogger } from '@ajgifford/keepwatching-common-server/logger';
-import { BadRequestError } from '@ajgifford/keepwatching-common-server/middleware/errorMiddleware';
 import { accountService, profileService } from '@ajgifford/keepwatching-common-server/services';
 import { getAccountImage, getProfileImage } from '@ajgifford/keepwatching-common-server/utils';
 import { uploadAccountImage, uploadProfileImage } from '@controllers/fileController';

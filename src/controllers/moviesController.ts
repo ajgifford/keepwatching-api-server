@@ -1,9 +1,9 @@
-import { AccountAndProfileIdsParams } from '@ajgifford/keepwatching-common-server/schema/accountSchema';
 import {
+  AccountAndProfileIdsParams,
   AddMovieFavoriteParams,
   MovieWatchStatusParams,
   RemoveMovieFavoriteParams,
-} from '@ajgifford/keepwatching-common-server/schema/movieSchema';
+} from '@ajgifford/keepwatching-common-server/schema';
 import { moviesService } from '@ajgifford/keepwatching-common-server/services';
 import { NextFunction, Request, Response } from 'express';
 

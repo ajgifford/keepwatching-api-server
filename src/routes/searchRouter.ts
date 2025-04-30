@@ -1,6 +1,6 @@
 import { searchMovies, searchShows } from '../controllers/searchController';
-import { validateSchema } from '@ajgifford/keepwatching-common-server/middleware/validationMiddleware';
-import { searchParamsSchema } from '@ajgifford/keepwatching-common-server/schema/searchSchema';
+import { validateSchema } from '@ajgifford/keepwatching-common-server';
+import { searchParamsSchema } from '@ajgifford/keepwatching-common-server/schema';
 import express from 'express';
 
 const router = express.Router();

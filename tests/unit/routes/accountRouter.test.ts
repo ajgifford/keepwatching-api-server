@@ -18,7 +18,7 @@ jest.mock('@middleware/authorizationMiddleware', () => ({
   authorizeAccountAccess: (_req: any, _res: any, next: () => any) => next(),
 }));
 
-jest.mock('@ajgifford/keepwatching-common-server/middleware/validationMiddleware', () => ({
+jest.mock('@ajgifford/keepwatching-common-server', () => ({
   validateSchema: (_schema: any, _location: any) => (_req: any, _res: any, next: () => any) => next(),
   validateRequest: (_schema: any) => (_req: any, _res: any, next: () => any) => next(),
 }));

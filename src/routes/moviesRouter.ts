@@ -6,13 +6,13 @@ import {
   updateMovieWatchStatus,
 } from '../controllers/moviesController';
 import { authorizeAccountAccess } from '../middleware/authorizationMiddleware';
-import { validateRequest, validateSchema } from '@ajgifford/keepwatching-common-server/middleware/validationMiddleware';
-import { accountAndProfileIdsParamSchema } from '@ajgifford/keepwatching-common-server/schema/accountSchema';
+import { validateRequest, validateSchema } from '@ajgifford/keepwatching-common-server';
 import {
+  accountAndProfileIdsParamSchema,
   addMovieFavoriteSchema,
   movieWatchStatusSchema,
   removeMovieFavoriteParamSchema,
-} from '@ajgifford/keepwatching-common-server/schema/movieSchema';
+} from '@ajgifford/keepwatching-common-server/schema';
 import express from 'express';
 
 const router = express.Router();

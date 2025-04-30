@@ -2,7 +2,7 @@ import {
   DiscoverChangesQuery,
   DiscoverTopQuery,
   DiscoverTrendingQuery,
-} from '@ajgifford/keepwatching-common-server/schema/discoverSchema';
+} from '@ajgifford/keepwatching-common-server/schema';
 import { contentDiscoveryService } from '@ajgifford/keepwatching-common-server/services';
 import { NextFunction, Request, Response } from 'express';
 

@@ -1,9 +1,9 @@
-import { AccountAndProfileIdsParams } from '@ajgifford/keepwatching-common-server/schema/accountSchema';
 import {
+  AccountAndProfileIdsParams,
   AddShowFavoriteParams,
   ShowParams,
   ShowWatchStatusParams,
-} from '@ajgifford/keepwatching-common-server/schema/showSchema';
+} from '@ajgifford/keepwatching-common-server/schema';
 import { showService } from '@ajgifford/keepwatching-common-server/services';
 import { NextFunction, Request, Response } from 'express';
 

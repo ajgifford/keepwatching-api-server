@@ -1,11 +1,11 @@
 import { addProfile, deleteProfile, editProfile, getProfile, getProfiles } from '../controllers/profileController';
 import { authorizeAccountAccess } from '../middleware/authorizationMiddleware';
-import { validateRequest, validateSchema } from '@ajgifford/keepwatching-common-server/middleware/validationMiddleware';
+import { validateRequest, validateSchema } from '@ajgifford/keepwatching-common-server';
 import {
   accountAndProfileIdsParamSchema,
   accountIdParamSchema,
   profileNameSchema,
-} from '@ajgifford/keepwatching-common-server/schema/accountSchema';
+} from '@ajgifford/keepwatching-common-server/schema';
 import express from 'express';
 
 const router = express.Router();

@@ -1,4 +1,4 @@
-import { ForbiddenError, UnauthorizedError } from '@ajgifford/keepwatching-common-server/middleware/errorMiddleware';
+import { ForbiddenError, UnauthorizedError } from '@ajgifford/keepwatching-common-server';
 import { accountService } from '@ajgifford/keepwatching-common-server/services';
 import { NextFunction, Request, Response } from 'express';
 

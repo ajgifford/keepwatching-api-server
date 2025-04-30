@@ -15,11 +15,7 @@
       "@controllers/*": ["src/controllers/*"],
       "@middleware/*": ["src/middleware/*"],
       "@routes/*": ["src/routes/*"],
-      "@utils/*": ["src/utils/*"],
-      "@ajgifford/keepwatching-common-server/*": [
-        "node_modules/@ajgifford/keepwatching-common-server/dist/src/*",
-        "../keepwatching-common-server/dist/src/*"
-      ]
+      "@utils/*": ["src/utils/*"]
     }
   },
   "include": ["src/**/*"],

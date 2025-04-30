@@ -1,8 +1,7 @@
 import { dismissNotification, getNotifications } from '../controllers/notificationsController';
 import { authorizeAccountAccess } from '../middleware/authorizationMiddleware';
-import { validateSchema } from '@ajgifford/keepwatching-common-server/middleware/validationMiddleware';
-import { accountIdParamSchema } from '@ajgifford/keepwatching-common-server/schema/accountSchema';
-import { dismissParamSchema } from '@ajgifford/keepwatching-common-server/schema/notificationsSchema';
+import { validateSchema } from '@ajgifford/keepwatching-common-server';
+import { accountIdParamSchema, dismissParamSchema } from '@ajgifford/keepwatching-common-server/schema';
 import express from 'express';
 
 const router = express.Router();

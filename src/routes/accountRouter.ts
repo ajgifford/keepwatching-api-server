@@ -1,14 +1,14 @@
 import { editAccount, googleLogin, login, logout, register } from '../controllers/accountController';
 import { authenticateUser } from '../middleware/authenticationMiddleware';
 import { authorizeAccountAccess } from '../middleware/authorizationMiddleware';
-import { validateRequest, validateSchema } from '@ajgifford/keepwatching-common-server/middleware/validationMiddleware';
+import { validateRequest, validateSchema } from '@ajgifford/keepwatching-common-server';
 import {
   accountIdParamSchema,
   accountSchema,
   accountUpdateSchema,
   googleLoginSchema,
   loginSchema,
-} from '@ajgifford/keepwatching-common-server/schema/accountSchema';
+} from '@ajgifford/keepwatching-common-server/schema';
 import express from 'express';
 
 const router = express.Router();
