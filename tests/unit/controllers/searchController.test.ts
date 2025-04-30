@@ -1,7 +1,10 @@
-import { MediaType, contentDiscoveryService } from '@ajgifford/keepwatching-common-server/services';
+import { MediaType } from '@ajgifford/keepwatching-common-server/services';
+import { contentDiscoveryService } from '@ajgifford/keepwatching-common-server/testing';
 import { searchMovies, searchShows } from '@controllers/searchController';
 
-jest.mock('@ajgifford/keepwatching-common-server/services/contentDiscoveryService');
+jest.mock('@ajgifford/keepwatching-common-server/services', () => ({
+  contentDiscoveryService: contentDiscoveryService,
+}));
 
 describe('searchController', () => {
   let req: any;

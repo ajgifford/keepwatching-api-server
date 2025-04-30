@@ -1,7 +1,9 @@
-import { seasonsService } from '@ajgifford/keepwatching-common-server/services';
+import { seasonsService } from '@ajgifford/keepwatching-common-server/testing';
 import { getSeasonsForShow, updateSeasonWatchStatus } from '@controllers/seasonsController';
 
-jest.mock('@ajgifford/keepwatching-common-server/services/seasonsService');
+jest.mock('@ajgifford/keepwatching-common-server/services', () => ({
+  seasonsService: seasonsService,
+}));
 
 describe('seasonsController', () => {
   let req: any;

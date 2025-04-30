@@ -1,7 +1,7 @@
-import { statisticsService } from '@ajgifford/keepwatching-common-server/services';
+import { statisticsService } from '@ajgifford/keepwatching-common-server/testing';
 import { getAccountStatistics, getProfileStatistics } from '@controllers/statisticsController';
 
-jest.mock('@ajgifford/keepwatching-common-server/services/statisticsService');
+jest.mock('@ajgifford/keepwatching-common-server/services', () => ({ statisticsService: statisticsService }));
 
 describe('statisticsController', () => {
   let req: any;

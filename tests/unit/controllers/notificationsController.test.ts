@@ -1,7 +1,7 @@
-import { notificationsService } from '@ajgifford/keepwatching-common-server/services';
+import { notificationsService } from '@ajgifford/keepwatching-common-server/testing';
 import { dismissNotification, getNotifications } from '@controllers/notificationsController';
 
-jest.mock('@ajgifford/keepwatching-common-server/services/notificationsService');
+jest.mock('@ajgifford/keepwatching-common-server/services', () => ({ notificationsService: notificationsService }));
 
 describe('notificationsController', () => {
   let req: any;
@@ -24,22 +24,22 @@ describe('notificationsController', () => {
   describe('getNotifications', () => {
     it('should retrieve notifications successfully', async () => {
       const mockNotifications = [
-        { 
-          notification_id: 123, 
-          message: 'New episode available', 
+        {
+          notification_id: 123,
+          message: 'New episode available',
           start_date: '2025-04-01T00:00:00Z',
           end_date: '2025-04-30T00:00:00Z',
-          dismissed: false
+          dismissed: false,
         },
-        { 
-          notification_id: 124, 
-          message: 'New update available', 
+        {
+          notification_id: 124,
+          message: 'New update available',
           start_date: '2025-04-10T00:00:00Z',
           end_date: '2025-05-10T00:00:00Z',
-          dismissed: true
-        }
+          dismissed: true,
+        },
       ];
-      
+
       (notificationsService.getNotifications as jest.Mock).mockResolvedValue(mockNotifications);
 
       await getNotifications(req, res, next);
@@ -55,7 +55,7 @@ describe('notificationsController', () => {
 
     it('should handle empty notifications array', async () => {
       const mockNotifications: any[] = [];
-      
+
       (notificationsService.getNotifications as jest.Mock).mockResolvedValue(mockNotifications);
 
       await getNotifications(req, res, next);

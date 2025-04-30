@@ -1,4 +1,4 @@
-import { showService } from '@ajgifford/keepwatching-common-server/services';
+import { showService } from '@ajgifford/keepwatching-common-server/testing';
 import {
   addFavorite,
   getProfileEpisodes,
@@ -10,7 +10,7 @@ import {
   updateShowWatchStatus,
 } from '@controllers/showsController';
 
-jest.mock('@ajgifford/keepwatching-common-server/services/showService');
+jest.mock('@ajgifford/keepwatching-common-server/services', () => ({ showService: showService }));
 
 describe('showsController', () => {
   let req: any;

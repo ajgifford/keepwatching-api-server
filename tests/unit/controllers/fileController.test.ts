@@ -1,6 +1,6 @@
 import { BadRequestError } from '@ajgifford/keepwatching-common-server';
 import { httpLogger } from '@ajgifford/keepwatching-common-server/logger';
-import { accountService, profileService } from '@ajgifford/keepwatching-common-server/services';
+import { accountService, profileService } from '@ajgifford/keepwatching-common-server/testing';
 import { getAccountImage, getProfileImage } from '@ajgifford/keepwatching-common-server/utils';
 import { uploadAccountImage, uploadProfileImage } from '@controllers/fileController';
 import uploadFileMiddleware from '@middleware/uploadMiddleware';
@@ -14,9 +14,12 @@ jest.mock('@utils/environmentUtil', () => ({
   getUploadDirectory: jest.fn().mockReturnValue('uploads/'),
 }));
 jest.mock('fs');
-jest.mock('@ajgifford/keepwatching-common-server/services');
+jest.mock('@ajgifford/keepwatching-common-server/services', () => ({
+  accountService: accountService,
+  profileService: profileService,
+}));
 jest.mock('@ajgifford/keepwatching-common-server/utils');
-jest.mock('@ajgifford/keepwatching-common-server/logger/logger', () => ({
+jest.mock('@ajgifford/keepwatching-common-server/logger', () => ({
   httpLogger: {
     error: jest.fn(),
     info: jest.fn(),
