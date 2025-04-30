@@ -9,21 +9,30 @@ import { NextFunction, Request, Response } from 'express';
 import fs from 'fs';
 
 // Mock dependencies
-jest.mock('@middleware/uploadMiddleware');
+jest.mock('@middleware/uploadMiddleware', () => jest.fn());
 jest.mock('@utils/environmentUtil', () => ({
   getUploadDirectory: jest.fn().mockReturnValue('uploads/'),
 }));
-jest.mock('fs');
-jest.mock('@ajgifford/keepwatching-common-server/services', () => ({
-  accountService: accountService,
-  profileService: profileService,
+jest.mock('fs', () => ({
+  unlink: jest.fn(),
 }));
-jest.mock('@ajgifford/keepwatching-common-server/utils');
+
+// Mock modules before importing them
 jest.mock('@ajgifford/keepwatching-common-server/logger', () => ({
   httpLogger: {
     error: jest.fn(),
     info: jest.fn(),
   },
+}));
+
+jest.mock('@ajgifford/keepwatching-common-server/utils', () => ({
+  getAccountImage: jest.fn(),
+  getProfileImage: jest.fn(),
+}));
+
+jest.mock('@ajgifford/keepwatching-common-server/services', () => ({
+  accountService: accountService,
+  profileService: profileService,
 }));
 
 describe('fileController', () => {

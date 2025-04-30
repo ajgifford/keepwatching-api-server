@@ -1,9 +1,12 @@
-import { MediaType } from '@ajgifford/keepwatching-common-server/services';
-import { contentDiscoveryService } from '@ajgifford/keepwatching-common-server/testing';
+import { MediaType, contentDiscoveryService } from '@ajgifford/keepwatching-common-server/services';
 import { searchMovies, searchShows } from '@controllers/searchController';
 
+// Mock the services before using them
 jest.mock('@ajgifford/keepwatching-common-server/services', () => ({
-  contentDiscoveryService: contentDiscoveryService,
+  MediaType: { SHOW: 'show', MOVIE: 'movie' },
+  contentDiscoveryService: {
+    searchMedia: jest.fn(),
+  },
 }));
 
 describe('searchController', () => {
