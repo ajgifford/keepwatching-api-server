@@ -14,8 +14,16 @@ import searchRouter from './routes/searchRouter';
 import seasonsRouter from './routes/seasonsRouter';
 import showsRouter from './routes/showsRouter';
 import statisticsRouter from './routes/statisticsRouter';
-import { getLogDirectory, getUploadDirectory } from './utils/environmentUtil';
 import { errorHandler } from '@ajgifford/keepwatching-common-server';
+import {
+  getCertsKeyPath,
+  getCertsServerPath,
+  getLogDirectory,
+  getPort,
+  getRateLimitMax,
+  getRateLimitTimeWindow,
+  getUploadDirectory,
+} from '@ajgifford/keepwatching-common-server/config';
 import { ErrorMessages, appLogger, cliLogger } from '@ajgifford/keepwatching-common-server/logger';
 import { responseInterceptor } from '@ajgifford/keepwatching-common-server/middleware';
 import { databaseService, socketService } from '@ajgifford/keepwatching-common-server/services';
@@ -32,8 +40,8 @@ import helmet from 'helmet';
 import https from 'https';
 import { Server } from 'socket.io';
 
-const KEY_PATH = process.env.CERT_KEY_PATH || 'certs/server.key';
-const CERT_PATH = process.env.CERT_PATH || 'certs/server.crt';
+const KEY_PATH = getCertsKeyPath();
+const CERT_PATH = getCertsServerPath();
 
 const credentials = {
   key: fs.readFileSync(KEY_PATH),
@@ -41,8 +49,7 @@ const credentials = {
 };
 
 const app: Express = express();
-const port = process.env.PORT || 3000;
-
+const port = getPort();
 const UPLOADS_DIR = getUploadDirectory();
 const LOG_DIRECTORY = getLogDirectory();
 
@@ -62,8 +69,8 @@ function ensureSecure(req: Request, res: Response, next: NextFunction) {
 }
 
 const limiter = rateLimit({
-  windowMs: 5 * 60 * 1000,
-  max: 100,
+  windowMs: getRateLimitTimeWindow(),
+  max: getRateLimitMax(),
   message: 'Too many requests, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,

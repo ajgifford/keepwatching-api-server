@@ -1,16 +1,16 @@
 import { BadRequestError } from '@ajgifford/keepwatching-common-server';
+import { getUploadDirectory } from '@ajgifford/keepwatching-common-server/config';
 import { appLogger } from '@ajgifford/keepwatching-common-server/logger';
 import { accountService, profileService } from '@ajgifford/keepwatching-common-server/testing';
 import { getAccountImage, getProfileImage } from '@ajgifford/keepwatching-common-server/utils';
 import { uploadAccountImage, uploadProfileImage } from '@controllers/fileController';
 import uploadFileMiddleware from '@middleware/uploadMiddleware';
-import { getUploadDirectory } from '@utils/environmentUtil';
 import { NextFunction, Request, Response } from 'express';
 import fs from 'fs';
 
 // Mock dependencies
 jest.mock('@middleware/uploadMiddleware', () => jest.fn());
-jest.mock('@utils/environmentUtil', () => ({
+jest.mock('@ajgifford/keepwatching-common-server/config', () => ({
   getUploadDirectory: jest.fn().mockReturnValue('uploads/'),
 }));
 jest.mock('fs', () => ({
