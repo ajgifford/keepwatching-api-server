@@ -1,7 +1,7 @@
 import uploadFileMiddleware from '../middleware/uploadMiddleware';
 import { getUploadDirectory } from '../utils/environmentUtil';
 import { BadRequestError } from '@ajgifford/keepwatching-common-server';
-import { httpLogger } from '@ajgifford/keepwatching-common-server/logger';
+import { appLogger } from '@ajgifford/keepwatching-common-server/logger';
 import { AccountAndProfileIdsParams, AccountIdParam } from '@ajgifford/keepwatching-common-server/schema';
 import { accountService, profileService } from '@ajgifford/keepwatching-common-server/services';
 import { getAccountImage, getProfileImage } from '@ajgifford/keepwatching-common-server/utils';
@@ -37,9 +37,9 @@ export const uploadAccountImage = asyncHandler(async (req: Request, res: Respons
           fs.unlink(filePath, (err) => {
             if (err) {
               if (err.code === 'ENOENT') {
-                httpLogger.info('File not found when attempting to delete');
+                appLogger.info('File not found when attempting to delete');
               } else {
-                httpLogger.info('Unexpected exception when attempting to delete', err);
+                appLogger.info('Unexpected exception when attempting to delete', err);
               }
             }
           });
@@ -81,9 +81,9 @@ export const uploadProfileImage = asyncHandler(async (req: Request, res: Respons
           fs.unlink(filePath, (err) => {
             if (err) {
               if (err.code === 'ENOENT') {
-                httpLogger.info('File not found when attempting to delete');
+                appLogger.info('File not found when attempting to delete');
               } else {
-                httpLogger.info('Unexpected exception when attempting to delete', err);
+                appLogger.info('Unexpected exception when attempting to delete', err);
               }
             }
           });

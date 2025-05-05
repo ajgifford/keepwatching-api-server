@@ -3,7 +3,6 @@ import 'module-alias/register';
 import 'dotenv/config';
 
 import { authenticateUser } from './middleware/authenticationMiddleware';
-import responseInterceptor from './middleware/loggerMiddleware';
 import accountRouter from './routes/accountRouter';
 import discoverRouter from './routes/discoverRouter';
 import episodesRouter from './routes/episodesRouter';
@@ -16,8 +15,9 @@ import seasonsRouter from './routes/seasonsRouter';
 import showsRouter from './routes/showsRouter';
 import statisticsRouter from './routes/statisticsRouter';
 import { getLogDirectory, getUploadDirectory } from './utils/environmentUtil';
+import { responseInterceptor } from '@ajgifford/keepwatching-common-server';
 import { errorHandler } from '@ajgifford/keepwatching-common-server';
-import { ErrorMessages, cliLogger, httpLogger } from '@ajgifford/keepwatching-common-server/logger';
+import { ErrorMessages, appLogger, cliLogger } from '@ajgifford/keepwatching-common-server/logger';
 import { databaseService, socketService } from '@ajgifford/keepwatching-common-server/services';
 import { initScheduledJobs, shutdownJobs } from '@ajgifford/keepwatching-common-server/services';
 import { loadStreamingService } from '@ajgifford/keepwatching-common-server/utils';
@@ -166,7 +166,7 @@ const startServer = async () => {
     });
   } catch (error) {
     cliLogger.error('Error starting the server!');
-    httpLogger.error(ErrorMessages.AppStartupFail, { error });
+    appLogger.error(ErrorMessages.AppStartupFail, { error });
     process.exit(1);
   }
 };

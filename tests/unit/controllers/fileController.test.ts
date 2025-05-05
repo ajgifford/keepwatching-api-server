@@ -1,5 +1,5 @@
 import { BadRequestError } from '@ajgifford/keepwatching-common-server';
-import { httpLogger } from '@ajgifford/keepwatching-common-server/logger';
+import { appLogger } from '@ajgifford/keepwatching-common-server/logger';
 import { accountService, profileService } from '@ajgifford/keepwatching-common-server/testing';
 import { getAccountImage, getProfileImage } from '@ajgifford/keepwatching-common-server/utils';
 import { uploadAccountImage, uploadProfileImage } from '@controllers/fileController';
@@ -19,7 +19,7 @@ jest.mock('fs', () => ({
 
 // Mock modules before importing them
 jest.mock('@ajgifford/keepwatching-common-server/logger', () => ({
-  httpLogger: {
+  appLogger: {
     error: jest.fn(),
     info: jest.fn(),
   },
@@ -192,7 +192,7 @@ describe('fileController', () => {
 
       expect(uploadFileMiddleware).toHaveBeenCalledWith(req, res);
       expect(fs.unlink).toHaveBeenCalledWith(`${getUploadDirectory()}/accounts/old-image.jpg`, expect.any(Function));
-      expect(httpLogger.info).toHaveBeenCalledWith('File not found when attempting to delete');
+      expect(appLogger.info).toHaveBeenCalledWith('File not found when attempting to delete');
       expect(res.status).toHaveBeenCalledWith(200);
       expect(next).not.toHaveBeenCalled();
     });
@@ -322,7 +322,7 @@ describe('fileController', () => {
 
       expect(uploadFileMiddleware).toHaveBeenCalledWith(req, res);
       expect(fs.unlink).toHaveBeenCalledWith(`${getUploadDirectory()}/profiles/old-profile.jpg`, expect.any(Function));
-      expect(httpLogger.info).toHaveBeenCalledWith('Unexpected exception when attempting to delete', unexpectedError);
+      expect(appLogger.info).toHaveBeenCalledWith('Unexpected exception when attempting to delete', unexpectedError);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(next).not.toHaveBeenCalled();
     });
