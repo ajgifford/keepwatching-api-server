@@ -16,6 +16,7 @@ import showsRouter from './routes/showsRouter';
 import statisticsRouter from './routes/statisticsRouter';
 import { errorHandler } from '@ajgifford/keepwatching-common-server';
 import {
+  getAppVersion,
   getCertsKeyPath,
   getCertsServerPath,
   getLogDirectory,
@@ -94,6 +95,36 @@ app.use((req: Request, res: Response, next: NextFunction): void => {
   next();
 }) as express.RequestHandler;
 
+const blockSuspiciousRequests = (req: Request, res: Response, next: NextFunction): void => {
+  const suspiciousPatterns = [
+    /\.php/i,
+    /invokefunction/i,
+    /call_user_func/i,
+    /eval\(/i,
+    /base64_decode/i,
+    /system\(/i,
+    /exec\(/i,
+    /\/\.\./i, // Path traversal
+  ];
+
+  const url = req.url.toLowerCase();
+
+  if (suspiciousPatterns.some((pattern) => pattern.test(url))) {
+    appLogger.warn('Blocked suspicious request', {
+      ip: req.ip,
+      userAgent: req.get('User-Agent'),
+      url: req.url,
+      method: req.method,
+    });
+    res.status(403).json({ error: 'Forbidden' });
+    return;
+  }
+
+  next();
+};
+
+app.use(blockSuspiciousRequests);
+
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -102,6 +133,26 @@ app.use(cookieParser());
 app.use('/uploads', express.static(UPLOADS_DIR));
 app.use(ensureSecure);
 app.use(limiter);
+
+app.use(errorHandler);
+
+app.get('/', (req: Request, res: Response) => {
+  res.json({
+    name: 'KeepWatching API',
+    status: 'running',
+    version: getAppVersion(),
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.get('/health', (req: Request, res: Response) => {
+  res.json({
+    status: 'healthy',
+    version: getAppVersion(),
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+  });
+});
 
 app.use(accountRouter);
 app.use(authenticateUser, profileRouter);
@@ -114,12 +165,6 @@ app.use(authenticateUser, moviesRouter);
 app.use(authenticateUser, fileRouter);
 app.use(authenticateUser, notificationsRouter);
 app.use(authenticateUser, statisticsRouter);
-
-app.use(errorHandler);
-
-app.get('/', (req: Request, res: Response) => {
-  res.send('KeepWatching API');
-});
 
 const server = https.createServer(credentials, app);
 const io = new Server(server, {
