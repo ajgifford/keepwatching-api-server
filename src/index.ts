@@ -29,7 +29,7 @@ import { ErrorMessages, appLogger, cliLogger } from '@ajgifford/keepwatching-com
 import { responseInterceptor } from '@ajgifford/keepwatching-common-server/middleware';
 import { databaseService, socketService } from '@ajgifford/keepwatching-common-server/services';
 import { initScheduledJobs, shutdownJobs } from '@ajgifford/keepwatching-common-server/services';
-import { loadStreamingService } from '@ajgifford/keepwatching-common-server/utils';
+import { GlobalErrorHandler, loadStreamingService } from '@ajgifford/keepwatching-common-server/utils';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
@@ -61,6 +61,8 @@ declare global {
     }
   }
 }
+
+GlobalErrorHandler.initialize();
 
 function ensureSecure(req: Request, res: Response, next: NextFunction) {
   if (req.secure) {
@@ -192,7 +194,7 @@ io.use(async (socket, next) => {
     socket.data.accountId = account_id;
     next();
   } catch (error) {
-    console.error('WebSocket Auth Failed:', error);
+    GlobalErrorHandler.logError(error as Error, 'WebSocket Auth Failed');
     next(new Error('Authentication error'));
   }
 });
