@@ -8,7 +8,7 @@ describe('profileController', () => {
 
   beforeEach(() => {
     req = {
-      params: { accountId: '1', profileId: '123' },
+      params: { accountId: 1, profileId: 123 },
       body: {},
     };
     res = {

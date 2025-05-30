@@ -23,7 +23,7 @@ describe('statisticsController', () => {
 
   describe('getProfileStatistics', () => {
     it('should return profile statistics successfully', async () => {
-      req.params = { accountId: '1', profileId: '123' };
+      req.params = { accountId: 1, profileId: 123 };
       const mockStats = {
         showStatistics: { total: 10 },
         movieStatistics: { total: 5 },
@@ -34,7 +34,7 @@ describe('statisticsController', () => {
 
       await getProfileStatistics(req, res, next);
 
-      expect(statisticsService.getProfileStatistics).toHaveBeenCalledWith('123');
+      expect(statisticsService.getProfileStatistics).toHaveBeenCalledWith(123);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully retrieved profile statistics',
@@ -44,13 +44,13 @@ describe('statisticsController', () => {
     });
 
     it('should handle errors from the service', async () => {
-      req.params = { accountId: '1', profileId: '123' };
+      req.params = { accountId: 1, profileId: 123 };
       const error = new Error('Failed to get profile statistics');
       (statisticsService.getProfileStatistics as jest.Mock).mockRejectedValue(error);
 
       await getProfileStatistics(req, res, next);
 
-      expect(statisticsService.getProfileStatistics).toHaveBeenCalledWith('123');
+      expect(statisticsService.getProfileStatistics).toHaveBeenCalledWith(123);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
@@ -59,7 +59,7 @@ describe('statisticsController', () => {
 
   describe('getAccountStatistics', () => {
     it('should return account statistics successfully', async () => {
-      req.params = { accountId: '1' };
+      req.params = { accountId: 1 };
       const mockStats = {
         profileCount: 2,
         uniqueContent: { showCount: 15, movieCount: 10 },
@@ -82,7 +82,7 @@ describe('statisticsController', () => {
     });
 
     it('should handle errors from the service', async () => {
-      req.params = { accountId: '1' };
+      req.params = { accountId: 1 };
       const error = new Error('Failed to get account statistics');
       (statisticsService.getAccountStatistics as jest.Mock).mockRejectedValue(error);
 

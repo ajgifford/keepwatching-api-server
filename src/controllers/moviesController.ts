@@ -12,9 +12,9 @@ import { NextFunction, Request, Response } from 'express';
  *
  * @route GET /api/v1/accounts/:accountId/profiles/:profileId/movies
  */
-export async function getMovies(req: Request<AccountAndProfileIdsParams>, res: Response, next: NextFunction) {
+export async function getMovies(req: Request, res: Response, next: NextFunction) {
   try {
-    const { profileId } = req.params as AccountAndProfileIdsParams;
+    const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
 
     const results = await moviesService.getMoviesForProfile(profileId);
 
@@ -32,9 +32,9 @@ export async function getMovies(req: Request<AccountAndProfileIdsParams>, res: R
  *
  * @route POST /api/v1/accounts/:accountId/profiles/:profileId/movies/favorites
  */
-export async function addFavorite(req: Request<AccountAndProfileIdsParams>, res: Response, next: NextFunction) {
+export async function addFavorite(req: Request, res: Response, next: NextFunction) {
   try {
-    const { profileId } = req.params as AccountAndProfileIdsParams;
+    const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
     const { movieId }: AddMovieFavoriteParams = req.body;
 
     const result = await moviesService.addMovieToFavorites(profileId, movieId);
@@ -53,9 +53,9 @@ export async function addFavorite(req: Request<AccountAndProfileIdsParams>, res:
  *
  * @route DELETE /api/v1/accounts/:accountId/profiles/:profileId/movies/favorites/:movieId
  */
-export async function removeFavorite(req: Request<RemoveMovieFavoriteParams>, res: Response, next: NextFunction) {
+export async function removeFavorite(req: Request, res: Response, next: NextFunction) {
   try {
-    const { profileId, movieId } = req.params as RemoveMovieFavoriteParams;
+    const { profileId, movieId } = req.params as unknown as RemoveMovieFavoriteParams;
 
     const result = await moviesService.removeMovieFromFavorites(profileId, movieId);
 
@@ -73,13 +73,9 @@ export async function removeFavorite(req: Request<RemoveMovieFavoriteParams>, re
  *
  * @route PUT /api/v1/accounts/:accountId/profiles/:profileId/movies/watchstatus
  */
-export async function updateMovieWatchStatus(
-  req: Request<AccountAndProfileIdsParams>,
-  res: Response,
-  next: NextFunction,
-) {
+export async function updateMovieWatchStatus(req: Request, res: Response, next: NextFunction) {
   try {
-    const { profileId } = req.params as AccountAndProfileIdsParams;
+    const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
     const { movieId, status }: MovieWatchStatusParams = req.body;
 
     await moviesService.updateMovieWatchStatus(profileId, movieId, status);
@@ -95,13 +91,9 @@ export async function updateMovieWatchStatus(
  *
  * @route GET /api/v1/accounts/:accountId/profiles/:profileId/movies/recentUpcoming
  */
-export async function getRecentUpcomingForProfile(
-  req: Request<AccountAndProfileIdsParams>,
-  res: Response,
-  next: NextFunction,
-) {
+export async function getRecentUpcomingForProfile(req: Request, res: Response, next: NextFunction) {
   try {
-    const { profileId } = req.params as AccountAndProfileIdsParams;
+    const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
 
     const recentMovies = await moviesService.getRecentMoviesForProfile(profileId);
     const upcomingMovies = await moviesService.getUpcomingMoviesForProfile(profileId);

@@ -18,7 +18,7 @@ describe('episodesController', () => {
 
   beforeEach(() => {
     req = {
-      params: { accountId: '1', profileId: '123' },
+      params: { accountId: 1, profileId: 123 },
       body: {},
     };
     res = {
@@ -37,7 +37,7 @@ describe('episodesController', () => {
       (episodesService.updateEpisodeWatchStatus as jest.Mock).mockResolvedValue(mockResult);
 
       await updateEpisodeWatchStatus(req, res, next);
-      expect(episodesService.updateEpisodeWatchStatus).toHaveBeenCalledWith('123', 456, 'WATCHED');
+      expect(episodesService.updateEpisodeWatchStatus).toHaveBeenCalledWith(123, 456, 'WATCHED');
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully updated the episode watch status',
@@ -52,7 +52,7 @@ describe('episodesController', () => {
       (episodesService.updateEpisodeWatchStatus as jest.Mock).mockRejectedValue(error);
 
       await updateEpisodeWatchStatus(req, res, next);
-      expect(episodesService.updateEpisodeWatchStatus).toHaveBeenCalledWith('123', 456, 'WATCHED');
+      expect(episodesService.updateEpisodeWatchStatus).toHaveBeenCalledWith(123, 456, 'WATCHED');
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
@@ -66,7 +66,7 @@ describe('episodesController', () => {
       (episodesService.updateNextEpisodeWatchStatus as jest.Mock).mockResolvedValue(mockResult);
 
       await updateNextEpisodeWatchStatus(req, res, next);
-      expect(episodesService.updateNextEpisodeWatchStatus).toHaveBeenCalledWith('123', 100, 200, 456, 'WATCHED');
+      expect(episodesService.updateNextEpisodeWatchStatus).toHaveBeenCalledWith(123, 100, 200, 456, 'WATCHED');
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully updated the episode watch status',
@@ -81,7 +81,7 @@ describe('episodesController', () => {
       (episodesService.updateNextEpisodeWatchStatus as jest.Mock).mockRejectedValue(error);
 
       await updateNextEpisodeWatchStatus(req, res, next);
-      expect(episodesService.updateNextEpisodeWatchStatus).toHaveBeenCalledWith('123', 100, 200, 456, 'WATCHED');
+      expect(episodesService.updateNextEpisodeWatchStatus).toHaveBeenCalledWith(123, 100, 200, 456, 'WATCHED');
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
@@ -90,15 +90,15 @@ describe('episodesController', () => {
 
   describe('getEpisodesForSeason', () => {
     it('should retrieve episodes for a season successfully', async () => {
-      req.params.seasonId = '200';
+      req.params.seasonId = 200;
       const mockEpisodes = [
-        { id: 1, title: 'Episode 1', watch_status: 'WATCHED' },
-        { id: 2, title: 'Episode 2', watch_status: 'NOT_WATCHED' },
+        { id: 1, title: 'Episode 1', watchStatus: 'WATCHED' },
+        { id: 2, title: 'Episode 2', watchStatus: 'NOT_WATCHED' },
       ];
       (episodesService.getEpisodesForSeason as jest.Mock).mockResolvedValue(mockEpisodes);
 
       await getEpisodesForSeason(req, res, next);
-      expect(episodesService.getEpisodesForSeason).toHaveBeenCalledWith('123', 200);
+      expect(episodesService.getEpisodesForSeason).toHaveBeenCalledWith(123, 200);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully retrieved episodes for the season',
@@ -108,12 +108,12 @@ describe('episodesController', () => {
     });
 
     it('should handle errors from the service', async () => {
-      req.params.seasonId = '200';
+      req.params.seasonId = 200;
       const error = new Error('Failed to get episodes');
       (episodesService.getEpisodesForSeason as jest.Mock).mockRejectedValue(error);
 
       await getEpisodesForSeason(req, res, next);
-      expect(episodesService.getEpisodesForSeason).toHaveBeenCalledWith('123', 200);
+      expect(episodesService.getEpisodesForSeason).toHaveBeenCalledWith(123, 200);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
@@ -129,7 +129,7 @@ describe('episodesController', () => {
       (episodesService.getUpcomingEpisodesForProfile as jest.Mock).mockResolvedValue(mockEpisodes);
 
       await getUpcomingEpisodes(req, res, next);
-      expect(episodesService.getUpcomingEpisodesForProfile).toHaveBeenCalledWith('123');
+      expect(episodesService.getUpcomingEpisodesForProfile).toHaveBeenCalledWith(123);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully retrieved upcoming episodes',
@@ -143,7 +143,7 @@ describe('episodesController', () => {
       (episodesService.getUpcomingEpisodesForProfile as jest.Mock).mockRejectedValue(error);
 
       await getUpcomingEpisodes(req, res, next);
-      expect(episodesService.getUpcomingEpisodesForProfile).toHaveBeenCalledWith('123');
+      expect(episodesService.getUpcomingEpisodesForProfile).toHaveBeenCalledWith(123);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
@@ -159,7 +159,7 @@ describe('episodesController', () => {
       (episodesService.getRecentEpisodesForProfile as jest.Mock).mockResolvedValue(mockEpisodes);
 
       await getRecentEpisodes(req, res, next);
-      expect(episodesService.getRecentEpisodesForProfile).toHaveBeenCalledWith('123');
+      expect(episodesService.getRecentEpisodesForProfile).toHaveBeenCalledWith(123);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully retrieved recent episodes',
@@ -173,7 +173,7 @@ describe('episodesController', () => {
       (episodesService.getRecentEpisodesForProfile as jest.Mock).mockRejectedValue(error);
 
       await getRecentEpisodes(req, res, next);
-      expect(episodesService.getRecentEpisodesForProfile).toHaveBeenCalledWith('123');
+      expect(episodesService.getRecentEpisodesForProfile).toHaveBeenCalledWith(123);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();

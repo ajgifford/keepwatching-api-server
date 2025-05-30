@@ -11,13 +11,9 @@ import { NextFunction, Request, Response } from 'express';
  *
  * @route PUT /api/v1/accounts/:accountId/profiles/:profileId/seasons/watchstatus
  */
-export const updateSeasonWatchStatus = async (
-  req: Request<AccountAndProfileIdsParams>,
-  res: Response,
-  next: NextFunction,
-) => {
+export const updateSeasonWatchStatus = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { profileId } = req.params as AccountAndProfileIdsParams;
+    const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
     const { seasonId, status, recursive = false } = req.body as SeasonWatchStatusParams;
 
     await seasonsService.updateSeasonWatchStatus(profileId, seasonId, status, recursive);
@@ -33,9 +29,9 @@ export const updateSeasonWatchStatus = async (
  *
  * @route GET /api/v1/accounts/:accountId/profiles/:profileId/shows/:showId/seasons
  */
-export const getSeasonsForShow = async (req: Request<ShowParams>, res: Response, next: NextFunction) => {
+export const getSeasonsForShow = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { profileId, showId } = req.params as ShowParams;
+    const { profileId, showId } = req.params as unknown as ShowParams;
 
     const seasons = await seasonsService.getSeasonsForShow(profileId, showId);
 

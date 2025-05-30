@@ -12,7 +12,7 @@ describe('seasonsController', () => {
 
   beforeEach(() => {
     req = {
-      params: { accountId: '1', profileId: '123' },
+      params: { accountId: 1, profileId: 123 },
       body: {},
     };
     res = {
@@ -31,7 +31,7 @@ describe('seasonsController', () => {
 
       await updateSeasonWatchStatus(req, res, next);
 
-      expect(seasonsService.updateSeasonWatchStatus).toHaveBeenCalledWith('123', 456, 'WATCHED', false);
+      expect(seasonsService.updateSeasonWatchStatus).toHaveBeenCalledWith(123, 456, 'WATCHED', false);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully updated the season watch status',
@@ -45,7 +45,7 @@ describe('seasonsController', () => {
 
       await updateSeasonWatchStatus(req, res, next);
 
-      expect(seasonsService.updateSeasonWatchStatus).toHaveBeenCalledWith('123', 456, 'WATCHED', true);
+      expect(seasonsService.updateSeasonWatchStatus).toHaveBeenCalledWith(123, 456, 'WATCHED', true);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully updated the season watch status',
@@ -59,7 +59,7 @@ describe('seasonsController', () => {
 
       await updateSeasonWatchStatus(req, res, next);
 
-      expect(seasonsService.updateSeasonWatchStatus).toHaveBeenCalledWith('123', 456, 'WATCHED', false);
+      expect(seasonsService.updateSeasonWatchStatus).toHaveBeenCalledWith(123, 456, 'WATCHED', false);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
@@ -77,7 +77,7 @@ describe('seasonsController', () => {
 
       await getSeasonsForShow(req, res, next);
 
-      expect(seasonsService.getSeasonsForShow).toHaveBeenCalledWith('123', '200');
+      expect(seasonsService.getSeasonsForShow).toHaveBeenCalledWith(123, '200');
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully retrieved seasons for the show',
@@ -93,7 +93,7 @@ describe('seasonsController', () => {
 
       await getSeasonsForShow(req, res, next);
 
-      expect(seasonsService.getSeasonsForShow).toHaveBeenCalledWith('123', '200');
+      expect(seasonsService.getSeasonsForShow).toHaveBeenCalledWith(123, '200');
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();

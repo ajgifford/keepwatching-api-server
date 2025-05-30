@@ -10,7 +10,7 @@ describe('notificationsController', () => {
 
   beforeEach(() => {
     req = {
-      params: { accountId: '1', notificationId: '123' },
+      params: { accountId: 1, notificationId: 123 },
     };
     res = {
       status: jest.fn().mockReturnThis(),

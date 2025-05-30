@@ -1,16 +1,12 @@
 import { ForbiddenError, UnauthorizedError } from '@ajgifford/keepwatching-common-server';
-import { AccountAndProfileIdsParams } from '@ajgifford/keepwatching-common-server/schema';
+import { AccountAndProfileIdsParams, AccountIdParam } from '@ajgifford/keepwatching-common-server/schema';
 import { accountService } from '@ajgifford/keepwatching-common-server/services';
 import { NextFunction, Request, Response } from 'express';
 
-export const authorizeAccountAccess = async (
-  req: Request<AccountAndProfileIdsParams>,
-  res: Response,
-  next: NextFunction,
-): Promise<void> => {
+export const authorizeAccountAccess = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const authenticatedUid = req.user?.uid;
-    const { accountId, profileId } = req.params as AccountAndProfileIdsParams;
+    const { accountId, profileId } = req.params as unknown as AccountAndProfileIdsParams;
 
     if (!authenticatedUid) {
       next(new UnauthorizedError('Authentication required'));

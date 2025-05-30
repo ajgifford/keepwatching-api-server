@@ -31,7 +31,7 @@ describe('accountController', () => {
 
   beforeEach(() => {
     req = {
-      params: { accountId: '1', profileId: '123' },
+      params: { accountId: 1, profileId: 123 },
       body: {},
     };
     res = {
@@ -272,7 +272,7 @@ describe('accountController', () => {
         name: 'Updated Account Name',
         email: 'test@example.com',
         image: 'account.jpg',
-        default_profile_id: 12,
+        defaultProfileId: 12,
       };
 
       (accountService.editAccount as jest.Mock).mockResolvedValue(mockUpdatedAccount);

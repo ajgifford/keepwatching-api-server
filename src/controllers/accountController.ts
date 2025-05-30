@@ -120,7 +120,7 @@ export const googleLogin = asyncHandler(async (req: Request, res: Response, next
  * @param {NextFunction} next - Express next function
  * @returns {Response} 200 with success message
  */
-export const logout = asyncHandler(async (req: Request<AccountIdParam>, res: Response, next: NextFunction) => {
+export const logout = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { accountId }: AccountIdParam = req.body;
     accountService.logout(accountId);
@@ -135,20 +135,18 @@ export const logout = asyncHandler(async (req: Request<AccountIdParam>, res: Res
  *
  * @route PUT /api/v1/accounts/:accountId
  */
-export const editAccount = asyncHandler(
-  async (req: Request<AccountIdParam>, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const { accountId } = req.params as AccountIdParam;
-      const { name, defaultProfileId }: AccountUpdateParams = req.body;
+export const editAccount = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { accountId } = req.params as unknown as AccountIdParam;
+    const { name, defaultProfileId }: AccountUpdateParams = req.body;
 
-      const updatedAccount = await accountService.editAccount(accountId, name, defaultProfileId);
+    const updatedAccount = await accountService.editAccount(accountId, name, defaultProfileId);
 
-      res.status(200).json({
-        message: `Updated account ${accountId}`,
-        result: updatedAccount,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
-);
+    res.status(200).json({
+      message: `Updated account ${accountId}`,
+      result: updatedAccount,
+    });
+  } catch (error) {
+    next(error);
+  }
+});

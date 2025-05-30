@@ -7,9 +7,9 @@ import { NextFunction, Request, Response } from 'express';
  *
  * @route GET /api/v1/accounts/:accountId/statistics
  */
-export async function getAccountStatistics(req: Request<AccountIdParam>, res: Response, next: NextFunction) {
+export async function getAccountStatistics(req: Request, res: Response, next: NextFunction) {
   try {
-    const { accountId } = req.params as AccountIdParam;
+    const { accountId } = req.params as unknown as AccountIdParam;
     const results = await statisticsService.getAccountStatistics(accountId);
 
     res.status(200).json({
@@ -26,13 +26,9 @@ export async function getAccountStatistics(req: Request<AccountIdParam>, res: Re
  *
  * @route GET /api/v1/accounts/:accountId/profiles/:profileId/statistics
  */
-export async function getProfileStatistics(
-  req: Request<AccountAndProfileIdsParams>,
-  res: Response,
-  next: NextFunction,
-) {
+export async function getProfileStatistics(req: Request, res: Response, next: NextFunction) {
   try {
-    const { profileId } = req.params as AccountAndProfileIdsParams;
+    const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
     const results = await statisticsService.getProfileStatistics(profileId);
 
     res.status(200).json({

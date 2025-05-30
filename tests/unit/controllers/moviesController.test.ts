@@ -18,7 +18,7 @@ describe('moviesController', () => {
 
   beforeEach(() => {
     req = {
-      params: { accountId: '1', profileId: '123' },
+      params: { accountId: 1, profileId: 123 },
       body: {},
     };
     res = {
@@ -33,14 +33,14 @@ describe('moviesController', () => {
   describe('getMovies', () => {
     it('should get movies for a profile', async () => {
       const mockMovies = [
-        { movie_id: 1, title: 'Movie 1', watch_status: 'WATCHED' },
-        { movie_id: 2, title: 'Movie 2', watch_status: 'NOT_WATCHED' },
+        { movie_id: 1, title: 'Movie 1', watchStatus: 'WATCHED' },
+        { movie_id: 2, title: 'Movie 2', watchStatus: 'NOT_WATCHED' },
       ];
       (moviesService.getMoviesForProfile as jest.Mock).mockResolvedValue(mockMovies);
 
       await getMovies(req, res, next);
 
-      expect(moviesService.getMoviesForProfile).toHaveBeenCalledWith('123');
+      expect(moviesService.getMoviesForProfile).toHaveBeenCalledWith(123);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully retrieved movies for a profile',
@@ -54,7 +54,7 @@ describe('moviesController', () => {
 
       await getMovies(req, res, next);
 
-      expect(moviesService.getMoviesForProfile).toHaveBeenCalledWith('123');
+      expect(moviesService.getMoviesForProfile).toHaveBeenCalledWith(123);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
@@ -73,7 +73,7 @@ describe('moviesController', () => {
 
       await addFavorite(req, res, next);
 
-      expect(moviesService.addMovieToFavorites).toHaveBeenCalledWith('123', 12345);
+      expect(moviesService.addMovieToFavorites).toHaveBeenCalledWith(123, 12345);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully saved movie as a favorite',
@@ -88,7 +88,7 @@ describe('moviesController', () => {
 
       await addFavorite(req, res, next);
 
-      expect(moviesService.addMovieToFavorites).toHaveBeenCalledWith('123', 12345);
+      expect(moviesService.addMovieToFavorites).toHaveBeenCalledWith(123, 12345);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
@@ -97,7 +97,7 @@ describe('moviesController', () => {
 
   describe('removeFavorite', () => {
     it('should remove a movie from favorites', async () => {
-      req.params.movieId = '12345';
+      req.params.movieId = 12345;
       const mockResult = {
         removedMovie: { id: 12345, title: 'Movie to Remove' },
         recentMovies: [{ movie_id: 1 }],
@@ -107,7 +107,7 @@ describe('moviesController', () => {
 
       await removeFavorite(req, res, next);
 
-      expect(moviesService.removeMovieFromFavorites).toHaveBeenCalledWith('123', 12345);
+      expect(moviesService.removeMovieFromFavorites).toHaveBeenCalledWith(123, 12345);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully removed the movie from favorites',
@@ -116,13 +116,13 @@ describe('moviesController', () => {
     });
 
     it('should handle errors', async () => {
-      req.params.movieId = '12345';
+      req.params.movieId = 12345;
       const error = new Error('Failed to remove movie');
       (moviesService.removeMovieFromFavorites as jest.Mock).mockRejectedValue(error);
 
       await removeFavorite(req, res, next);
 
-      expect(moviesService.removeMovieFromFavorites).toHaveBeenCalledWith('123', 12345);
+      expect(moviesService.removeMovieFromFavorites).toHaveBeenCalledWith(123, 12345);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
@@ -136,7 +136,7 @@ describe('moviesController', () => {
 
       await updateMovieWatchStatus(req, res, next);
 
-      expect(moviesService.updateMovieWatchStatus).toHaveBeenCalledWith('123', 12345, 'WATCHED');
+      expect(moviesService.updateMovieWatchStatus).toHaveBeenCalledWith(123, 12345, 'WATCHED');
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: "Successfully updated the watch status to 'WATCHED'",
@@ -150,7 +150,7 @@ describe('moviesController', () => {
 
       await updateMovieWatchStatus(req, res, next);
 
-      expect(moviesService.updateMovieWatchStatus).toHaveBeenCalledWith('123', 12345, 'WATCHED');
+      expect(moviesService.updateMovieWatchStatus).toHaveBeenCalledWith(123, 12345, 'WATCHED');
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
@@ -167,8 +167,8 @@ describe('moviesController', () => {
 
       await getRecentUpcomingForProfile(req, res, next);
 
-      expect(moviesService.getRecentMoviesForProfile).toHaveBeenCalledWith('123');
-      expect(moviesService.getUpcomingMoviesForProfile).toHaveBeenCalledWith('123');
+      expect(moviesService.getRecentMoviesForProfile).toHaveBeenCalledWith(123);
+      expect(moviesService.getUpcomingMoviesForProfile).toHaveBeenCalledWith(123);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully retrieved recent & upcoming movies for a profile',
@@ -184,7 +184,7 @@ describe('moviesController', () => {
 
       await getRecentUpcomingForProfile(req, res, next);
 
-      expect(moviesService.getRecentMoviesForProfile).toHaveBeenCalledWith('123');
+      expect(moviesService.getRecentMoviesForProfile).toHaveBeenCalledWith(123);
       expect(moviesService.getUpcomingMoviesForProfile).not.toHaveBeenCalled();
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
@@ -199,8 +199,8 @@ describe('moviesController', () => {
 
       await getRecentUpcomingForProfile(req, res, next);
 
-      expect(moviesService.getRecentMoviesForProfile).toHaveBeenCalledWith('123');
-      expect(moviesService.getUpcomingMoviesForProfile).toHaveBeenCalledWith('123');
+      expect(moviesService.getRecentMoviesForProfile).toHaveBeenCalledWith(123);
+      expect(moviesService.getUpcomingMoviesForProfile).toHaveBeenCalledWith(123);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
