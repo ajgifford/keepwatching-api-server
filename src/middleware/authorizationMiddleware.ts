@@ -1,18 +1,23 @@
 import { ForbiddenError, UnauthorizedError } from '@ajgifford/keepwatching-common-server';
+import { AccountAndProfileIdsParams } from '@ajgifford/keepwatching-common-server/schema';
 import { accountService } from '@ajgifford/keepwatching-common-server/services';
 import { NextFunction, Request, Response } from 'express';
 
-export const authorizeAccountAccess = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const authorizeAccountAccess = async (
+  req: Request<AccountAndProfileIdsParams>,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
   try {
     const authenticatedUid = req.user?.uid;
-    const { accountId, profileId } = req.params;
+    const { accountId, profileId } = req.params as AccountAndProfileIdsParams;
 
     if (!authenticatedUid) {
       next(new UnauthorizedError('Authentication required'));
       return;
     }
 
-    const account = await accountService.findAccountById(Number(accountId));
+    const account = await accountService.findAccountById(accountId);
 
     if (!account || account.uid !== authenticatedUid) {
       next(new ForbiddenError('You do not have permission to access this account'));

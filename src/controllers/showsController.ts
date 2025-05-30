@@ -12,7 +12,7 @@ import { NextFunction, Request, Response } from 'express';
  *
  * @route GET /api/v1/accounts/:accountId/profiles/:profileId/shows
  */
-export async function getShows(req: Request, res: Response, next: NextFunction) {
+export async function getShows(req: Request<AccountAndProfileIdsParams>, res: Response, next: NextFunction) {
   try {
     const { profileId } = req.params as AccountAndProfileIdsParams;
     const results = await showService.getShowsForProfile(profileId);
@@ -28,7 +28,7 @@ export async function getShows(req: Request, res: Response, next: NextFunction) 
  *
  * @route GET /api/v1/accounts/:accountId/profiles/:profileId/shows/:showId/details
  */
-export async function getShowDetails(req: Request, res: Response, next: NextFunction) {
+export async function getShowDetails(req: Request<ShowParams>, res: Response, next: NextFunction) {
   try {
     const { profileId, showId } = req.params as ShowParams;
     const show = await showService.getShowDetailsForProfile(profileId, showId);
@@ -44,7 +44,7 @@ export async function getShowDetails(req: Request, res: Response, next: NextFunc
  *
  * @route GET /api/v1/accounts/:accountId/profiles/:profileId/episodes
  */
-export async function getProfileEpisodes(req: Request, res: Response, next: NextFunction) {
+export async function getProfileEpisodes(req: Request<AccountAndProfileIdsParams>, res: Response, next: NextFunction) {
   try {
     const { profileId } = req.params as AccountAndProfileIdsParams;
     const episodeData = await showService.getEpisodesForProfile(profileId);
@@ -63,7 +63,7 @@ export async function getProfileEpisodes(req: Request, res: Response, next: Next
  *
  * @route POST /api/v1/accounts/:accountId/profiles/:profileId/shows/favorites
  */
-export async function addFavorite(req: Request, res: Response, next: NextFunction) {
+export async function addFavorite(req: Request<AccountAndProfileIdsParams>, res: Response, next: NextFunction) {
   try {
     const { profileId } = req.params as AccountAndProfileIdsParams;
     const { showId }: AddShowFavoriteParams = req.body;
@@ -81,10 +81,10 @@ export async function addFavorite(req: Request, res: Response, next: NextFunctio
  *
  * @route DELETE /api/v1/accounts/:accountId/profiles/:profileId/shows/favorites/:showId
  */
-export async function removeFavorite(req: Request, res: Response, next: NextFunction) {
+export async function removeFavorite(req: Request<ShowParams>, res: Response, next: NextFunction) {
   try {
     const { profileId, showId } = req.params as ShowParams;
-    const result = await showService.removeShowFromFavorites(profileId, Number(showId));
+    const result = await showService.removeShowFromFavorites(profileId, showId);
 
     res.status(200).json({ message: 'Successfully removed the show from favorites', result });
   } catch (error) {
@@ -97,7 +97,11 @@ export async function removeFavorite(req: Request, res: Response, next: NextFunc
  *
  * @route PUT /api/v1/accounts/:accountId/profiles/:profileId/shows/watchstatus
  */
-export async function updateShowWatchStatus(req: Request, res: Response, next: NextFunction) {
+export async function updateShowWatchStatus(
+  req: Request<AccountAndProfileIdsParams>,
+  res: Response,
+  next: NextFunction,
+) {
   try {
     const { profileId } = req.params as AccountAndProfileIdsParams;
     const { showId: show_id, status, recursive = false } = req.body as ShowWatchStatusParams;
@@ -115,10 +119,10 @@ export async function updateShowWatchStatus(req: Request, res: Response, next: N
  *
  * @route GET /api/v1/accounts/:accountId/profiles/:profileId/shows/:showId/recommendations
  */
-export async function getShowRecommendations(req: Request, res: Response, next: NextFunction) {
+export async function getShowRecommendations(req: Request<ShowParams>, res: Response, next: NextFunction) {
   try {
     const { profileId, showId } = req.params as ShowParams;
-    const recommendations = await showService.getShowRecommendations(profileId, Number(showId));
+    const recommendations = await showService.getShowRecommendations(profileId, showId);
 
     res.status(200).json({
       message: 'Successfully retrieved show recommendations',
@@ -134,10 +138,10 @@ export async function getShowRecommendations(req: Request, res: Response, next: 
  *
  * @route GET /api/v1/accounts/:accountId/profiles/:profileId/shows/:showId/similar
  */
-export async function getSimilarShows(req: Request, res: Response, next: NextFunction) {
+export async function getSimilarShows(req: Request<ShowParams>, res: Response, next: NextFunction) {
   try {
     const { profileId, showId } = req.params as ShowParams;
-    const similarShows = await showService.getSimilarShows(profileId, Number(showId));
+    const similarShows = await showService.getSimilarShows(profileId, showId);
 
     res.status(200).json({
       message: 'Successfully retrieved similar shows',

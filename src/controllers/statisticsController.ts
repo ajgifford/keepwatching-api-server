@@ -7,10 +7,10 @@ import { NextFunction, Request, Response } from 'express';
  *
  * @route GET /api/v1/accounts/:accountId/statistics
  */
-export async function getAccountStatistics(req: Request, res: Response, next: NextFunction) {
+export async function getAccountStatistics(req: Request<AccountIdParam>, res: Response, next: NextFunction) {
   try {
     const { accountId } = req.params as AccountIdParam;
-    const results = await statisticsService.getAccountStatistics(Number(accountId));
+    const results = await statisticsService.getAccountStatistics(accountId);
 
     res.status(200).json({
       message: 'Successfully retrieved account statistics',
@@ -26,7 +26,11 @@ export async function getAccountStatistics(req: Request, res: Response, next: Ne
  *
  * @route GET /api/v1/accounts/:accountId/profiles/:profileId/statistics
  */
-export async function getProfileStatistics(req: Request, res: Response, next: NextFunction) {
+export async function getProfileStatistics(
+  req: Request<AccountAndProfileIdsParams>,
+  res: Response,
+  next: NextFunction,
+) {
   try {
     const { profileId } = req.params as AccountAndProfileIdsParams;
     const results = await statisticsService.getProfileStatistics(profileId);

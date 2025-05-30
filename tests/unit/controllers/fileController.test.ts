@@ -2,7 +2,6 @@ import { BadRequestError } from '@ajgifford/keepwatching-common-server';
 import { getUploadDirectory } from '@ajgifford/keepwatching-common-server/config';
 import { appLogger } from '@ajgifford/keepwatching-common-server/logger';
 import { accountService, profileService } from '@ajgifford/keepwatching-common-server/testing';
-import { getAccountImage, getProfileImage } from '@ajgifford/keepwatching-common-server/utils';
 import { uploadAccountImage, uploadProfileImage } from '@controllers/fileController';
 import uploadFileMiddleware from '@middleware/uploadMiddleware';
 import { NextFunction, Request, Response } from 'express';
@@ -76,7 +75,7 @@ describe('fileController', () => {
         name: 'Test User',
         email: 'test@example.com',
         image: 'old-image.jpg',
-        default_profile_id: 101,
+        defaultProfileId: 101,
       };
 
       const mockUpdatedAccount = {
@@ -90,14 +89,12 @@ describe('fileController', () => {
 
       (accountService.findAccountById as jest.Mock).mockResolvedValue(mockAccount);
       (accountService.updateAccountImage as jest.Mock).mockResolvedValue(mockUpdatedAccount);
-      (getAccountImage as jest.Mock).mockReturnValue('account-image-url.jpg');
 
       await uploadAccountImage(req as Request, res as Response, next as NextFunction);
 
       expect(uploadFileMiddleware).toHaveBeenCalledWith(req, res);
       expect(accountService.findAccountById).toHaveBeenCalledWith(1);
       expect(accountService.updateAccountImage).toHaveBeenCalledWith(1, 'test-image.jpg');
-      expect(getAccountImage).toHaveBeenCalledWith('test-image.jpg', 'Test User');
       expect(fs.unlink).toHaveBeenCalledWith(`${getUploadDirectory()}/accounts/old-image.jpg`, expect.any(Function));
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.send).toHaveBeenCalledWith({
@@ -106,8 +103,8 @@ describe('fileController', () => {
           id: 1,
           name: 'Test User',
           email: 'test@example.com',
-          image: 'account-image-url.jpg',
-          default_profile_id: 101,
+          image: 'test-image.jpg',
+          defaultProfileId: 101,
         },
       });
       expect(next).not.toHaveBeenCalled();
@@ -179,7 +176,6 @@ describe('fileController', () => {
       (uploadFileMiddleware as jest.Mock).mockResolvedValue(undefined);
       (accountService.findAccountById as jest.Mock).mockResolvedValue(mockAccount);
       (accountService.updateAccountImage as jest.Mock).mockResolvedValue(mockUpdatedAccount);
-      (getAccountImage as jest.Mock).mockReturnValue('account-image-url.jpg');
 
       // Simulate ENOENT error (file not found)
       const enoentError = new Error('File not found');
@@ -226,14 +222,12 @@ describe('fileController', () => {
       (uploadFileMiddleware as jest.Mock).mockResolvedValue(undefined);
       (profileService.findProfileById as jest.Mock).mockResolvedValue(mockProfile);
       (profileService.updateProfileImage as jest.Mock).mockResolvedValue(mockUpdatedProfile);
-      (getProfileImage as jest.Mock).mockReturnValue('profile-image-url.jpg');
 
       await uploadProfileImage(req as Request, res as Response, next as NextFunction);
 
       expect(uploadFileMiddleware).toHaveBeenCalledWith(req, res);
       expect(profileService.findProfileById).toHaveBeenCalledWith(123);
       expect(profileService.updateProfileImage).toHaveBeenCalledWith(123, 'test-image.jpg');
-      expect(getProfileImage).toHaveBeenCalledWith('test-image.jpg', 'Test Profile');
       expect(fs.unlink).toHaveBeenCalledWith(`${getUploadDirectory()}/profiles/old-profile.jpg`, expect.any(Function));
       expect(profileService.invalidateProfileCache).toHaveBeenCalledWith('123');
       expect(res.status).toHaveBeenCalledWith(200);
@@ -242,7 +236,7 @@ describe('fileController', () => {
         result: {
           id: 123,
           name: 'Test Profile',
-          image: 'profile-image-url.jpg',
+          image: 'test-image.jpg',
         },
       });
       expect(next).not.toHaveBeenCalled();
@@ -310,7 +304,6 @@ describe('fileController', () => {
       (uploadFileMiddleware as jest.Mock).mockResolvedValue(undefined);
       (profileService.findProfileById as jest.Mock).mockResolvedValue(mockProfile);
       (profileService.updateProfileImage as jest.Mock).mockResolvedValue(mockUpdatedProfile);
-      (getProfileImage as jest.Mock).mockReturnValue('profile-image-url.jpg');
 
       // Simulate unexpected error
       const unexpectedError = new Error('Unexpected error');

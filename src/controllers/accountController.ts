@@ -6,7 +6,6 @@ import {
   LoginParam,
 } from '@ajgifford/keepwatching-common-server/schema';
 import { accountService } from '@ajgifford/keepwatching-common-server/services';
-import { getAccountImage, getPhotoForGoogleAccount } from '@ajgifford/keepwatching-common-server/utils';
 import { NextFunction, Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 
@@ -33,8 +32,8 @@ export const register = asyncHandler(async (req: Request, res: Response, next: N
         name: account.name,
         uid: account.uid,
         email: account.email,
-        image: getAccountImage(account.image, account.name),
-        default_profile_id: account.default_profile_id,
+        image: account.image,
+        defaultProfileId: account.defaultProfileId,
       },
     });
   } catch (error) {
@@ -65,8 +64,8 @@ export const login = asyncHandler(async (req: Request, res: Response, next: Next
         name: account.name,
         uid: account.uid,
         email: account.email,
-        image: getAccountImage(account.image, account.name),
-        default_profile_id: account.default_profile_id,
+        image: account.image,
+        defaultProfileId: account.defaultProfileId,
       },
     });
   } catch (error) {
@@ -88,7 +87,7 @@ export const login = asyncHandler(async (req: Request, res: Response, next: Next
 export const googleLogin = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { name, email, uid, photoURL }: GoogleLoginParams = req.body;
-    const googleLoginResult = await accountService.googleLogin(name, email, uid);
+    const googleLoginResult = await accountService.googleLogin(name, email, uid, photoURL);
 
     const statusCode = googleLoginResult.isNewAccount ? 201 : 200;
     const message = googleLoginResult.isNewAccount ? 'Account registered successfully' : 'Login successful';
@@ -100,8 +99,8 @@ export const googleLogin = asyncHandler(async (req: Request, res: Response, next
         name: googleLoginResult.account.name,
         uid: googleLoginResult.account.uid,
         email: googleLoginResult.account.email,
-        image: getPhotoForGoogleAccount(name, photoURL, googleLoginResult.account.image),
-        default_profile_id: googleLoginResult.account.default_profile_id,
+        image: googleLoginResult.account.image,
+        defaultProfileId: googleLoginResult.account.defaultProfileId,
         isNewAccount: googleLoginResult.isNewAccount,
       },
     });
@@ -121,7 +120,7 @@ export const googleLogin = asyncHandler(async (req: Request, res: Response, next
  * @param {NextFunction} next - Express next function
  * @returns {Response} 200 with success message
  */
-export const logout = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const logout = asyncHandler(async (req: Request<AccountIdParam>, res: Response, next: NextFunction) => {
   try {
     const { accountId }: AccountIdParam = req.body;
     accountService.logout(accountId);
@@ -136,18 +135,20 @@ export const logout = asyncHandler(async (req: Request, res: Response, next: Nex
  *
  * @route PUT /api/v1/accounts/:accountId
  */
-export const editAccount = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    const { accountId } = req.params as AccountIdParam;
-    const { name, defaultProfileId }: AccountUpdateParams = req.body;
+export const editAccount = asyncHandler(
+  async (req: Request<AccountIdParam>, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { accountId } = req.params as AccountIdParam;
+      const { name, defaultProfileId }: AccountUpdateParams = req.body;
 
-    const updatedAccount = await accountService.editAccount(Number(accountId), name, Number(defaultProfileId));
+      const updatedAccount = await accountService.editAccount(accountId, name, defaultProfileId);
 
-    res.status(200).json({
-      message: `Updated account ${accountId}`,
-      result: updatedAccount,
-    });
-  } catch (error) {
-    next(error);
-  }
-});
+      res.status(200).json({
+        message: `Updated account ${accountId}`,
+        result: updatedAccount,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);

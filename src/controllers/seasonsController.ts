@@ -1,4 +1,8 @@
-import { AccountAndProfileIdsParams, SeasonWatchStatusParams } from '@ajgifford/keepwatching-common-server/schema';
+import {
+  AccountAndProfileIdsParams,
+  SeasonWatchStatusParams,
+  ShowParams,
+} from '@ajgifford/keepwatching-common-server/schema';
 import { seasonsService } from '@ajgifford/keepwatching-common-server/services';
 import { NextFunction, Request, Response } from 'express';
 
@@ -7,7 +11,11 @@ import { NextFunction, Request, Response } from 'express';
  *
  * @route PUT /api/v1/accounts/:accountId/profiles/:profileId/seasons/watchstatus
  */
-export const updateSeasonWatchStatus = async (req: Request, res: Response, next: NextFunction) => {
+export const updateSeasonWatchStatus = async (
+  req: Request<AccountAndProfileIdsParams>,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { profileId } = req.params as AccountAndProfileIdsParams;
     const { seasonId, status, recursive = false } = req.body as SeasonWatchStatusParams;
@@ -25,10 +33,9 @@ export const updateSeasonWatchStatus = async (req: Request, res: Response, next:
  *
  * @route GET /api/v1/accounts/:accountId/profiles/:profileId/shows/:showId/seasons
  */
-export const getSeasonsForShow = async (req: Request, res: Response, next: NextFunction) => {
+export const getSeasonsForShow = async (req: Request<ShowParams>, res: Response, next: NextFunction) => {
   try {
-    const { profileId } = req.params as AccountAndProfileIdsParams;
-    const { showId } = req.params;
+    const { profileId, showId } = req.params as ShowParams;
 
     const seasons = await seasonsService.getSeasonsForShow(profileId, showId);
 

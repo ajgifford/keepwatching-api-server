@@ -2,12 +2,17 @@ import {
   AccountAndProfileIdsParams,
   EpisodeWatchStatusParams,
   NextEpisodeWatchStatusParams,
+  ProfileSeasonIdsParams,
 } from '@ajgifford/keepwatching-common-server/schema';
 import { episodesService } from '@ajgifford/keepwatching-common-server/services';
 import { NextFunction, Request, Response } from 'express';
 
 // PUT /api/v1/accounts/:accountId/profiles/${profileId}/episodes/watchStatus
-export const updateEpisodeWatchStatus = async (req: Request, res: Response, next: NextFunction) => {
+export const updateEpisodeWatchStatus = async (
+  req: Request<AccountAndProfileIdsParams>,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { profileId } = req.params as AccountAndProfileIdsParams;
     const { episodeId, status } = req.body as EpisodeWatchStatusParams;
@@ -24,7 +29,11 @@ export const updateEpisodeWatchStatus = async (req: Request, res: Response, next
 };
 
 // PUT /api/v1/accounts/:accountId/profiles/${profileId}/episodes/nextWatchStatus
-export const updateNextEpisodeWatchStatus = async (req: Request, res: Response, next: NextFunction) => {
+export const updateNextEpisodeWatchStatus = async (
+  req: Request<AccountAndProfileIdsParams>,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { profileId } = req.params as AccountAndProfileIdsParams;
     const { showId, seasonId, episodeId, status } = req.body as NextEpisodeWatchStatusParams;
@@ -41,12 +50,11 @@ export const updateNextEpisodeWatchStatus = async (req: Request, res: Response, 
 };
 
 // GET /api/v1/accounts/:accountId/profiles/:profileId/seasons/:seasonId/episodes
-export const getEpisodesForSeason = async (req: Request, res: Response, next: NextFunction) => {
+export const getEpisodesForSeason = async (req: Request<ProfileSeasonIdsParams>, res: Response, next: NextFunction) => {
   try {
-    const { profileId } = req.params as AccountAndProfileIdsParams;
-    const { seasonId } = req.params;
+    const { profileId, seasonId } = req.params as ProfileSeasonIdsParams;
 
-    const episodes = await episodesService.getEpisodesForSeason(profileId, Number(seasonId));
+    const episodes = await episodesService.getEpisodesForSeason(profileId, seasonId);
 
     res.status(200).json({
       message: 'Successfully retrieved episodes for the season',
@@ -58,7 +66,11 @@ export const getEpisodesForSeason = async (req: Request, res: Response, next: Ne
 };
 
 // GET /api/v1/accounts/:accountId/profiles/:profileId/episodes/upcoming
-export const getUpcomingEpisodes = async (req: Request, res: Response, next: NextFunction) => {
+export const getUpcomingEpisodes = async (
+  req: Request<AccountAndProfileIdsParams>,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { profileId } = req.params as AccountAndProfileIdsParams;
 
@@ -74,7 +86,11 @@ export const getUpcomingEpisodes = async (req: Request, res: Response, next: Nex
 };
 
 // GET /api/v1/accounts/:accountId/profiles/:profileId/episodes/recent
-export const getRecentEpisodes = async (req: Request, res: Response, next: NextFunction) => {
+export const getRecentEpisodes = async (
+  req: Request<AccountAndProfileIdsParams>,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { profileId } = req.params as AccountAndProfileIdsParams;
 
