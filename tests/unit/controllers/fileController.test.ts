@@ -35,13 +35,13 @@ jest.mock('@ajgifford/keepwatching-common-server/services', () => ({
 }));
 
 describe('fileController', () => {
-  let req: Partial<Request>;
+  let req: Request;
   let res: Partial<Response>;
   let next: jest.Mock;
 
   beforeEach(() => {
     req = {
-      params: { accountId: '1', profileId: '123' },
+      params: { accountId: 1, profileId: 123 }, // Now properly typed as numbers
       file: {
         fieldname: 'file',
         originalname: 'original.jpg',
@@ -56,7 +56,7 @@ describe('fileController', () => {
           on: jest.fn(),
         } as any,
       } as Express.Multer.File,
-    };
+    } as unknown as Request;
     res = {
       status: jest.fn().mockReturnThis(),
       send: jest.fn(),
@@ -229,7 +229,7 @@ describe('fileController', () => {
       expect(profileService.findProfileById).toHaveBeenCalledWith(123);
       expect(profileService.updateProfileImage).toHaveBeenCalledWith(123, 'test-image.jpg');
       expect(fs.unlink).toHaveBeenCalledWith(`${getUploadDirectory()}/profiles/old-profile.jpg`, expect.any(Function));
-      expect(profileService.invalidateProfileCache).toHaveBeenCalledWith('123');
+      expect(profileService.invalidateProfileCache).toHaveBeenCalledWith(123);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.send).toHaveBeenCalledWith({
         message: 'Uploaded the file successfully: test-image.jpg',
