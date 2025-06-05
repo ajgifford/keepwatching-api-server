@@ -1,7 +1,7 @@
 import {
   AccountAndProfileIdsParams,
   AccountIdParam,
-  ProfileNameParam,
+  ProfileNameBody,
 } from '@ajgifford/keepwatching-common-server/schema';
 import { profileService } from '@ajgifford/keepwatching-common-server/services';
 import { NextFunction, Request, Response } from 'express';
@@ -20,7 +20,7 @@ export const getProfiles = asyncHandler(async (req: Request, res: Response, next
 
     res.status(200).json({
       message: `Retrieved profiles for account ${accountId}`,
-      results: profiles,
+      profiles,
     });
   } catch (error) {
     next(error);
@@ -36,11 +36,11 @@ export const getProfile = asyncHandler(async (req: Request, res: Response, next:
   try {
     const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
 
-    const result = await profileService.getProfile(profileId);
+    const profileWithContent = await profileService.getProfileWithContent(profileId);
 
     res.status(200).json({
-      message: `Retrieved profile with id: ${profileId}`,
-      results: result,
+      message: `Retrieved profile with id: ${profileId} and it's content`,
+      profileWithContent,
     });
   } catch (error) {
     next(error);
@@ -55,13 +55,13 @@ export const getProfile = asyncHandler(async (req: Request, res: Response, next:
 export const addProfile = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { accountId } = req.params as unknown as AccountIdParam;
-    const { name }: ProfileNameParam = req.body;
+    const { name }: ProfileNameBody = req.body;
 
-    const newProfile = await profileService.createProfile(accountId, name);
+    const profile = await profileService.createProfile(accountId, name);
 
     res.status(201).json({
       message: 'Profile added successfully',
-      result: newProfile,
+      profile,
     });
   } catch (error) {
     next(error);
@@ -76,13 +76,13 @@ export const addProfile = asyncHandler(async (req: Request, res: Response, next:
 export const editProfile = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
-    const { name }: ProfileNameParam = req.body;
+    const { name }: ProfileNameBody = req.body;
 
-    const updatedProfile = await profileService.updateProfileName(profileId, name);
+    const profile = await profileService.updateProfileName(profileId, name);
 
     res.status(200).json({
       message: 'Profile edited successfully',
-      result: updatedProfile,
+      profile,
     });
   } catch (error) {
     next(error);

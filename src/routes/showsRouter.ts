@@ -12,9 +12,9 @@ import { authorizeAccountAccess } from '../middleware/authorizationMiddleware';
 import { validateRequest, validateSchema } from '@ajgifford/keepwatching-common-server';
 import {
   accountAndProfileIdsParamSchema,
-  addShowFavoriteSchema,
+  addShowFavoriteBodySchema,
   showParamsSchema,
-  showWatchStatusSchema,
+  showWatchStatusBodySchema,
 } from '@ajgifford/keepwatching-common-server/schema';
 import express from 'express';
 
@@ -31,7 +31,7 @@ router.post(
   '/api/v1/accounts/:accountId/profiles/:profileId/shows/favorites',
   validateSchema(accountAndProfileIdsParamSchema, 'params'),
   authorizeAccountAccess,
-  validateRequest(addShowFavoriteSchema),
+  validateRequest(addShowFavoriteBodySchema),
   addFavorite,
 );
 
@@ -46,7 +46,7 @@ router.put(
   '/api/v1/accounts/:accountId/profiles/:profileId/shows/watchstatus',
   validateSchema(accountAndProfileIdsParamSchema, 'params'),
   authorizeAccountAccess,
-  validateRequest(showWatchStatusSchema),
+  validateRequest(showWatchStatusBodySchema),
   updateShowWatchStatus,
 );
 

@@ -1,9 +1,9 @@
 import {
   AccountIdParam,
-  AccountParams,
-  AccountUpdateParams,
-  GoogleLoginParams,
-  LoginParam,
+  AccountLoginBody,
+  GoogleLoginBody,
+  RegisterAccountBody,
+  UpdateAccountBody,
 } from '@ajgifford/keepwatching-common-server/schema';
 import { accountService } from '@ajgifford/keepwatching-common-server/services';
 import { NextFunction, Request, Response } from 'express';
@@ -22,7 +22,7 @@ import asyncHandler from 'express-async-handler';
  */
 export const register = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { name, email, uid }: AccountParams = req.body;
+    const { name, email, uid }: RegisterAccountBody = req.body;
     const account = await accountService.register(name, email, uid);
 
     res.status(201).json({
@@ -54,7 +54,7 @@ export const register = asyncHandler(async (req: Request, res: Response, next: N
  */
 export const login = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { uid }: LoginParam = req.body;
+    const { uid }: AccountLoginBody = req.body;
     const account = await accountService.login(uid);
 
     res.status(200).json({
@@ -86,7 +86,7 @@ export const login = asyncHandler(async (req: Request, res: Response, next: Next
  */
 export const googleLogin = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { name, email, uid, photoURL }: GoogleLoginParams = req.body;
+    const { name, email, uid, photoURL }: GoogleLoginBody = req.body;
     const googleLoginResult = await accountService.googleLogin(name, email, uid, photoURL);
 
     const statusCode = googleLoginResult.isNewAccount ? 201 : 200;
@@ -138,7 +138,7 @@ export const logout = asyncHandler(async (req: Request, res: Response, next: Nex
 export const editAccount = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { accountId } = req.params as unknown as AccountIdParam;
-    const { name, defaultProfileId }: AccountUpdateParams = req.body;
+    const { name, defaultProfileId }: UpdateAccountBody = req.body;
 
     const updatedAccount = await accountService.editAccount(accountId, name, defaultProfileId);
 

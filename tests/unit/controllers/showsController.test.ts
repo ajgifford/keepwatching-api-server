@@ -34,8 +34,8 @@ describe('showsController', () => {
   describe('getShows', () => {
     it('should get shows for a profile', async () => {
       const mockShows = [
-        { show_id: 1, title: 'Show 1', watchStatus: 'WATCHING' },
-        { show_id: 2, title: 'Show 2', watchStatus: 'NOT_WATCHED' },
+        { showId: 1, title: 'Show 1', watchStatus: 'WATCHING' },
+        { showId: 2, title: 'Show 2', watchStatus: 'NOT_WATCHED' },
       ];
       (showService.getShowsForProfile as jest.Mock).mockResolvedValue(mockShows);
 
@@ -45,7 +45,7 @@ describe('showsController', () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully retrieved shows for a profile',
-        results: mockShows,
+        shows: mockShows,
       });
       expect(next).not.toHaveBeenCalled();
     });
@@ -69,7 +69,7 @@ describe('showsController', () => {
         id: 456,
         title: 'Breaking Bad',
         description: 'A high school chemistry teacher turned meth cook',
-        seasons: [{ season_id: 1, name: 'Season 1' }],
+        seasons: [{ seasonId: 1, name: 'Season 1' }],
       };
       (showService.getShowDetailsForProfile as jest.Mock).mockResolvedValue(mockShowDetails);
 
@@ -79,7 +79,7 @@ describe('showsController', () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully retrieved a show and its details',
-        results: mockShowDetails,
+        show: mockShowDetails,
       });
       expect(next).not.toHaveBeenCalled();
     });
@@ -100,9 +100,9 @@ describe('showsController', () => {
   describe('getProfileEpisodes', () => {
     it('should get episode data for a profile', async () => {
       const mockEpisodeData = {
-        recentEpisodes: [{ episode_id: 101, title: 'Recent Episode' }],
-        upcomingEpisodes: [{ episode_id: 102, title: 'Upcoming Episode' }],
-        nextUnwatchedEpisodes: [{ show_id: 1, episodes: [{ episode_id: 103 }] }],
+        recentEpisodes: [{ episodeId: 101, title: 'Recent Episode' }],
+        upcomingEpisodes: [{ episodeId: 102, title: 'Upcoming Episode' }],
+        nextUnwatchedEpisodes: [{ showId: 1, episodes: [{ episodeId: 103 }] }],
       };
       (showService.getEpisodesForProfile as jest.Mock).mockResolvedValue(mockEpisodeData);
 
@@ -112,7 +112,7 @@ describe('showsController', () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully retrieved the episodes for a profile',
-        results: mockEpisodeData,
+        episodes: mockEpisodeData,
       });
       expect(next).not.toHaveBeenCalled();
     });
@@ -132,33 +132,33 @@ describe('showsController', () => {
 
   describe('addFavorite', () => {
     it('should add a show to favorites', async () => {
-      req.body = { showId: 789 };
+      req.body = { showTMDBId: 789 };
       const mockResult = {
-        favoritedShow: { show_id: 789, title: 'New Show' },
-        recentEpisodes: [{ episode_id: 101 }],
-        upcomingEpisodes: [{ episode_id: 102 }],
+        favoritedShow: { showId: 789, title: 'New Show' },
+        episodes: { recentEpisodes: [{ episodeId: 101 }], upcomingEpisodes: [{ episodeId: 102 }] },
       };
       (showService.addShowToFavorites as jest.Mock).mockResolvedValue(mockResult);
 
       await addFavorite(req, res, next);
 
-      expect(showService.addShowToFavorites).toHaveBeenCalledWith(123, 789);
+      expect(showService.addShowToFavorites).toHaveBeenCalledWith(1, 123, 789);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully saved show as a favorite',
-        result: mockResult,
+        addedShow: mockResult.favoritedShow,
+        episodes: mockResult.episodes,
       });
       expect(next).not.toHaveBeenCalled();
     });
 
     it('should handle errors', async () => {
-      req.body = { showId: 789 };
+      req.body = { showTMDBId: 789 };
       const error = new Error('Failed to add show');
       (showService.addShowToFavorites as jest.Mock).mockRejectedValue(error);
 
       await addFavorite(req, res, next);
 
-      expect(showService.addShowToFavorites).toHaveBeenCalledWith(123, 789);
+      expect(showService.addShowToFavorites).toHaveBeenCalledWith(1, 123, 789);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
@@ -169,18 +169,18 @@ describe('showsController', () => {
     it('should remove a show from favorites', async () => {
       const mockResult = {
         removedShow: { id: 456, title: 'Show to Remove' },
-        recentEpisodes: [{ episode_id: 101 }],
-        upcomingEpisodes: [{ episode_id: 102 }],
+        episodes: { recentEpisodes: [{ episodeId: 101 }], upcomingEpisodes: [{ episodeId: 102 }] },
       };
       (showService.removeShowFromFavorites as jest.Mock).mockResolvedValue(mockResult);
 
       await removeFavorite(req, res, next);
 
-      expect(showService.removeShowFromFavorites).toHaveBeenCalledWith(123, 456);
+      expect(showService.removeShowFromFavorites).toHaveBeenCalledWith(1, 123, 456);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully removed the show from favorites',
-        result: mockResult,
+        removedShowReference: mockResult.removedShow,
+        episodes: mockResult.episodes,
       });
       expect(next).not.toHaveBeenCalled();
     });
@@ -191,7 +191,7 @@ describe('showsController', () => {
 
       await removeFavorite(req, res, next);
 
-      expect(showService.removeShowFromFavorites).toHaveBeenCalledWith(123, 456);
+      expect(showService.removeShowFromFavorites).toHaveBeenCalledWith(1, 123, 456);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
@@ -201,28 +201,30 @@ describe('showsController', () => {
   describe('updateShowWatchStatus', () => {
     it('should update show watch status with default recursive value', async () => {
       req.body = { showId: 456, status: 'WATCHED' };
-      (showService.updateShowWatchStatus as jest.Mock).mockResolvedValue(true);
+      (showService.updateShowWatchStatus as jest.Mock).mockResolvedValue([]);
 
       await updateShowWatchStatus(req, res, next);
 
-      expect(showService.updateShowWatchStatus).toHaveBeenCalledWith(123, 456, 'WATCHED', false);
+      expect(showService.updateShowWatchStatus).toHaveBeenCalledWith(1, 123, 456, 'WATCHED', false);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: "Successfully updated the watch status to 'WATCHED'",
+        nextUnwatchedEpisodes: [],
       });
       expect(next).not.toHaveBeenCalled();
     });
 
     it('should update show watch status with specified recursive value', async () => {
       req.body = { showId: 456, status: 'WATCHED', recursive: true };
-      (showService.updateShowWatchStatus as jest.Mock).mockResolvedValue(true);
+      (showService.updateShowWatchStatus as jest.Mock).mockResolvedValue([]);
 
       await updateShowWatchStatus(req, res, next);
 
-      expect(showService.updateShowWatchStatus).toHaveBeenCalledWith(123, 456, 'WATCHED', true);
+      expect(showService.updateShowWatchStatus).toHaveBeenCalledWith(1, 123, 456, 'WATCHED', true);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: "Successfully updated the watch status to 'WATCHED'",
+        nextUnwatchedEpisodes: [],
       });
       expect(next).not.toHaveBeenCalled();
     });
@@ -234,7 +236,7 @@ describe('showsController', () => {
 
       await updateShowWatchStatus(req, res, next);
 
-      expect(showService.updateShowWatchStatus).toHaveBeenCalledWith(123, 456, 'WATCHED', false);
+      expect(showService.updateShowWatchStatus).toHaveBeenCalledWith(1, 123, 456, 'WATCHED', false);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
@@ -255,7 +257,7 @@ describe('showsController', () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully retrieved show recommendations',
-        results: mockRecommendations,
+        shows: mockRecommendations,
       });
       expect(next).not.toHaveBeenCalled();
     });
@@ -287,7 +289,7 @@ describe('showsController', () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully retrieved similar shows',
-        results: mockSimilarShows,
+        shows: mockSimilarShows,
       });
       expect(next).not.toHaveBeenCalled();
     });

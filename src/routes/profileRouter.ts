@@ -4,7 +4,7 @@ import { validateRequest, validateSchema } from '@ajgifford/keepwatching-common-
 import {
   accountAndProfileIdsParamSchema,
   accountIdParamSchema,
-  profileNameSchema,
+  profileNameBodySchema,
 } from '@ajgifford/keepwatching-common-server/schema';
 import express from 'express';
 
@@ -26,14 +26,14 @@ router.post(
   '/api/v1/accounts/:accountId/profiles',
   validateSchema(accountIdParamSchema, 'params'),
   authorizeAccountAccess,
-  validateRequest(profileNameSchema),
+  validateRequest(profileNameBodySchema),
   addProfile,
 );
 router.put(
   '/api/v1/accounts/:accountId/profiles/:profileId',
   validateSchema(accountAndProfileIdsParamSchema, 'params'),
   authorizeAccountAccess,
-  validateRequest(profileNameSchema),
+  validateRequest(profileNameBodySchema),
   editProfile,
 );
 router.delete(

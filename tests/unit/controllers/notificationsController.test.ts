@@ -1,4 +1,5 @@
 import { notificationsService } from '@ajgifford/keepwatching-common-server/testing';
+import { NotificationResponse } from '@ajgifford/keepwatching-types';
 import { dismissNotification, getNotifications } from '@controllers/notificationsController';
 
 jest.mock('@ajgifford/keepwatching-common-server/services', () => ({ notificationsService: notificationsService }));
@@ -25,20 +26,23 @@ describe('notificationsController', () => {
     it('should retrieve notifications successfully', async () => {
       const mockNotifications = [
         {
-          notification_id: 123,
+          id: 123,
           message: 'New episode available',
-          start_date: '2025-04-01T00:00:00Z',
-          end_date: '2025-04-30T00:00:00Z',
-          dismissed: false,
+          startDate: new Date('2025-04-01T00:00:00Z'),
+          endDate: new Date('2025-04-30T00:00:00Z'),
         },
         {
-          notification_id: 124,
+          id: 124,
           message: 'New update available',
-          start_date: '2025-04-10T00:00:00Z',
-          end_date: '2025-05-10T00:00:00Z',
-          dismissed: true,
+          startDate: new Date('2025-04-10T00:00:00Z'),
+          endDate: new Date('2025-05-10T00:00:00Z'),
         },
       ];
+
+      const response: NotificationResponse = {
+        message: 'Retrieved notifications for an account',
+        notifications: mockNotifications,
+      };
 
       (notificationsService.getNotifications as jest.Mock).mockResolvedValue(mockNotifications);
 
@@ -46,17 +50,12 @@ describe('notificationsController', () => {
 
       expect(notificationsService.getNotifications).toHaveBeenCalledWith(1);
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({
-        message: 'Retrieved notifications for an account',
-        results: mockNotifications,
-      });
+      expect(res.json).toHaveBeenCalledWith(response);
       expect(next).not.toHaveBeenCalled();
     });
 
     it('should handle empty notifications array', async () => {
-      const mockNotifications: any[] = [];
-
-      (notificationsService.getNotifications as jest.Mock).mockResolvedValue(mockNotifications);
+      (notificationsService.getNotifications as jest.Mock).mockResolvedValue([]);
 
       await getNotifications(req, res, next);
 
@@ -64,7 +63,7 @@ describe('notificationsController', () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Retrieved notifications for an account',
-        results: [],
+        notifications: [],
       });
       expect(next).not.toHaveBeenCalled();
     });
@@ -84,15 +83,33 @@ describe('notificationsController', () => {
 
   describe('dismissNotification', () => {
     it('should dismiss a notification successfully', async () => {
-      (notificationsService.dismissNotification as jest.Mock).mockResolvedValue(true);
+      const mockNotifications = [
+        {
+          id: 123,
+          message: 'New episode available',
+          startDate: new Date('2025-04-01T00:00:00Z'),
+          endDate: new Date('2025-04-30T00:00:00Z'),
+        },
+        {
+          id: 124,
+          message: 'New update available',
+          startDate: new Date('2025-04-10T00:00:00Z'),
+          endDate: new Date('2025-05-10T00:00:00Z'),
+        },
+      ];
+
+      const response: NotificationResponse = {
+        message: 'Dismissed notification for account',
+        notifications: mockNotifications,
+      };
+
+      (notificationsService.dismissNotification as jest.Mock).mockResolvedValue(mockNotifications);
 
       await dismissNotification(req, res, next);
 
       expect(notificationsService.dismissNotification).toHaveBeenCalledWith(123, 1);
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({
-        message: 'Notification dismissed successfully',
-      });
+      expect(res.json).toHaveBeenCalledWith(response);
       expect(next).not.toHaveBeenCalled();
     });
 

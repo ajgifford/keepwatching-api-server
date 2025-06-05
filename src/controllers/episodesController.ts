@@ -1,7 +1,7 @@
 import {
   AccountAndProfileIdsParams,
-  EpisodeWatchStatusParams,
-  NextEpisodeWatchStatusParams,
+  EpisodeWatchStatusBody,
+  NextEpisodeWatchStatusBody,
   ProfileSeasonIdsParams,
 } from '@ajgifford/keepwatching-common-server/schema';
 import { episodesService } from '@ajgifford/keepwatching-common-server/services';
@@ -10,14 +10,14 @@ import { NextFunction, Request, Response } from 'express';
 // PUT /api/v1/accounts/:accountId/profiles/${profileId}/episodes/watchStatus
 export const updateEpisodeWatchStatus = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
-    const { episodeId, status } = req.body as EpisodeWatchStatusParams;
+    const { accountId, profileId } = req.params as unknown as AccountAndProfileIdsParams;
+    const { episodeId, status } = req.body as EpisodeWatchStatusBody;
 
-    const result = await episodesService.updateEpisodeWatchStatus(profileId, episodeId, status);
+    const episodes = await episodesService.updateEpisodeWatchStatus(accountId, profileId, episodeId, status);
 
     res.status(200).json({
       message: 'Successfully updated the episode watch status',
-      result,
+      nextUnwatchedEpisodes: episodes,
     });
   } catch (error) {
     next(error);
@@ -27,14 +27,21 @@ export const updateEpisodeWatchStatus = async (req: Request, res: Response, next
 // PUT /api/v1/accounts/:accountId/profiles/${profileId}/episodes/nextWatchStatus
 export const updateNextEpisodeWatchStatus = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
-    const { showId, seasonId, episodeId, status } = req.body as NextEpisodeWatchStatusParams;
+    const { accountId, profileId } = req.params as unknown as AccountAndProfileIdsParams;
+    const { showId, seasonId, episodeId, status } = req.body as NextEpisodeWatchStatusBody;
 
-    const result = await episodesService.updateNextEpisodeWatchStatus(profileId, showId, seasonId, episodeId, status);
+    const episodes = await episodesService.updateNextEpisodeWatchStatus(
+      accountId,
+      profileId,
+      showId,
+      seasonId,
+      episodeId,
+      status,
+    );
 
     res.status(200).json({
       message: 'Successfully updated the episode watch status',
-      result,
+      nextUnwatchedEpisodes: episodes,
     });
   } catch (error) {
     next(error);

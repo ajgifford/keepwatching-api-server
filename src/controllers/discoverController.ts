@@ -31,7 +31,7 @@ export const discoverChangesContent = async (req: Request, res: Response, next: 
 // GET /api/v1/discover/trending
 export const discoverTrendingContent = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { showType, page = '1' } = req.query as DiscoverTrendingQuery;
+    const { showType, page = 1 } = req.query as unknown as DiscoverTrendingQuery;
     const trendingContent = await contentDiscoveryService.discoverTrendingContent(showType, page);
     res.status(200).json(trendingContent);
   } catch (error) {

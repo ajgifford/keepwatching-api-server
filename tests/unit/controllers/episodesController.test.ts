@@ -37,11 +37,11 @@ describe('episodesController', () => {
       (episodesService.updateEpisodeWatchStatus as jest.Mock).mockResolvedValue(mockResult);
 
       await updateEpisodeWatchStatus(req, res, next);
-      expect(episodesService.updateEpisodeWatchStatus).toHaveBeenCalledWith(123, 456, 'WATCHED');
+      expect(episodesService.updateEpisodeWatchStatus).toHaveBeenCalledWith(1, 123, 456, 'WATCHED');
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully updated the episode watch status',
-        result: mockResult,
+        nextUnwatchedEpisodes: mockResult,
       });
       expect(next).not.toHaveBeenCalled();
     });
@@ -52,7 +52,7 @@ describe('episodesController', () => {
       (episodesService.updateEpisodeWatchStatus as jest.Mock).mockRejectedValue(error);
 
       await updateEpisodeWatchStatus(req, res, next);
-      expect(episodesService.updateEpisodeWatchStatus).toHaveBeenCalledWith(123, 456, 'WATCHED');
+      expect(episodesService.updateEpisodeWatchStatus).toHaveBeenCalledWith(1, 123, 456, 'WATCHED');
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
@@ -66,11 +66,11 @@ describe('episodesController', () => {
       (episodesService.updateNextEpisodeWatchStatus as jest.Mock).mockResolvedValue(mockResult);
 
       await updateNextEpisodeWatchStatus(req, res, next);
-      expect(episodesService.updateNextEpisodeWatchStatus).toHaveBeenCalledWith(123, 100, 200, 456, 'WATCHED');
+      expect(episodesService.updateNextEpisodeWatchStatus).toHaveBeenCalledWith(1, 123, 100, 200, 456, 'WATCHED');
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully updated the episode watch status',
-        result: mockResult,
+        nextUnwatchedEpisodes: mockResult,
       });
       expect(next).not.toHaveBeenCalled();
     });
@@ -81,7 +81,7 @@ describe('episodesController', () => {
       (episodesService.updateNextEpisodeWatchStatus as jest.Mock).mockRejectedValue(error);
 
       await updateNextEpisodeWatchStatus(req, res, next);
-      expect(episodesService.updateNextEpisodeWatchStatus).toHaveBeenCalledWith(123, 100, 200, 456, 'WATCHED');
+      expect(episodesService.updateNextEpisodeWatchStatus).toHaveBeenCalledWith(1, 123, 100, 200, 456, 'WATCHED');
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();

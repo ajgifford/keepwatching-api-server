@@ -1,8 +1,8 @@
 import {
   AccountAndProfileIdsParams,
-  AddShowFavoriteParams,
+  AddShowFavoriteBody,
   ShowParams,
-  ShowWatchStatusParams,
+  ShowWatchStatusBody,
 } from '@ajgifford/keepwatching-common-server/schema';
 import { showService } from '@ajgifford/keepwatching-common-server/services';
 import { NextFunction, Request, Response } from 'express';
@@ -15,9 +15,8 @@ import { NextFunction, Request, Response } from 'express';
 export async function getShows(req: Request, res: Response, next: NextFunction) {
   try {
     const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
-    const results = await showService.getShowsForProfile(profileId);
-
-    res.status(200).json({ message: 'Successfully retrieved shows for a profile', results });
+    const shows = await showService.getShowsForProfile(profileId);
+    res.status(200).json({ message: 'Successfully retrieved shows for a profile', shows });
   } catch (error) {
     next(error);
   }
@@ -32,8 +31,7 @@ export async function getShowDetails(req: Request, res: Response, next: NextFunc
   try {
     const { profileId, showId } = req.params as unknown as ShowParams;
     const show = await showService.getShowDetailsForProfile(profileId, showId);
-
-    res.status(200).json({ message: 'Successfully retrieved a show and its details', results: show });
+    res.status(200).json({ message: 'Successfully retrieved a show and its details', show });
   } catch (error) {
     next(error);
   }
@@ -47,9 +45,8 @@ export async function getShowDetails(req: Request, res: Response, next: NextFunc
 export async function getProfileEpisodes(req: Request, res: Response, next: NextFunction) {
   try {
     const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
-    const episodeData = await showService.getEpisodesForProfile(profileId);
-
-    res.status(200).json({ message: 'Successfully retrieved the episodes for a profile', results: episodeData });
+    const episodes = await showService.getEpisodesForProfile(profileId);
+    res.status(200).json({ message: 'Successfully retrieved the episodes for a profile', episodes });
   } catch (error) {
     next(error);
   }
@@ -65,12 +62,14 @@ export async function getProfileEpisodes(req: Request, res: Response, next: Next
  */
 export async function addFavorite(req: Request, res: Response, next: NextFunction) {
   try {
-    const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
-    const { showId }: AddShowFavoriteParams = req.body;
-
-    const result = await showService.addShowToFavorites(profileId, showId);
-
-    res.status(200).json({ message: `Successfully saved show as a favorite`, result });
+    const { accountId, profileId } = req.params as unknown as AccountAndProfileIdsParams;
+    const { showTMDBId }: AddShowFavoriteBody = req.body;
+    const result = await showService.addShowToFavorites(accountId, profileId, showTMDBId);
+    res.status(200).json({
+      message: `Successfully saved show as a favorite`,
+      addedShow: result.favoritedShow,
+      episodes: result.episodes,
+    });
   } catch (error) {
     next(error);
   }
@@ -83,10 +82,13 @@ export async function addFavorite(req: Request, res: Response, next: NextFunctio
  */
 export async function removeFavorite(req: Request, res: Response, next: NextFunction) {
   try {
-    const { profileId, showId } = req.params as unknown as ShowParams;
-    const result = await showService.removeShowFromFavorites(profileId, showId);
-
-    res.status(200).json({ message: 'Successfully removed the show from favorites', result });
+    const { accountId, profileId, showId } = req.params as unknown as ShowParams;
+    const result = await showService.removeShowFromFavorites(accountId, profileId, showId);
+    res.status(200).json({
+      message: 'Successfully removed the show from favorites',
+      removedShowReference: result.removedShow,
+      episodes: result.episodes,
+    });
   } catch (error) {
     next(error);
   }
@@ -99,12 +101,18 @@ export async function removeFavorite(req: Request, res: Response, next: NextFunc
  */
 export async function updateShowWatchStatus(req: Request, res: Response, next: NextFunction) {
   try {
-    const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
-    const { showId: show_id, status, recursive = false } = req.body as ShowWatchStatusParams;
+    const { accountId, profileId } = req.params as unknown as AccountAndProfileIdsParams;
+    const { showId, status, recursive = false } = req.body as ShowWatchStatusBody;
 
-    await showService.updateShowWatchStatus(profileId, show_id, status, recursive);
+    const nextUnwatchedEpisodes = await showService.updateShowWatchStatus(
+      accountId,
+      profileId,
+      showId,
+      status,
+      recursive,
+    );
 
-    res.status(200).json({ message: `Successfully updated the watch status to '${status}'` });
+    res.status(200).json({ message: `Successfully updated the watch status to '${status}'`, nextUnwatchedEpisodes });
   } catch (error) {
     next(error);
   }
@@ -118,11 +126,11 @@ export async function updateShowWatchStatus(req: Request, res: Response, next: N
 export async function getShowRecommendations(req: Request, res: Response, next: NextFunction) {
   try {
     const { profileId, showId } = req.params as unknown as ShowParams;
-    const recommendations = await showService.getShowRecommendations(profileId, showId);
+    const shows = await showService.getShowRecommendations(profileId, showId);
 
     res.status(200).json({
       message: 'Successfully retrieved show recommendations',
-      results: recommendations,
+      shows,
     });
   } catch (error) {
     next(error);
@@ -137,11 +145,11 @@ export async function getShowRecommendations(req: Request, res: Response, next: 
 export async function getSimilarShows(req: Request, res: Response, next: NextFunction) {
   try {
     const { profileId, showId } = req.params as unknown as ShowParams;
-    const similarShows = await showService.getSimilarShows(profileId, showId);
+    const shows = await showService.getSimilarShows(profileId, showId);
 
     res.status(200).json({
       message: 'Successfully retrieved similar shows',
-      results: similarShows,
+      shows,
     });
   } catch (error) {
     next(error);

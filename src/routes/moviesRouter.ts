@@ -9,8 +9,8 @@ import { authorizeAccountAccess } from '../middleware/authorizationMiddleware';
 import { validateRequest, validateSchema } from '@ajgifford/keepwatching-common-server';
 import {
   accountAndProfileIdsParamSchema,
-  addMovieFavoriteSchema,
-  movieWatchStatusSchema,
+  addMovieFavoriteBodySchema,
+  movieWatchStatusBodySchema,
   removeMovieFavoriteParamSchema,
 } from '@ajgifford/keepwatching-common-server/schema';
 import express from 'express';
@@ -27,7 +27,7 @@ router.post(
   '/api/v1/accounts/:accountId/profiles/:profileId/movies/favorites',
   validateSchema(accountAndProfileIdsParamSchema, 'params'),
   authorizeAccountAccess,
-  validateRequest(addMovieFavoriteSchema),
+  validateRequest(addMovieFavoriteBodySchema),
   addFavorite,
 );
 router.delete(
@@ -40,7 +40,7 @@ router.put(
   '/api/v1/accounts/:accountId/profiles/:profileId/movies/watchstatus',
   validateSchema(accountAndProfileIdsParamSchema, 'params'),
   authorizeAccountAccess,
-  validateRequest(movieWatchStatusSchema),
+  validateRequest(movieWatchStatusBodySchema),
   updateMovieWatchStatus,
 );
 router.get(

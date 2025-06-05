@@ -146,14 +146,14 @@ describe('discoverController', () => {
         results: [{ id: '123', title: 'The Matrix' }],
         total_results: 20,
         total_pages: 2,
-        current_page: '1',
+        current_page: 1,
       };
 
       (contentDiscoveryService.discoverTrendingContent as jest.Mock).mockResolvedValue(mockTrendingContent);
 
       await discoverTrendingContent(req, res, next);
 
-      expect(contentDiscoveryService.discoverTrendingContent).toHaveBeenCalledWith('movie', '1');
+      expect(contentDiscoveryService.discoverTrendingContent).toHaveBeenCalledWith('movie', 1);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockTrendingContent);
       expect(next).not.toHaveBeenCalled();

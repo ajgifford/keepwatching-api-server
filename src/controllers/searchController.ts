@@ -1,5 +1,6 @@
-import { SearchParams } from '@ajgifford/keepwatching-common-server/schema';
-import { MediaType, contentDiscoveryService } from '@ajgifford/keepwatching-common-server/services';
+import { SearchQuery } from '@ajgifford/keepwatching-common-server/schema';
+import { contentDiscoveryService } from '@ajgifford/keepwatching-common-server/services';
+import { MediaType } from '@ajgifford/keepwatching-types';
 import { NextFunction, Request, Response } from 'express';
 
 /**
@@ -9,7 +10,7 @@ import { NextFunction, Request, Response } from 'express';
  */
 export const searchShows = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { searchString, year, page = '1' } = req.query as unknown as SearchParams;
+    const { searchString, year, page = 1 } = req.query as unknown as SearchQuery;
     const searchResults = await contentDiscoveryService.searchMedia(MediaType.SHOW, searchString, year, page);
     res.status(200).json(searchResults);
   } catch (error) {
@@ -24,7 +25,7 @@ export const searchShows = async (req: Request, res: Response, next: NextFunctio
  */
 export const searchMovies = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { searchString, year, page = '1' } = req.query as unknown as SearchParams;
+    const { searchString, year, page = 1 } = req.query as unknown as SearchQuery;
     const searchResults = await contentDiscoveryService.searchMedia(MediaType.MOVIE, searchString, year, page);
     res.status(200).json(searchResults);
   } catch (error) {

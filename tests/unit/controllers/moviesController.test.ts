@@ -63,11 +63,10 @@ describe('moviesController', () => {
 
   describe('addFavorite', () => {
     it('should add a movie to favorites', async () => {
-      req.body = { movieId: 12345 };
+      req.body = { movieTMDBId: 12345 };
       const mockResult = {
-        favoritedMovie: { movie_id: 12345, title: 'New Movie' },
-        recentMovies: [{ movie_id: 1 }],
-        upcomingMovies: [{ movie_id: 2 }],
+        favoritedMovie: { movieId: 12345, title: 'New Movie' },
+        recentUpcomingMovies: { recentMovies: [{ movieId: 1 }], upcomingMovies: [{ movieId: 2 }] },
       };
       (moviesService.addMovieToFavorites as jest.Mock).mockResolvedValue(mockResult);
 
@@ -77,12 +76,13 @@ describe('moviesController', () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully saved movie as a favorite',
-        result: mockResult,
+        favoritedMovie: mockResult.favoritedMovie,
+        recentUpcomingMovies: mockResult.recentUpcomingMovies,
       });
     });
 
     it('should handle errors', async () => {
-      req.body = { movieId: 12345 };
+      req.body = { movieTMDBId: 12345 };
       const error = new Error('Failed to add movie');
       (moviesService.addMovieToFavorites as jest.Mock).mockRejectedValue(error);
 
@@ -100,8 +100,7 @@ describe('moviesController', () => {
       req.params.movieId = 12345;
       const mockResult = {
         removedMovie: { id: 12345, title: 'Movie to Remove' },
-        recentMovies: [{ movie_id: 1 }],
-        upcomingMovies: [{ movie_id: 2 }],
+        recentUpcomingMovies: { recentMovies: [{ movie_id: 1 }], upcomingMovies: [{ movie_id: 2 }] },
       };
       (moviesService.removeMovieFromFavorites as jest.Mock).mockResolvedValue(mockResult);
 
@@ -111,7 +110,8 @@ describe('moviesController', () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully removed the movie from favorites',
-        result: mockResult,
+        removedMovieReference: mockResult.removedMovie,
+        recentUpcomingMovies: mockResult.recentUpcomingMovies,
       });
     });
 

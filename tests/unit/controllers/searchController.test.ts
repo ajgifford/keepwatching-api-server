@@ -1,4 +1,5 @@
-import { MediaType, contentDiscoveryService } from '@ajgifford/keepwatching-common-server/services';
+import { contentDiscoveryService } from '@ajgifford/keepwatching-common-server/services';
+import { DiscoverAndSearchResponse, MediaType } from '@ajgifford/keepwatching-types';
 import { searchMovies, searchShows } from '@controllers/searchController';
 
 // Mock the services before using them
@@ -32,21 +33,21 @@ describe('searchController', () => {
       req.query = {
         searchString: 'Breaking Bad',
         year: '2008',
-        page: '2',
+        page: 2,
       };
 
       const mockSearchResults = {
         results: [{ id: '123', title: 'Breaking Bad' }],
-        total_pages: 5,
-        total_results: 10,
-        current_page: '2',
+        totalPages: 5,
+        totalResults: 10,
+        currentPage: 2,
       };
 
       (contentDiscoveryService.searchMedia as jest.Mock).mockResolvedValue(mockSearchResults);
 
       await searchShows(req, res, next);
 
-      expect(contentDiscoveryService.searchMedia).toHaveBeenCalledWith(MediaType.SHOW, 'Breaking Bad', '2008', '2');
+      expect(contentDiscoveryService.searchMedia).toHaveBeenCalledWith(MediaType.SHOW, 'Breaking Bad', '2008', 2);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockSearchResults);
       expect(next).not.toHaveBeenCalled();
@@ -60,16 +61,16 @@ describe('searchController', () => {
 
       const mockSearchResults = {
         results: [{ id: '123', title: 'Breaking Bad' }],
-        total_pages: 5,
-        total_results: 10,
-        current_page: '1',
+        totalPages: 5,
+        totalResults: 10,
+        currentPage: 1,
       };
 
       (contentDiscoveryService.searchMedia as jest.Mock).mockResolvedValue(mockSearchResults);
 
       await searchShows(req, res, next);
 
-      expect(contentDiscoveryService.searchMedia).toHaveBeenCalledWith(MediaType.SHOW, 'Breaking Bad', '2008', '1');
+      expect(contentDiscoveryService.searchMedia).toHaveBeenCalledWith(MediaType.SHOW, 'Breaking Bad', '2008', 1);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockSearchResults);
     });
@@ -77,21 +78,21 @@ describe('searchController', () => {
     it('should search for shows without year filter', async () => {
       req.query = {
         searchString: 'Breaking Bad',
-        page: '1',
+        page: 1,
       };
 
       const mockSearchResults = {
         results: [{ id: '123', title: 'Breaking Bad' }],
-        total_pages: 5,
-        total_results: 10,
-        current_page: '1',
+        totalPages: 5,
+        totalResults: 10,
+        currentPage: 1,
       };
 
       (contentDiscoveryService.searchMedia as jest.Mock).mockResolvedValue(mockSearchResults);
 
       await searchShows(req, res, next);
 
-      expect(contentDiscoveryService.searchMedia).toHaveBeenCalledWith(MediaType.SHOW, 'Breaking Bad', undefined, '1');
+      expect(contentDiscoveryService.searchMedia).toHaveBeenCalledWith(MediaType.SHOW, 'Breaking Bad', undefined, 1);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockSearchResults);
     });
@@ -118,21 +119,21 @@ describe('searchController', () => {
       req.query = {
         searchString: 'Inception',
         year: '2010',
-        page: '2',
+        page: 2,
       };
 
       const mockSearchResults = {
         results: [{ id: '456', title: 'Inception' }],
-        total_pages: 5,
-        total_results: 10,
-        current_page: '2',
+        totalPages: 5,
+        totalResults: 10,
+        currentPage: 2,
       };
 
       (contentDiscoveryService.searchMedia as jest.Mock).mockResolvedValue(mockSearchResults);
 
       await searchMovies(req, res, next);
 
-      expect(contentDiscoveryService.searchMedia).toHaveBeenCalledWith(MediaType.MOVIE, 'Inception', '2010', '2');
+      expect(contentDiscoveryService.searchMedia).toHaveBeenCalledWith(MediaType.MOVIE, 'Inception', '2010', 2);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockSearchResults);
       expect(next).not.toHaveBeenCalled();
@@ -146,16 +147,16 @@ describe('searchController', () => {
 
       const mockSearchResults = {
         results: [{ id: '456', title: 'Inception' }],
-        total_pages: 5,
-        total_results: 10,
-        current_page: '1',
+        totalPages: 5,
+        totalResults: 10,
+        currentPage: 1,
       };
 
       (contentDiscoveryService.searchMedia as jest.Mock).mockResolvedValue(mockSearchResults);
 
       await searchMovies(req, res, next);
 
-      expect(contentDiscoveryService.searchMedia).toHaveBeenCalledWith(MediaType.MOVIE, 'Inception', '2010', '1');
+      expect(contentDiscoveryService.searchMedia).toHaveBeenCalledWith(MediaType.MOVIE, 'Inception', '2010', 1);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockSearchResults);
     });
@@ -163,21 +164,21 @@ describe('searchController', () => {
     it('should search for movies without year filter', async () => {
       req.query = {
         searchString: 'Inception',
-        page: '1',
+        page: 1,
       };
 
       const mockSearchResults = {
         results: [{ id: '456', title: 'Inception' }],
-        total_pages: 5,
-        total_results: 10,
-        current_page: '1',
+        totalPages: 5,
+        totalResults: 10,
+        currentPage: 1,
       };
 
       (contentDiscoveryService.searchMedia as jest.Mock).mockResolvedValue(mockSearchResults);
 
       await searchMovies(req, res, next);
 
-      expect(contentDiscoveryService.searchMedia).toHaveBeenCalledWith(MediaType.MOVIE, 'Inception', undefined, '1');
+      expect(contentDiscoveryService.searchMedia).toHaveBeenCalledWith(MediaType.MOVIE, 'Inception', undefined, 1);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockSearchResults);
     });

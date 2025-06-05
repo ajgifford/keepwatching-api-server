@@ -35,7 +35,7 @@ describe('profileController', () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Retrieved profiles for account 1',
-        results: mockProfiles,
+        profiles: mockProfiles,
       });
       expect(next).not.toHaveBeenCalled();
     });
@@ -56,36 +56,40 @@ describe('profileController', () => {
   describe('getProfile', () => {
     it('should retrieve profile with all related content', async () => {
       const mockProfileData = {
-        profile: { id: 123, name: 'Test Profile', image: 'profile.jpg' },
+        profile: { id: 123, accountId: 1, name: 'Test Profile', image: 'profile.jpg' },
         shows: [{ show_id: 1, title: 'Show 1' }],
-        recentEpisodes: [{ episode_id: 1, title: 'Recent Episode' }],
-        upcomingEpisodes: [{ episode_id: 2, title: 'Upcoming Episode' }],
-        nextUnwatchedEpisodes: [{ show_id: 1, episodes: [{ episode_id: 3 }] }],
+        episodes: {
+          recentEpisodes: [{ episode_id: 1, title: 'Recent Episode' }],
+          upcomingEpisodes: [{ episode_id: 2, title: 'Upcoming Episode' }],
+          nextUnwatchedEpisodes: [{ show_id: 1, episodes: [{ episode_id: 3 }] }],
+        },
         movies: [{ movie_id: 1, title: 'Movie 1' }],
-        recentMovies: [{ movie_id: 2, title: 'Recent Movie' }],
-        upcomingMovies: [{ movie_id: 3, title: 'Upcoming Movie' }],
+        recentUpcomingMovies: {
+          recentMovies: [{ movie_id: 2, title: 'Recent Movie' }],
+          upcomingMovies: [{ movie_id: 3, title: 'Upcoming Movie' }],
+        },
       };
 
-      (profileService.getProfile as jest.Mock).mockResolvedValue(mockProfileData);
+      (profileService.getProfileWithContent as jest.Mock).mockResolvedValue(mockProfileData);
 
       await getProfile(req, res, next);
 
-      expect(profileService.getProfile).toHaveBeenCalledWith(123);
+      expect(profileService.getProfileWithContent).toHaveBeenCalledWith(123);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
-        message: 'Retrieved profile with id: 123',
-        results: mockProfileData,
+        message: `Retrieved profile with id: 123 and it's content`,
+        profileWithContent: mockProfileData,
       });
       expect(next).not.toHaveBeenCalled();
     });
 
     it('should handle errors', async () => {
       const error = new Error('Profile not found');
-      (profileService.getProfile as jest.Mock).mockRejectedValue(error);
+      (profileService.getProfileWithContent as jest.Mock).mockRejectedValue(error);
 
       await getProfile(req, res, next);
 
-      expect(profileService.getProfile).toHaveBeenCalledWith(123);
+      expect(profileService.getProfileWithContent).toHaveBeenCalledWith(123);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
@@ -109,7 +113,7 @@ describe('profileController', () => {
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Profile added successfully',
-        result: mockNewProfile,
+        profile: mockNewProfile,
       });
       expect(next).not.toHaveBeenCalled();
     });
@@ -145,7 +149,7 @@ describe('profileController', () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Profile edited successfully',
-        result: mockUpdatedProfile,
+        profile: mockUpdatedProfile,
       });
       expect(next).not.toHaveBeenCalled();
     });

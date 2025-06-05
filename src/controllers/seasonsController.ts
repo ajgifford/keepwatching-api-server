@@ -1,6 +1,6 @@
 import {
   AccountAndProfileIdsParams,
-  SeasonWatchStatusParams,
+  SeasonWatchStatusBody,
   ShowParams,
 } from '@ajgifford/keepwatching-common-server/schema';
 import { seasonsService } from '@ajgifford/keepwatching-common-server/services';
@@ -13,10 +13,10 @@ import { NextFunction, Request, Response } from 'express';
  */
 export const updateSeasonWatchStatus = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
-    const { seasonId, status, recursive = false } = req.body as SeasonWatchStatusParams;
+    const { accountId, profileId } = req.params as unknown as AccountAndProfileIdsParams;
+    const { seasonId, status, recursive = false } = req.body as SeasonWatchStatusBody;
 
-    await seasonsService.updateSeasonWatchStatus(profileId, seasonId, status, recursive);
+    await seasonsService.updateSeasonWatchStatus(accountId, profileId, seasonId, status, recursive);
 
     res.status(200).json({ message: 'Successfully updated the season watch status' });
   } catch (error) {

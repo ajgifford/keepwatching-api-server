@@ -9,8 +9,8 @@ import { authorizeAccountAccess } from '../middleware/authorizationMiddleware';
 import { validateRequest, validateSchema } from '@ajgifford/keepwatching-common-server';
 import {
   accountAndProfileIdsParamSchema,
-  episodeWatchStatusSchema,
-  nextEpisodeWatchStatusSchema,
+  episodeWatchStatusBodySchema,
+  nextEpisodeWatchStatusBodySchema,
 } from '@ajgifford/keepwatching-common-server/schema';
 import express from 'express';
 
@@ -20,7 +20,7 @@ router.put(
   '/api/v1/accounts/:accountId/profiles/:profileId/episodes/watchStatus',
   validateSchema(accountAndProfileIdsParamSchema, 'params'),
   authorizeAccountAccess,
-  validateRequest(episodeWatchStatusSchema),
+  validateRequest(episodeWatchStatusBodySchema),
   updateEpisodeWatchStatus,
 );
 
@@ -28,7 +28,7 @@ router.put(
   '/api/v1/accounts/:accountId/profiles/:profileId/episodes/nextWatchStatus',
   validateSchema(accountAndProfileIdsParamSchema, 'params'),
   authorizeAccountAccess,
-  validateRequest(nextEpisodeWatchStatusSchema),
+  validateRequest(nextEpisodeWatchStatusBodySchema),
   updateNextEpisodeWatchStatus,
 );
 

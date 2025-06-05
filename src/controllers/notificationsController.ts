@@ -12,7 +12,7 @@ export const getNotifications = asyncHandler(async (req: Request, res: Response,
   try {
     const { accountId } = req.params as unknown as AccountIdParam;
     const notifications = await notificationsService.getNotifications(accountId);
-    res.status(200).json({ message: 'Retrieved notifications for an account', results: notifications });
+    res.status(200).json({ message: 'Retrieved notifications for an account', notifications });
   } catch (error) {
     next(error);
   }
@@ -26,8 +26,8 @@ export const getNotifications = asyncHandler(async (req: Request, res: Response,
 export const dismissNotification = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { accountId, notificationId } = req.params as unknown as DismissParams;
-    await notificationsService.dismissNotification(notificationId, accountId);
-    res.status(200).json({ message: 'Notification dismissed successfully' });
+    const notifications = await notificationsService.dismissNotification(notificationId, accountId);
+    res.status(200).json({ message: 'Dismissed notification for account', notifications });
   } catch (error) {
     next(error);
   }
