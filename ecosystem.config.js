@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: 'keepwatching-server',
+      name: 'keepwatching-api-server',
       script: 'dist/index.js',
       instances: 1,
       exec_mode: 'fork',
@@ -17,7 +17,7 @@ module.exports = {
       group: "cert-access"
     },
     {
-      name: 'keepwatching-server-dev',
+      name: 'keepwatching-api-server-dev',
       script: 'yarn',
       args: 'dev',
       exec_mode: 'fork',

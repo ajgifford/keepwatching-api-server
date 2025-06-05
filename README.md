@@ -39,7 +39,7 @@ A Node.js/TypeScript API server for the KeepWatching application - a comprehensi
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd keepwatching-server
+   cd keepwatching-api-server
    ```
 
 2. **Install dependencies**
@@ -104,8 +104,8 @@ This builds the project and starts it using PM2 with the production configuratio
 
 ### PM2 Configuration
 The project includes `ecosystem.config.js` with two app configurations:
-- `keepwatching-server`: Production mode
-- `keepwatching-server-dev`: Development mode with file watching
+- `keepwatching-api-server`: Production mode
+- `keepwatching-api-server-dev`: Development mode with file watching
 
 ## API Documentation
 

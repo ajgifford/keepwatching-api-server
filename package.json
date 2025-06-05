@@ -1,5 +1,5 @@
 {
-  "name": "keep-watching-server",
+  "name": "keepwatching-api-server",
   "version": "1.0.0",
   "description": "API server for the KeepWatching application",
   "main": "dist/index.js",
@@ -72,7 +72,7 @@
     "start": "node dist/index.js",
     "dev": "tsx watch src",
     "format": "prettier --config ./.prettierrc.js . --write",
-    "serve": "yarn build && pm2 start ecosystem.config.js --only keepwatching-server --env production",
+    "serve": "yarn build && pm2 start ecosystem.config.js --only keepwatching-api-server --env production",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
