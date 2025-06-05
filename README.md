@@ -1,4 +1,4 @@
-# KeepWatching Server
+# KeepWatching API Server
 
 A Node.js/TypeScript API server for the KeepWatching application - a comprehensive media tracking platform that helps users manage their favorite TV shows and movies.
 
