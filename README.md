@@ -125,23 +125,35 @@ The server provides a comprehensive REST API with the following main endpoints:
 - `PUT /api/v1/accounts/:accountId/profiles/:profileId` - Update profile
 - `DELETE /api/v1/accounts/:accountId/profiles/:profileId` - Delete profile
 
-### Shows & Episodes
+### [Shows, Seasons & Episodes](./resources/tvSeries.md)
 - `GET /api/v1/accounts/:accountId/profiles/:profileId/shows` - Get user's shows
+- `GET /api/v1/accounts/:accountId/profiles/:profileId/shows/:showId/details` - Get show details
+- `GET /api/v1/accounts/:accountId/profiles/:profileId/shows/:showId/recommendations` - Get show recommendations
+- `GET /api/v1/accounts/:accountId/profiles/:profileId/shows/:showId/similar` - Get similar shows
 - `POST /api/v1/accounts/:accountId/profiles/:profileId/shows/favorites` - Add show to favorites
 - `DELETE /api/v1/accounts/:accountId/profiles/:profileId/shows/favorites/:showId` - Remove from favorites
-- `PUT /api/v1/accounts/:accountId/profiles/:profileId/shows/watchstatus` - Update watch status
-- `GET /api/v1/accounts/:accountId/profiles/:profileId/episodes` - Get episode data
+- `PUT /api/v1/accounts/:accountId/profiles/:profileId/shows/watchstatus` - Update show watch status
+- `GET /api/v1/accounts/:accountId/profiles/:profileId/episodes` - Get episode data for profile
+- `PUT /api/v1/accounts/:accountId/profiles/:profileId/episodes/watchStatus` - Update episode watch status
+- `PUT /api/v1/accounts/:accountId/profiles/:profileId/episodes/nextWatchStatus` - Update next episode watch status
+- `GET /api/v1/accounts/:accountId/profiles/:profileId/episodes/upcoming` - Get upcoming episodes
+- `GET /api/v1/accounts/:accountId/profiles/:profileId/episodes/recent` - Get recent episodes
+- `GET /api/v1/accounts/:accountId/profiles/:profileId/seasons/:seasonId/episodes` - Get episodes for season
+- `GET /api/v1/accounts/:accountId/profiles/:profileId/shows/:showId/seasons` - Get seasons for show
+- `PUT /api/v1/accounts/:accountId/profiles/:profileId/seasons/watchstatus` - Update season watch status
 
-### Movies
+### [Movies](./resources/movies.md)
 - `GET /api/v1/accounts/:accountId/profiles/:profileId/movies` - Get user's movies
 - `POST /api/v1/accounts/:accountId/profiles/:profileId/movies/favorites` - Add movie to favorites
-- `PUT /api/v1/accounts/:accountId/profiles/:profileId/movies/watchstatus` - Update watch status
+- `DELETE /api/v1/accounts/:accountId/profiles/:profileId/movies/favorites/:movieId` - Remove movie from favorites
+- `PUT /api/v1/accounts/:accountId/profiles/:profileId/movies/watchstatus` - Update movie watch status
+- `GET /api/v1/accounts/:accountId/profiles/:profileId/movies/recentUpcoming` - Get recent and upcoming movies
 
-### Search
+### [Search](./resources/search.md)
 - `GET /api/v1/search/shows` - Search TV shows
 - `GET /api/v1/search/movies` - Search movies
 
-### Content Discovery
+### [Content Discovery](./resources/discover.md)
 - `GET /api/v1/discover/top` - Discover top content
 - `GET /api/v1/discover/trending` - Discover trending content
 - `GET /api/v1/discover/changes` - Discover content changes (new, expiring)
@@ -150,9 +162,11 @@ The server provides a comprehensive REST API with the following main endpoints:
 - `POST /api/v1/upload/accounts/:accountId` - Upload account image
 - `POST /api/v1/upload/accounts/:accountId/profiles/:profileId` - Upload profile image
 
-### [Statistics & Notifications](./resources/statistics.md)
+### [Statistics](./resources/statistics.md)
 - `GET /api/v1/accounts/:accountId/statistics` - Get account statistics
 - `GET /api/v1/accounts/:accountId/profiles/:profileId/statistics` - Get profile statistics
+
+### [Notifications](./resources/notifications.md)
 - `GET /api/v1/accounts/:accountId/notifications` - Get notifications
 - `POST /api/v1/accounts/:accountId/notifications/dismiss/:notificationId` - Dismiss notification
 
