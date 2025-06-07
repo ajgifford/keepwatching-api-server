@@ -19,15 +19,23 @@ import {
   getAppVersion,
   getCertsKeyPath,
   getCertsServerPath,
+  getEmailConfig,
   getLogDirectory,
   getPort,
   getRateLimitMax,
   getRateLimitTimeWindow,
   getUploadDirectory,
+  isEmailEnabled,
+  validateEmailConfig,
 } from '@ajgifford/keepwatching-common-server/config';
 import { ErrorMessages, appLogger, cliLogger } from '@ajgifford/keepwatching-common-server/logger';
 import { responseInterceptor } from '@ajgifford/keepwatching-common-server/middleware';
-import { databaseService, socketService } from '@ajgifford/keepwatching-common-server/services';
+import {
+  databaseService,
+  getEmailService,
+  initializeEmailService,
+  socketService,
+} from '@ajgifford/keepwatching-common-server/services';
 import { initScheduledJobs, shutdownJobs } from '@ajgifford/keepwatching-common-server/services';
 import { GlobalErrorHandler, loadStreamingService } from '@ajgifford/keepwatching-common-server/utils';
 import bodyParser from 'body-parser';
@@ -207,6 +215,26 @@ const startServer = async () => {
     cliLogger.info('Fetching initial data from the database...');
     await loadStreamingService();
     cliLogger.info('Data fetched and cached successfully.');
+
+    if (isEmailEnabled()) {
+      const emailValidation = validateEmailConfig();
+
+      if (!emailValidation.isValid) {
+        cliLogger.error('Email configuration is invalid:', emailValidation.errors);
+        cliLogger.warn('Email service will be disabled due to configuration errors');
+        process.env.EMAIL_ENABLED = 'false';
+      } else {
+        const emailConfig = getEmailConfig();
+        const emailService = initializeEmailService(emailConfig);
+
+        const isConnected = await emailService.verifyConnection();
+        if (!isConnected) {
+          cliLogger.warn('Email service connection failed, but continuing startup');
+        }
+      }
+    } else {
+      cliLogger.info('Email service is disabled via configuration');
+    }
 
     initScheduledJobs(
       () => socketService.notifyShowsUpdate(),
