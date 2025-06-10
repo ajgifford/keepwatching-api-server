@@ -233,7 +233,7 @@ describe('fileController', () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.send).toHaveBeenCalledWith({
         message: 'Uploaded the file successfully: test-image.jpg',
-        result: {
+        profile: {
           id: 123,
           name: 'Test Profile',
           image: 'test-image.jpg',
