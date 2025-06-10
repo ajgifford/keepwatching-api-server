@@ -64,7 +64,7 @@ export const uploadProfileImage = asyncHandler(async (req: Request, res: Respons
         if (updatedProfile) {
           res.status(200).send({
             message: `Uploaded the file successfully: ${profileImage}`,
-            result: updatedProfile,
+            profile: updatedProfile,
           });
           const filePath = getUploadDirectory() + '/profiles/' + profile.image;
           fs.unlink(filePath, (err) => {
