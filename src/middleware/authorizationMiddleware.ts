@@ -1,5 +1,5 @@
 import { ForbiddenError, UnauthorizedError } from '@ajgifford/keepwatching-common-server';
-import { AccountAndProfileIdsParams, AccountIdParam } from '@ajgifford/keepwatching-common-server/schema';
+import { AccountAndProfileIdsParams } from '@ajgifford/keepwatching-common-server/schema';
 import { accountService } from '@ajgifford/keepwatching-common-server/services';
 import { NextFunction, Request, Response } from 'express';
 

@@ -36,7 +36,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@eslint/js": "^9.16.0",
+    "@eslint/js": "9.16.0",
     "@trivago/prettier-plugin-sort-imports": "^5.2.0",
     "@types/cookie-parser": "^1.4.8",
     "@types/cors": "^2.8.17",
@@ -47,6 +47,7 @@
     "@types/node-cron": "^3.0.11",
     "@types/supertest": "^6.0.2",
     "concurrently": "^9.1.0",
+    "eslint": "9.16.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-jest": "^28.9.0",
     "eslint-plugin-react": "^7.37.2",
@@ -60,7 +61,7 @@
     "ts-jest": "^29.2.6",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
-    "typescript-eslint": "^8.18.0"
+    "typescript-eslint": "8.16.0"
   },
   "resolutions": {
     "esbuild": "0.25.0",
@@ -71,12 +72,16 @@
     "build": "npx tsc",
     "start": "node dist/index.js",
     "dev": "tsx watch src",
-    "format": "prettier --config ./.prettierrc.js . --write",
-    "serve": "yarn build && pm2 start ecosystem.config.js --only keepwatching-api-server --env production",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "test:ci": "jest --ci --coverage"
+    "test:ci": "jest --ci --coverage",
+    "serve": "yarn build && pm2 start ecosystem.config.js --only keepwatching-api-server --env production",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --config ./.prettierrc.js . --write",
+    "format:check": "prettier --config ./.prettierrc.js . --check",
+    "type-check": "tsc --noEmit"
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }

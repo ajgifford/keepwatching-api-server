@@ -1,5 +1,5 @@
 import { contentDiscoveryService } from '@ajgifford/keepwatching-common-server/services';
-import { DiscoverAndSearchResponse, MediaType } from '@ajgifford/keepwatching-types';
+import { MediaType } from '@ajgifford/keepwatching-types';
 import { searchMovies, searchShows } from '@controllers/searchController';
 
 // Mock the services before using them

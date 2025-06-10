@@ -83,7 +83,7 @@ describe('fileController', () => {
         image: 'test-image.jpg',
       };
 
-      (uploadFileMiddleware as jest.Mock).mockImplementation((req, res) => {
+      (uploadFileMiddleware as jest.Mock).mockImplementation(() => {
         return Promise.resolve();
       });
 

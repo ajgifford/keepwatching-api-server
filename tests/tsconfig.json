@@ -4,7 +4,8 @@
     "rootDir": "..",
     "types": ["node", "jest"],
     "typeRoots": ["../node_modules/@types", "./types"],
-    "outDir": "../dist-tests"
+    "outDir": "../dist-tests",
+    "isolatedModules": true
   },
   "include": ["../src/**/*", "./**/*"]
 }
