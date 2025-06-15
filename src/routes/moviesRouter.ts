@@ -1,5 +1,6 @@
 import {
   addFavorite,
+  getMovieDetails,
   getMovies,
   getRecentUpcomingForProfile,
   removeFavorite,
@@ -10,6 +11,7 @@ import { validateRequest, validateSchema } from '@ajgifford/keepwatching-common-
 import {
   accountAndProfileIdsParamSchema,
   addMovieFavoriteBodySchema,
+  movieParamsSchema,
   movieWatchStatusBodySchema,
   removeMovieFavoriteParamSchema,
 } from '@ajgifford/keepwatching-common-server/schema';
@@ -23,6 +25,7 @@ router.get(
   authorizeAccountAccess,
   getMovies,
 );
+
 router.post(
   '/api/v1/accounts/:accountId/profiles/:profileId/movies/favorites',
   validateSchema(accountAndProfileIdsParamSchema, 'params'),
@@ -30,12 +33,14 @@ router.post(
   validateRequest(addMovieFavoriteBodySchema),
   addFavorite,
 );
+
 router.delete(
   '/api/v1/accounts/:accountId/profiles/:profileId/movies/favorites/:movieId',
   validateSchema(removeMovieFavoriteParamSchema, 'params'),
   authorizeAccountAccess,
   removeFavorite,
 );
+
 router.put(
   '/api/v1/accounts/:accountId/profiles/:profileId/movies/watchstatus',
   validateSchema(accountAndProfileIdsParamSchema, 'params'),
@@ -43,11 +48,19 @@ router.put(
   validateRequest(movieWatchStatusBodySchema),
   updateMovieWatchStatus,
 );
+
 router.get(
   '/api/v1/accounts/:accountId/profiles/:profileId/movies/recentUpcoming',
   validateSchema(accountAndProfileIdsParamSchema, 'params'),
   authorizeAccountAccess,
   getRecentUpcomingForProfile,
+);
+
+router.get(
+  '/api/v1/accounts/:accountId/profiles/:profileId/movies/:movieId/details',
+  validateSchema(movieParamsSchema, 'params'),
+  authorizeAccountAccess,
+  getMovieDetails,
 );
 
 export default router;

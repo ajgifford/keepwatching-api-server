@@ -6,8 +6,8 @@
   "author": "Andy Gifford",
   "private": true,
   "dependencies": {
-    "@ajgifford/keepwatching-common-server": "^0.2.2",
-    "@ajgifford/keepwatching-types": "^0.1.0",
+    "@ajgifford/keepwatching-common-server": "^0.2.3",
+    "@ajgifford/keepwatching-types": "^0.1.2",
     "@express-rate-limit/tsconfig": "^1.0.2",
     "axios": "^1.7.9",
     "axios-retry": "^4.5.0",
@@ -57,6 +57,7 @@
     "mock-socket": "^9.3.1",
     "mysql2-promise": "^0.1.4",
     "prettier": "^3.4.2",
+    "rimraf": "^6.0.1",
     "supertest": "^7.0.0",
     "ts-jest": "^29.2.6",
     "tsx": "^4.19.2",
@@ -70,6 +71,8 @@
   },
   "scripts": {
     "build": "npx tsc",
+    "clean": "rimraf dist",
+    "rebuild": "yarn clean && yarn build",
     "start": "node dist/index.js",
     "dev": "tsx watch src",
     "test": "jest",

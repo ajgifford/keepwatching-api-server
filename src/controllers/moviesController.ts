@@ -1,6 +1,7 @@
 import {
   AccountAndProfileIdsParams,
   AddMovieFavoriteBody,
+  MovieParams,
   MovieWatchStatusBody,
   RemoveMovieFavoriteParams,
 } from '@ajgifford/keepwatching-common-server/schema';
@@ -103,6 +104,31 @@ export async function getRecentUpcomingForProfile(req: Request, res: Response, n
     res.status(200).json({
       message: 'Successfully retrieved recent & upcoming movies for a profile',
       results: { recentMovies, upcomingMovies },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Get the details of a given movie including a list of recommended and similar movies
+ *
+ * @route GET /api/v1/accounts/:accountId/profiles/:profileId/movies/:movieId/details
+ */
+export async function getMovieDetails(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { profileId, movieId } = req.params as unknown as MovieParams;
+    const [movie, recommendedMovies, similarMovies] = await Promise.all([
+      moviesService.getMovieDetailsForProfile(profileId, movieId),
+      moviesService.getMovieRecommendations(profileId, movieId),
+      moviesService.getSimilarMovies(profileId, movieId),
+    ]);
+
+    res.status(200).json({
+      message: 'Successfully retrieved movie details',
+      movie,
+      recommendedMovies,
+      similarMovies,
     });
   } catch (error) {
     next(error);
