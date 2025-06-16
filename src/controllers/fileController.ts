@@ -27,7 +27,7 @@ export const uploadAccountImage = asyncHandler(async (req: Request, res: Respons
             message: `Uploaded the file successfully: ${accountImage}`,
             result: updatedAccount,
           });
-          const filePath = path.join(getUploadDirectory() + 'accounts' + account.image);
+          const filePath = path.join(getUploadDirectory(), 'accounts', account.image);
           fs.unlink(filePath, (err) => {
             if (err) {
               if (err.code === 'ENOENT') {
@@ -67,7 +67,7 @@ export const uploadProfileImage = asyncHandler(async (req: Request, res: Respons
             message: `Uploaded the file successfully: ${profileImage}`,
             profile: updatedProfile,
           });
-          const filePath = path.join(getUploadDirectory() + 'profiles' + profile.image);
+          const filePath = path.join(getUploadDirectory(), 'profiles', profile.image!);
           fs.unlink(filePath, (err) => {
             if (err) {
               if (err.code === 'ENOENT') {

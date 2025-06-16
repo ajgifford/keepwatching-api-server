@@ -6,6 +6,7 @@ import { uploadAccountImage, uploadProfileImage } from '@controllers/fileControl
 import uploadFileMiddleware from '@middleware/uploadMiddleware';
 import { NextFunction, Request, Response } from 'express';
 import fs from 'fs';
+import path from 'path';
 
 // Mock dependencies
 jest.mock('@middleware/uploadMiddleware', () => jest.fn());
@@ -95,7 +96,10 @@ describe('fileController', () => {
       expect(uploadFileMiddleware).toHaveBeenCalledWith(req, res);
       expect(accountService.findAccountById).toHaveBeenCalledWith(1);
       expect(accountService.updateAccountImage).toHaveBeenCalledWith(1, 'test-image.jpg');
-      expect(fs.unlink).toHaveBeenCalledWith(`${getUploadDirectory()}/accounts/old-image.jpg`, expect.any(Function));
+      expect(fs.unlink).toHaveBeenCalledWith(
+        path.join(getUploadDirectory(), 'accounts', 'old-image.jpg'),
+        expect.any(Function),
+      );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.send).toHaveBeenCalledWith({
         message: 'Uploaded the file successfully: test-image.jpg',
@@ -187,7 +191,10 @@ describe('fileController', () => {
       await uploadAccountImage(req as Request, res as Response, next as NextFunction);
 
       expect(uploadFileMiddleware).toHaveBeenCalledWith(req, res);
-      expect(fs.unlink).toHaveBeenCalledWith(`${getUploadDirectory()}/accounts/old-image.jpg`, expect.any(Function));
+      expect(fs.unlink).toHaveBeenCalledWith(
+        path.join(getUploadDirectory(), 'accounts', 'old-image.jpg'),
+        expect.any(Function),
+      );
       expect(appLogger.info).toHaveBeenCalledWith('File not found when attempting to delete');
       expect(res.status).toHaveBeenCalledWith(200);
       expect(next).not.toHaveBeenCalled();
@@ -228,7 +235,10 @@ describe('fileController', () => {
       expect(uploadFileMiddleware).toHaveBeenCalledWith(req, res);
       expect(profileService.findProfileById).toHaveBeenCalledWith(123);
       expect(profileService.updateProfileImage).toHaveBeenCalledWith(123, 'test-image.jpg');
-      expect(fs.unlink).toHaveBeenCalledWith(`${getUploadDirectory()}/profiles/old-profile.jpg`, expect.any(Function));
+      expect(fs.unlink).toHaveBeenCalledWith(
+        path.join(getUploadDirectory(), 'profiles', 'old-profile.jpg'),
+        expect.any(Function),
+      );
       expect(profileService.invalidateProfileCache).toHaveBeenCalledWith(123);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.send).toHaveBeenCalledWith({
@@ -314,7 +324,10 @@ describe('fileController', () => {
       await uploadProfileImage(req as Request, res as Response, next as NextFunction);
 
       expect(uploadFileMiddleware).toHaveBeenCalledWith(req, res);
-      expect(fs.unlink).toHaveBeenCalledWith(`${getUploadDirectory()}/profiles/old-profile.jpg`, expect.any(Function));
+      expect(fs.unlink).toHaveBeenCalledWith(
+        path.join(getUploadDirectory(), 'profiles', 'old-profile.jpg'),
+        expect.any(Function),
+      );
       expect(appLogger.info).toHaveBeenCalledWith('Unexpected exception when attempting to delete', unexpectedError);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(next).not.toHaveBeenCalled();
