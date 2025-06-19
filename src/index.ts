@@ -24,20 +24,21 @@ import {
   getPort,
   getRateLimitMax,
   getRateLimitTimeWindow,
+  getServiceAccountPath,
   getUploadDirectory,
   isEmailEnabled,
   validateEmailConfig,
 } from '@ajgifford/keepwatching-common-server/config';
 import { ErrorMessages, appLogger, cliLogger } from '@ajgifford/keepwatching-common-server/logger';
 import { responseInterceptor } from '@ajgifford/keepwatching-common-server/middleware';
-import {
-  databaseService,
-  getEmailService,
-  initializeEmailService,
-  socketService,
-} from '@ajgifford/keepwatching-common-server/services';
+import { databaseService, initializeEmailService, socketService } from '@ajgifford/keepwatching-common-server/services';
 import { initScheduledJobs, shutdownJobs } from '@ajgifford/keepwatching-common-server/services';
-import { GlobalErrorHandler, loadStreamingService } from '@ajgifford/keepwatching-common-server/utils';
+import {
+  GlobalErrorHandler,
+  initializeFirebase,
+  loadStreamingService,
+  shutdownFirebase,
+} from '@ajgifford/keepwatching-common-server/utils';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
@@ -61,6 +62,10 @@ const app: Express = express();
 const port = getPort();
 const UPLOADS_DIR = getUploadDirectory();
 const LOG_DIRECTORY = getLogDirectory();
+const SERVICE_ACCOUNT_PATH = getServiceAccountPath();
+
+const serviceAccount: object = require(SERVICE_ACCOUNT_PATH);
+initializeFirebase(serviceAccount);
 
 declare global {
   namespace Express {
@@ -267,6 +272,12 @@ const gracefulShutdown = (signal: string) => {
       await databaseService.shutdown();
     } catch (err) {
       cliLogger.error('Error during database shutdown', err);
+    }
+
+    try {
+      await shutdownFirebase();
+    } catch (error) {
+      cliLogger.error('Error during Firebase shutdown', error);
     }
 
     cliLogger.info('Graceful shutdown complete, exiting process');
