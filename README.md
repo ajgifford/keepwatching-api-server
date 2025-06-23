@@ -135,7 +135,6 @@ The server provides a comprehensive REST API with the following main endpoints:
 - `PUT /api/v1/accounts/:accountId/profiles/:profileId/shows/watchstatus` - Update show watch status
 - `GET /api/v1/accounts/:accountId/profiles/:profileId/episodes` - Get episode data for profile
 - `PUT /api/v1/accounts/:accountId/profiles/:profileId/episodes/watchStatus` - Update episode watch status
-- `PUT /api/v1/accounts/:accountId/profiles/:profileId/episodes/nextWatchStatus` - Update next episode watch status
 - `GET /api/v1/accounts/:accountId/profiles/:profileId/episodes/upcoming` - Get upcoming episodes
 - `GET /api/v1/accounts/:accountId/profiles/:profileId/episodes/recent` - Get recent episodes
 - `GET /api/v1/accounts/:accountId/profiles/:profileId/seasons/:seasonId/episodes` - Get episodes for season

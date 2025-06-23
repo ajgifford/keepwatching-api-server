@@ -2,7 +2,9 @@
 
 # TV Series API Documentation
 
-This document describes the comprehensive endpoints available for managing TV series, including shows, seasons, and episodes. The TV Series API provides functionality for tracking watch progress, managing favorites, and discovering new content.
+This document describes the comprehensive endpoints available for managing TV series, including shows, seasons, and
+episodes. The TV Series API provides functionality for tracking watch progress, managing favorites, and discovering new
+content.
 
 ## Overview
 
@@ -29,6 +31,7 @@ Requests without valid authentication will receive a 401 Unauthorized response.
 ## Quick Reference
 
 ### Shows
+
 - `GET /shows` - Get all shows for a profile
 - `POST /shows/favorites` - Add show to favorites
 - `DELETE /shows/favorites/:showId` - Remove show from favorites
@@ -38,20 +41,22 @@ Requests without valid authentication will receive a 401 Unauthorized response.
 - `GET /shows/:showId/similar` - Get similar shows
 
 ### Seasons
+
 - `GET /shows/:showId/seasons` - Get seasons for a show
 - `PUT /seasons/watchstatus` - Update season watch status
 
 ### Episodes
+
 - `GET /episodes` - Get episode data for profile
 - `GET /seasons/:seasonId/episodes` - Get episodes for a season
 - `GET /episodes/recent` - Get recent episodes
 - `GET /episodes/upcoming` - Get upcoming episodes
 - `PUT /episodes/watchStatus` - Update episode watch status
-- `PUT /episodes/nextWatchStatus` - Update next episode watch status
 
 ## Data Structures
 
 ### Show Object
+
 ```typescript
 {
   show_id: number,
@@ -73,6 +78,7 @@ Requests without valid authentication will receive a 401 Unauthorized response.
 ```
 
 ### Season Object
+
 ```typescript
 {
   season_id: number,
@@ -89,6 +95,7 @@ Requests without valid authentication will receive a 401 Unauthorized response.
 ```
 
 ### Episode Object
+
 ```typescript
 {
   episode_id: number,
@@ -110,17 +117,20 @@ Requests without valid authentication will receive a 401 Unauthorized response.
 ## Watch Status Types
 
 ### Show Watch Status
+
 - `WATCHING`: Currently watching the show
 - `COMPLETED`: Finished watching all available episodes
 - `NOT_WATCHING`: Not currently watching (may be paused or dropped)
 
 ### Episode Watch Status
+
 - `WATCHED`: Episode has been watched
 - `NOT_WATCHED`: Episode has not been watched
 
 ## Content Discovery
 
 The API integrates with TMDB (The Movie Database) to provide:
+
 - Automatic show metadata fetching
 - Show recommendations based on viewing history
 - Similar show suggestions
@@ -129,6 +139,7 @@ The API integrates with TMDB (The Movie Database) to provide:
 ## Authorization
 
 All TV Series endpoints require that:
+
 - The user is authenticated
 - The user owns the account specified in the URL
 - The profile belongs to the specified account
@@ -138,6 +149,7 @@ All TV Series endpoints require that:
 All endpoints follow consistent error response patterns:
 
 ### Authentication Required (401)
+
 ```json
 {
   "error": "Authorization header missing or malformed"
@@ -145,6 +157,7 @@ All endpoints follow consistent error response patterns:
 ```
 
 ### Access Forbidden (403)
+
 ```json
 {
   "error": "You do not have permission to access this account"
@@ -152,6 +165,7 @@ All endpoints follow consistent error response patterns:
 ```
 
 ### Not Found (404)
+
 ```json
 {
   "error": "Show/Season/Episode not found"
@@ -159,6 +173,7 @@ All endpoints follow consistent error response patterns:
 ```
 
 ### Validation Error (400)
+
 ```json
 {
   "error": "Validation failed",
@@ -174,28 +189,35 @@ All endpoints follow consistent error response patterns:
 ## Detailed Sections
 
 ### [Shows Management](./shows.md)
-Complete documentation for show-level operations including favorites management, watch status updates, and content discovery.
+
+Complete documentation for show-level operations including favorites management, watch status updates, and content
+discovery.
 
 ### [Seasons Management](./seasons.md)
+
 Documentation for season-level operations including season watch status and episode listing.
 
 ### [Episodes Management](./episodes.md)
+
 Documentation for episode-level operations including individual episode tracking and watch progress.
 
 ## Common Usage Patterns
 
 ### Adding a New Show
+
 1. Search for shows using the Search API
 2. Add show to favorites using `POST /shows/favorites`
 3. Set initial watch status using `PUT /shows/watchstatus`
 4. Track episode progress using episode endpoints
 
 ### Tracking Watch Progress
+
 1. Mark episodes as watched using `PUT /episodes/watchStatus`
 2. System automatically updates show/season progress
 3. Use statistics endpoints to view overall progress
 
 ### Discovering Content
+
 1. Get recommendations using `GET /shows/:showId/recommendations`
 2. Find similar content using `GET /shows/:showId/similar`
 3. Use the Discover API for trending content
@@ -210,6 +232,7 @@ Documentation for episode-level operations including individual episode tracking
 ## Real-time Updates
 
 The API supports real-time updates via WebSocket connections:
+
 - New episode notifications
 - Show status changes
 - Recommendation updates
@@ -217,6 +240,7 @@ The API supports real-time updates via WebSocket connections:
 ## Example Workflows
 
 ### Complete Show Management Workflow
+
 ```typescript
 // 1. Add show to favorites
 const addResult = await addShowToFavorites(accountId, profileId, tmdbId, token);
@@ -232,6 +256,7 @@ await updateShowWatchStatus(accountId, profileId, showId, 'COMPLETED', token);
 ```
 
 ### Batch Episode Updates
+
 ```typescript
 // Mark entire season as watched
 await updateSeasonWatchStatus(accountId, profileId, seasonId, 'COMPLETED', true, token);
