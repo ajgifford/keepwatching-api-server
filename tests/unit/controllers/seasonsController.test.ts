@@ -31,25 +31,12 @@ describe('seasonsController', () => {
 
       await updateSeasonWatchStatus(req, res, next);
 
-      expect(seasonsService.updateSeasonWatchStatus).toHaveBeenCalledWith(1, 123, 456, 'WATCHED', false);
+      expect(seasonsService.updateSeasonWatchStatus).toHaveBeenCalledWith(1, 123, 456, 'WATCHED');
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully updated the season watch status',
       });
       expect(next).not.toHaveBeenCalled();
-    });
-
-    it('should update season watch status with recursive option', async () => {
-      req.body = { seasonId: 456, status: 'WATCHED', recursive: true };
-      (seasonsService.updateSeasonWatchStatus as jest.Mock).mockResolvedValue(true);
-
-      await updateSeasonWatchStatus(req, res, next);
-
-      expect(seasonsService.updateSeasonWatchStatus).toHaveBeenCalledWith(1, 123, 456, 'WATCHED', true);
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({
-        message: 'Successfully updated the season watch status',
-      });
     });
 
     it('should handle errors from the service', async () => {
@@ -59,7 +46,7 @@ describe('seasonsController', () => {
 
       await updateSeasonWatchStatus(req, res, next);
 
-      expect(seasonsService.updateSeasonWatchStatus).toHaveBeenCalledWith(1, 123, 456, 'WATCHED', false);
+      expect(seasonsService.updateSeasonWatchStatus).toHaveBeenCalledWith(1, 123, 456, 'WATCHED');
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();

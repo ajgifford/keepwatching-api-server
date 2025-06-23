@@ -3,14 +3,12 @@ import {
   getRecentEpisodes,
   getUpcomingEpisodes,
   updateEpisodeWatchStatus,
-  updateNextEpisodeWatchStatus,
 } from '../controllers/episodesController';
 import { authorizeAccountAccess } from '../middleware/authorizationMiddleware';
 import { validateRequest, validateSchema } from '@ajgifford/keepwatching-common-server';
 import {
   accountAndProfileIdsParamSchema,
   episodeWatchStatusBodySchema,
-  nextEpisodeWatchStatusBodySchema,
 } from '@ajgifford/keepwatching-common-server/schema';
 import express from 'express';
 
@@ -22,14 +20,6 @@ router.put(
   authorizeAccountAccess,
   validateRequest(episodeWatchStatusBodySchema),
   updateEpisodeWatchStatus,
-);
-
-router.put(
-  '/api/v1/accounts/:accountId/profiles/:profileId/episodes/nextWatchStatus',
-  validateSchema(accountAndProfileIdsParamSchema, 'params'),
-  authorizeAccountAccess,
-  validateRequest(nextEpisodeWatchStatusBodySchema),
-  updateNextEpisodeWatchStatus,
 );
 
 router.get(

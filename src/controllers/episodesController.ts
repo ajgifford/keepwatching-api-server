@@ -1,7 +1,6 @@
 import {
   AccountAndProfileIdsParams,
   EpisodeWatchStatusBody,
-  NextEpisodeWatchStatusBody,
   ProfileSeasonIdsParams,
 } from '@ajgifford/keepwatching-common-server/schema';
 import { episodesService } from '@ajgifford/keepwatching-common-server/services';
@@ -14,30 +13,6 @@ export const updateEpisodeWatchStatus = async (req: Request, res: Response, next
     const { episodeId, status } = req.body as EpisodeWatchStatusBody;
 
     const episodes = await episodesService.updateEpisodeWatchStatus(accountId, profileId, episodeId, status);
-
-    res.status(200).json({
-      message: 'Successfully updated the episode watch status',
-      nextUnwatchedEpisodes: episodes,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// PUT /api/v1/accounts/:accountId/profiles/${profileId}/episodes/nextWatchStatus
-export const updateNextEpisodeWatchStatus = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { accountId, profileId } = req.params as unknown as AccountAndProfileIdsParams;
-    const { showId, seasonId, episodeId, status } = req.body as NextEpisodeWatchStatusBody;
-
-    const episodes = await episodesService.updateNextEpisodeWatchStatus(
-      accountId,
-      profileId,
-      showId,
-      seasonId,
-      episodeId,
-      status,
-    );
 
     res.status(200).json({
       message: 'Successfully updated the episode watch status',

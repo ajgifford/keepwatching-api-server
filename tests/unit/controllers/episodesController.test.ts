@@ -4,7 +4,6 @@ import {
   getRecentEpisodes,
   getUpcomingEpisodes,
   updateEpisodeWatchStatus,
-  updateNextEpisodeWatchStatus,
 } from '@controllers/episodesController';
 
 jest.mock('@ajgifford/keepwatching-common-server/services', () => ({
@@ -53,35 +52,6 @@ describe('episodesController', () => {
 
       await updateEpisodeWatchStatus(req, res, next);
       expect(episodesService.updateEpisodeWatchStatus).toHaveBeenCalledWith(1, 123, 456, 'WATCHED');
-      expect(next).toHaveBeenCalledWith(error);
-      expect(res.status).not.toHaveBeenCalled();
-      expect(res.json).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('updateNextEpisodeWatchStatus', () => {
-    it('should update a next episode watch status successfully', async () => {
-      req.body = { showId: 100, seasonId: 200, episodeId: 456, status: 'WATCHED' };
-      const mockResult = { nextUnwatchedEpisodes: [{ id: 789, title: 'Next Episode' }] };
-      (episodesService.updateNextEpisodeWatchStatus as jest.Mock).mockResolvedValue(mockResult);
-
-      await updateNextEpisodeWatchStatus(req, res, next);
-      expect(episodesService.updateNextEpisodeWatchStatus).toHaveBeenCalledWith(1, 123, 100, 200, 456, 'WATCHED');
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({
-        message: 'Successfully updated the episode watch status',
-        nextUnwatchedEpisodes: mockResult,
-      });
-      expect(next).not.toHaveBeenCalled();
-    });
-
-    it('should handle errors from the service', async () => {
-      req.body = { showId: 100, seasonId: 200, episodeId: 456, status: 'WATCHED' };
-      const error = new Error('Failed to update status');
-      (episodesService.updateNextEpisodeWatchStatus as jest.Mock).mockRejectedValue(error);
-
-      await updateNextEpisodeWatchStatus(req, res, next);
-      expect(episodesService.updateNextEpisodeWatchStatus).toHaveBeenCalledWith(1, 123, 100, 200, 456, 'WATCHED');
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();

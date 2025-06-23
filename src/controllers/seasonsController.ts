@@ -14,9 +14,9 @@ import { NextFunction, Request, Response } from 'express';
 export const updateSeasonWatchStatus = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { accountId, profileId } = req.params as unknown as AccountAndProfileIdsParams;
-    const { seasonId, status, recursive = false } = req.body as SeasonWatchStatusBody;
+    const { seasonId, status } = req.body as SeasonWatchStatusBody;
 
-    await seasonsService.updateSeasonWatchStatus(accountId, profileId, seasonId, status, recursive);
+    await seasonsService.updateSeasonWatchStatus(accountId, profileId, seasonId, status);
 
     res.status(200).json({ message: 'Successfully updated the season watch status' });
   } catch (error) {

@@ -75,7 +75,7 @@ describe('showsController', () => {
 
       await getShowDetails(req, res, next);
 
-      expect(showService.getShowDetailsForProfile).toHaveBeenCalledWith(123, 456);
+      expect(showService.getShowDetailsForProfile).toHaveBeenCalledWith(1, 123, 456);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully retrieved a show and its details',
@@ -90,7 +90,7 @@ describe('showsController', () => {
 
       await getShowDetails(req, res, next);
 
-      expect(showService.getShowDetailsForProfile).toHaveBeenCalledWith(123, 456);
+      expect(showService.getShowDetailsForProfile).toHaveBeenCalledWith(1, 123, 456);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
@@ -199,28 +199,13 @@ describe('showsController', () => {
   });
 
   describe('updateShowWatchStatus', () => {
-    it('should update show watch status with default recursive value', async () => {
+    it('should update show watch status', async () => {
       req.body = { showId: 456, status: 'WATCHED' };
       (showService.updateShowWatchStatus as jest.Mock).mockResolvedValue([]);
 
       await updateShowWatchStatus(req, res, next);
 
-      expect(showService.updateShowWatchStatus).toHaveBeenCalledWith(1, 123, 456, 'WATCHED', false);
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({
-        message: "Successfully updated the watch status to 'WATCHED'",
-        nextUnwatchedEpisodes: [],
-      });
-      expect(next).not.toHaveBeenCalled();
-    });
-
-    it('should update show watch status with specified recursive value', async () => {
-      req.body = { showId: 456, status: 'WATCHED', recursive: true };
-      (showService.updateShowWatchStatus as jest.Mock).mockResolvedValue([]);
-
-      await updateShowWatchStatus(req, res, next);
-
-      expect(showService.updateShowWatchStatus).toHaveBeenCalledWith(1, 123, 456, 'WATCHED', true);
+      expect(showService.updateShowWatchStatus).toHaveBeenCalledWith(1, 123, 456, 'WATCHED');
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: "Successfully updated the watch status to 'WATCHED'",
@@ -236,7 +221,7 @@ describe('showsController', () => {
 
       await updateShowWatchStatus(req, res, next);
 
-      expect(showService.updateShowWatchStatus).toHaveBeenCalledWith(1, 123, 456, 'WATCHED', false);
+      expect(showService.updateShowWatchStatus).toHaveBeenCalledWith(1, 123, 456, 'WATCHED');
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();

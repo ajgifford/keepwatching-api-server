@@ -29,8 +29,8 @@ export async function getShows(req: Request, res: Response, next: NextFunction) 
  */
 export async function getShowDetails(req: Request, res: Response, next: NextFunction) {
   try {
-    const { profileId, showId } = req.params as unknown as ShowParams;
-    const show = await showService.getShowDetailsForProfile(profileId, showId);
+    const { accountId, profileId, showId } = req.params as unknown as ShowParams;
+    const show = await showService.getShowDetailsForProfile(accountId, profileId, showId);
     res.status(200).json({ message: 'Successfully retrieved a show and its details', show });
   } catch (error) {
     next(error);
@@ -102,15 +102,9 @@ export async function removeFavorite(req: Request, res: Response, next: NextFunc
 export async function updateShowWatchStatus(req: Request, res: Response, next: NextFunction) {
   try {
     const { accountId, profileId } = req.params as unknown as AccountAndProfileIdsParams;
-    const { showId, status, recursive = false } = req.body as ShowWatchStatusBody;
+    const { showId, status } = req.body as ShowWatchStatusBody;
 
-    const nextUnwatchedEpisodes = await showService.updateShowWatchStatus(
-      accountId,
-      profileId,
-      showId,
-      status,
-      recursive,
-    );
+    const nextUnwatchedEpisodes = await showService.updateShowWatchStatus(accountId, profileId, showId, status);
 
     res.status(200).json({ message: `Successfully updated the watch status to '${status}'`, nextUnwatchedEpisodes });
   } catch (error) {
