@@ -27,7 +27,8 @@ describe('seasonsController', () => {
   describe('updateSeasonWatchStatus', () => {
     it('should update season watch status successfully', async () => {
       req.body = { seasonId: 456, status: 'WATCHED', recursive: false };
-      (seasonsService.updateSeasonWatchStatus as jest.Mock).mockResolvedValue(true);
+      const mockResult = { nextUnwatchedEpisodes: [{ id: 789, title: 'Next Episode' }] };
+      (seasonsService.updateSeasonWatchStatus as jest.Mock).mockResolvedValue(mockResult);
 
       await updateSeasonWatchStatus(req, res, next);
 
@@ -35,6 +36,7 @@ describe('seasonsController', () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully updated the season watch status',
+        data: mockResult,
       });
       expect(next).not.toHaveBeenCalled();
     });

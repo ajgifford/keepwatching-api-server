@@ -104,9 +104,9 @@ export async function updateShowWatchStatus(req: Request, res: Response, next: N
     const { accountId, profileId } = req.params as unknown as AccountAndProfileIdsParams;
     const { showId, status } = req.body as ShowWatchStatusBody;
 
-    const nextUnwatchedEpisodes = await showService.updateShowWatchStatus(accountId, profileId, showId, status);
+    const data = await showService.updateShowWatchStatus(accountId, profileId, showId, status);
 
-    res.status(200).json({ message: `Successfully updated the watch status to '${status}'`, nextUnwatchedEpisodes });
+    res.status(200).json({ message: `Successfully updated the watch status to '${status}'`, data });
   } catch (error) {
     next(error);
   }

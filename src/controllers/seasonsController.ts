@@ -16,9 +16,12 @@ export const updateSeasonWatchStatus = async (req: Request, res: Response, next:
     const { accountId, profileId } = req.params as unknown as AccountAndProfileIdsParams;
     const { seasonId, status } = req.body as SeasonWatchStatusBody;
 
-    await seasonsService.updateSeasonWatchStatus(accountId, profileId, seasonId, status);
+    const data = await seasonsService.updateSeasonWatchStatus(accountId, profileId, seasonId, status);
 
-    res.status(200).json({ message: 'Successfully updated the season watch status' });
+    res.status(200).json({
+      message: 'Successfully updated the season watch status',
+      data,
+    });
   } catch (error) {
     next(error);
   }

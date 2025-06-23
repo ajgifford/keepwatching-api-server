@@ -201,7 +201,8 @@ describe('showsController', () => {
   describe('updateShowWatchStatus', () => {
     it('should update show watch status', async () => {
       req.body = { showId: 456, status: 'WATCHED' };
-      (showService.updateShowWatchStatus as jest.Mock).mockResolvedValue([]);
+      const mockResult = { nextUnwatchedEpisodes: [{ id: 789, title: 'Next Episode' }] };
+      (showService.updateShowWatchStatus as jest.Mock).mockResolvedValue(mockResult);
 
       await updateShowWatchStatus(req, res, next);
 
@@ -209,7 +210,7 @@ describe('showsController', () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: "Successfully updated the watch status to 'WATCHED'",
-        nextUnwatchedEpisodes: [],
+        data: mockResult,
       });
       expect(next).not.toHaveBeenCalled();
     });
