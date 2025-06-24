@@ -52,7 +52,6 @@ Requests without valid authentication will receive a 401 Unauthorized response.
 - `GET /episodes/recent` - Get recent episodes
 - `GET /episodes/upcoming` - Get upcoming episodes
 - `PUT /episodes/watchStatus` - Update episode watch status
-- `PUT /episodes/nextWatchStatus` - Update next episode watch status
 
 ## Data Structures
 

@@ -504,27 +504,6 @@ async function updateEpisodeWatchStatus(
   return await response.json();
 }
 
-// Update next episode in sequence
-async function updateNextEpisodeWatchStatus(
-  accountId: number,
-  profileId: number,
-  showId: number,
-  seasonId: number,
-  episodeId: number,
-  status: 'WATCHED' | 'NOT_WATCHED',
-  token: string,
-) {
-  const response = await fetch(`/api/v1/accounts/${accountId}/profiles/${profileId}/episodes/nextWatchStatus`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ showId, seasonId, episodeId, status }),
-  });
-  return await response.json();
-}
-
 // Get episodes for a specific season
 async function getEpisodesForSeason(accountId: number, profileId: number, seasonId: number, token: string) {
   const response = await fetch(`/api/v1/accounts/${accountId}/profiles/${profileId}/seasons/${seasonId}/episodes`, {
@@ -686,13 +665,6 @@ curl -X PUT \
   -H "Authorization: Bearer your_token_here" \
   -d '{"episodeId": 123, "status": "WATCHED"}' \
   https://api.example.com/api/v1/accounts/123/profiles/456/episodes/watchStatus
-
-# Update next episode watch status
-curl -X PUT \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer your_token_here" \
-  -d '{"showId": 1, "seasonId": 1, "episodeId": 124, "status": "WATCHED"}' \
-  https://api.example.com/api/v1/accounts/123/profiles/456/episodes/nextWatchStatus
 
 # Get episodes for season
 curl -H "Authorization: Bearer your_token_here" \
