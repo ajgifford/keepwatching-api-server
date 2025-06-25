@@ -12,11 +12,11 @@ export const updateEpisodeWatchStatus = async (req: Request, res: Response, next
     const { accountId, profileId } = req.params as unknown as AccountAndProfileIdsParams;
     const { episodeId, status } = req.body as EpisodeWatchStatusBody;
 
-    const data = await episodesService.updateEpisodeWatchStatus(accountId, profileId, episodeId, status);
+    const statusData = await episodesService.updateEpisodeWatchStatus(accountId, profileId, episodeId, status);
 
     res.status(200).json({
       message: 'Successfully updated the episode watch status',
-      data,
+      statusData,
     });
   } catch (error) {
     next(error);

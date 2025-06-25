@@ -79,7 +79,7 @@ describe('showsController', () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully retrieved a show and its details',
-        show: mockShowDetails,
+        showWithSeasons: mockShowDetails,
       });
       expect(next).not.toHaveBeenCalled();
     });
@@ -210,7 +210,7 @@ describe('showsController', () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: "Successfully updated the watch status to 'WATCHED'",
-        data: mockResult,
+        statusData: mockResult,
       });
       expect(next).not.toHaveBeenCalled();
     });

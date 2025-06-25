@@ -36,7 +36,7 @@ describe('seasonsController', () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully updated the season watch status',
-        data: mockResult,
+        statusData: mockResult,
       });
       expect(next).not.toHaveBeenCalled();
     });

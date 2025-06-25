@@ -40,7 +40,7 @@ describe('episodesController', () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully updated the episode watch status',
-        data: mockResult,
+        statusData: mockResult,
       });
       expect(next).not.toHaveBeenCalled();
     });
