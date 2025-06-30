@@ -25,6 +25,7 @@ import {
   getRateLimitMax,
   getRateLimitTimeWindow,
   getServiceAccountPath,
+  getServiceName,
   getUploadDirectory,
   isEmailEnabled,
   validateEmailConfig,
@@ -63,9 +64,10 @@ const port = getPort();
 const UPLOADS_DIR = getUploadDirectory();
 const LOG_DIRECTORY = getLogDirectory();
 const SERVICE_ACCOUNT_PATH = getServiceAccountPath();
+const SERVICE_NAME = getServiceName();
 
 const serviceAccount: object = require(SERVICE_ACCOUNT_PATH);
-initializeFirebase(serviceAccount);
+initializeFirebase(serviceAccount, SERVICE_NAME);
 
 declare global {
   namespace Express {
@@ -275,7 +277,7 @@ const gracefulShutdown = (signal: string) => {
     }
 
     try {
-      await shutdownFirebase();
+      await shutdownFirebase(SERVICE_NAME);
     } catch (error) {
       cliLogger.error('Error during Firebase shutdown', error);
     }
