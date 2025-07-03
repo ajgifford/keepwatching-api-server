@@ -6,7 +6,7 @@
   "author": "Andy Gifford",
   "private": true,
   "dependencies": {
-    "@ajgifford/keepwatching-common-server": "^0.3.3",
+    "@ajgifford/keepwatching-common-server": "^0.3.4",
     "@ajgifford/keepwatching-types": "^0.2.0",
     "@express-rate-limit/tsconfig": "^1.0.2",
     "axios": "^1.7.9",

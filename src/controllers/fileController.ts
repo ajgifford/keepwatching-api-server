@@ -12,39 +12,68 @@ import path from 'path';
 // POST /api/v1/upload/accounts/:accountId
 export const uploadAccountImage = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const { accountId } = req.params as unknown as AccountIdParam;
+
   try {
+    // Handle file upload with proper error catching
     await uploadFileMiddleware(req, res);
 
-    if (req.file == undefined) {
-      res.status(400).send({ message: 'Please upload a file!' });
-    } else {
-      const accountImage = req.file.filename;
-      const account = await accountService.findAccountById(accountId);
-      if (account) {
-        const updatedAccount = await accountService.updateAccountImage(accountId, accountImage);
-        if (updatedAccount) {
-          res.status(200).send({
-            message: `Uploaded the file successfully: ${accountImage}`,
-            result: updatedAccount,
-          });
-          const filePath = path.join(getUploadDirectory(), 'accounts', account.image);
-          fs.unlink(filePath, (err) => {
-            if (err) {
-              if (err.code === 'ENOENT') {
-                appLogger.info('File not found when attempting to delete');
-              } else {
-                appLogger.info('Unexpected exception when attempting to delete', err);
-              }
-            }
-          });
-        } else {
-          throw new BadRequestError('Failed to add/update an account image');
-        }
-      } else {
-        throw new BadRequestError('Failed to add/update an account image');
-      }
+    if (!req.file) {
+      res.status(400).json({
+        error: 'No file provided',
+        message: 'Please upload a file!',
+        code: 'NO_FILE_PROVIDED',
+      });
+      return;
     }
-  } catch (error) {
+
+    const accountImage = req.file.filename;
+    const account = await accountService.findAccountById(accountId);
+
+    if (!account) {
+      throw new BadRequestError('Failed to add/update an account image - account not found');
+    }
+
+    const updatedAccount = await accountService.updateAccountImage(accountId, accountImage);
+
+    if (!updatedAccount) {
+      throw new BadRequestError('Failed to add/update an account image - update failed');
+    }
+
+    // Send success response
+    res.status(200).json({
+      message: `Uploaded the file successfully: ${accountImage}`,
+      result: updatedAccount,
+    });
+
+    // Clean up old image file (async, don't wait for it)
+    if (account.image && account.image !== accountImage) {
+      const filePath = getUploadDirectory() + '/accounts/' + account.image;
+      fs.unlink(filePath, (err) => {
+        if (err) {
+          if (err.code === 'ENOENT') {
+            appLogger.info('Previous account image file not found when attempting to delete');
+          } else {
+            appLogger.warn('Error deleting previous account image file', {
+              filePath,
+              error: err.message,
+            });
+          }
+        } else {
+          appLogger.info('Successfully deleted previous account image file', { filePath });
+        }
+      });
+    }
+  } catch (error: any) {
+    // Handle structured upload errors
+    if (error.status && error.code) {
+      res.status(error.status).json({
+        message: error.message,
+        code: error.code,
+      });
+      return;
+    }
+
+    // Handle other errors
     next(error);
   }
 });
@@ -52,41 +81,71 @@ export const uploadAccountImage = asyncHandler(async (req: Request, res: Respons
 // POST /api/v1/upload/accounts/:accountId/profiles/:profileId
 export const uploadProfileImage = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
+
   try {
+    // Handle file upload with proper error catching
     await uploadFileMiddleware(req, res);
 
-    if (req.file == undefined) {
-      res.status(400).send({ message: 'Please upload a file!' });
-    } else {
-      const profileImage = req.file.filename;
-      const profile = await profileService.findProfileById(profileId);
-      if (profile) {
-        const updatedProfile = await profileService.updateProfileImage(profileId, profileImage);
-        if (updatedProfile) {
-          res.status(200).send({
-            message: `Uploaded the file successfully: ${profileImage}`,
-            profile: updatedProfile,
-          });
-          const filePath = path.join(getUploadDirectory(), 'profiles', profile.image!);
-          fs.unlink(filePath, (err) => {
-            if (err) {
-              if (err.code === 'ENOENT') {
-                appLogger.info('File not found when attempting to delete');
-              } else {
-                appLogger.info('Unexpected exception when attempting to delete', err);
-              }
-            }
-          });
-
-          profileService.invalidateProfileCache(profileId);
-        } else {
-          throw new BadRequestError('Failed to add/update a profile image');
-        }
-      } else {
-        throw new BadRequestError('Failed to add/update a profile image');
-      }
+    if (!req.file) {
+      res.status(400).json({
+        error: 'No file provided',
+        message: 'Please upload a file!',
+        code: 'NO_FILE_PROVIDED',
+      });
+      return;
     }
-  } catch (error) {
+
+    const profileImage = req.file.filename;
+    const profile = await profileService.findProfileById(profileId);
+
+    if (!profile) {
+      throw new BadRequestError('Failed to add/update a profile image - profile not found');
+    }
+
+    const updatedProfile = await profileService.updateProfileImage(profileId, profileImage);
+
+    if (!updatedProfile) {
+      throw new BadRequestError('Failed to add/update a profile image - update failed');
+    }
+
+    // Send success response
+    res.status(200).json({
+      message: `Uploaded the file successfully: ${profileImage}`,
+      profile: updatedProfile,
+    });
+
+    // Invalidate profile cache
+    profileService.invalidateProfileCache(profileId);
+
+    // Clean up old image file (async, don't wait for it)
+    if (profile.image && profile.image !== profileImage) {
+      const filePath = getUploadDirectory() + '/profiles/' + profile.image;
+      fs.unlink(filePath, (err) => {
+        if (err) {
+          if (err.code === 'ENOENT') {
+            appLogger.info('Previous profile image file not found when attempting to delete');
+          } else {
+            appLogger.warn('Error deleting previous profile image file', {
+              filePath,
+              error: err.message,
+            });
+          }
+        } else {
+          appLogger.info('Successfully deleted previous profile image file', { filePath });
+        }
+      });
+    }
+  } catch (error: any) {
+    // Handle structured upload errors
+    if (error.status && error.code) {
+      res.status(error.status).json({
+        message: error.message,
+        code: error.code,
+      });
+      return;
+    }
+
+    // Handle other errors
     next(error);
   }
 });

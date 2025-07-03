@@ -78,6 +78,7 @@ declare global {
 }
 
 GlobalErrorHandler.initialize();
+GlobalErrorHandler.overrideConsoleError();
 
 function ensureSecure(req: Request, res: Response, next: NextFunction) {
   if (req.secure) {
