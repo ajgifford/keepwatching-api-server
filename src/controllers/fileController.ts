@@ -47,7 +47,7 @@ export const uploadAccountImage = asyncHandler(async (req: Request, res: Respons
 
     // Clean up old image file (async, don't wait for it)
     if (account.image && account.image !== accountImage) {
-      const filePath = getUploadDirectory() + '/accounts/' + account.image;
+      const filePath = path.join(getUploadDirectory(), 'accounts', account.image);
       fs.unlink(filePath, (err) => {
         if (err) {
           if (err.code === 'ENOENT') {
@@ -119,7 +119,7 @@ export const uploadProfileImage = asyncHandler(async (req: Request, res: Respons
 
     // Clean up old image file (async, don't wait for it)
     if (profile.image && profile.image !== profileImage) {
-      const filePath = getUploadDirectory() + '/profiles/' + profile.image;
+      const filePath = path.join(getUploadDirectory(), 'profiles', profile.image);
       fs.unlink(filePath, (err) => {
         if (err) {
           if (err.code === 'ENOENT') {

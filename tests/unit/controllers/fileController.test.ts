@@ -21,6 +21,7 @@ jest.mock('fs', () => ({
 jest.mock('@ajgifford/keepwatching-common-server/logger', () => ({
   appLogger: {
     error: jest.fn(),
+    warn: jest.fn(),
     info: jest.fn(),
   },
 }));
@@ -101,7 +102,7 @@ describe('fileController', () => {
         expect.any(Function),
       );
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.send).toHaveBeenCalledWith({
+      expect(res.json).toHaveBeenCalledWith({
         message: 'Uploaded the file successfully: test-image.jpg',
         result: {
           id: 1,
@@ -123,7 +124,11 @@ describe('fileController', () => {
 
       expect(uploadFileMiddleware).toHaveBeenCalledWith(req, res);
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.send).toHaveBeenCalledWith({ message: 'Please upload a file!' });
+      expect(res.json).toHaveBeenCalledWith({
+        code: 'NO_FILE_PROVIDED',
+        error: 'No file provided',
+        message: 'Please upload a file!',
+      });
       expect(next).not.toHaveBeenCalled();
     });
 
@@ -195,7 +200,7 @@ describe('fileController', () => {
         path.join(getUploadDirectory(), 'accounts', 'old-image.jpg'),
         expect.any(Function),
       );
-      expect(appLogger.info).toHaveBeenCalledWith('File not found when attempting to delete');
+      expect(appLogger.info).toHaveBeenCalledWith('Previous account image file not found when attempting to delete');
       expect(res.status).toHaveBeenCalledWith(200);
       expect(next).not.toHaveBeenCalled();
     });
@@ -241,7 +246,7 @@ describe('fileController', () => {
       );
       expect(profileService.invalidateProfileCache).toHaveBeenCalledWith(123);
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.send).toHaveBeenCalledWith({
+      expect(res.json).toHaveBeenCalledWith({
         message: 'Uploaded the file successfully: test-image.jpg',
         profile: {
           id: 123,
@@ -261,7 +266,11 @@ describe('fileController', () => {
 
       expect(uploadFileMiddleware).toHaveBeenCalledWith(req, res);
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.send).toHaveBeenCalledWith({ message: 'Please upload a file!' });
+      expect(res.json).toHaveBeenCalledWith({
+        code: 'NO_FILE_PROVIDED',
+        error: 'No file provided',
+        message: 'Please upload a file!',
+      });
       expect(next).not.toHaveBeenCalled();
     });
 
@@ -328,7 +337,10 @@ describe('fileController', () => {
         path.join(getUploadDirectory(), 'profiles', 'old-profile.jpg'),
         expect.any(Function),
       );
-      expect(appLogger.info).toHaveBeenCalledWith('Unexpected exception when attempting to delete', unexpectedError);
+      expect(appLogger.warn).toHaveBeenCalledWith('Error deleting previous profile image file', {
+        error: 'Unexpected error',
+        filePath: 'uploads\\profiles\\old-profile.jpg',
+      });
       expect(res.status).toHaveBeenCalledWith(200);
       expect(next).not.toHaveBeenCalled();
     });
