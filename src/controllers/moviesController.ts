@@ -118,10 +118,11 @@ export async function getRecentUpcomingForProfile(req: Request, res: Response, n
 export async function getMovieDetails(req: Request, res: Response, next: NextFunction) {
   try {
     const { profileId, movieId } = req.params as unknown as MovieParams;
-    const [movie, recommendedMovies, similarMovies] = await Promise.all([
+    const [movie, recommendedMovies, similarMovies, castMembers] = await Promise.all([
       moviesService.getMovieDetailsForProfile(profileId, movieId),
       moviesService.getMovieRecommendations(profileId, movieId),
       moviesService.getSimilarMovies(profileId, movieId),
+      moviesService.getMovieCastMembers(movieId),
     ]);
 
     res.status(200).json({
@@ -129,6 +130,7 @@ export async function getMovieDetails(req: Request, res: Response, next: NextFun
       movie,
       recommendedMovies,
       similarMovies,
+      castMembers,
     });
   } catch (error) {
     next(error);

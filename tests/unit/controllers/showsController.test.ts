@@ -72,6 +72,7 @@ describe('showsController', () => {
         seasons: [{ seasonId: 1, name: 'Season 1' }],
       };
       (showService.getShowDetailsForProfile as jest.Mock).mockResolvedValue(mockShowDetails);
+      (showService.getShowCastMembers as jest.Mock).mockResolvedValue({ activeCast: [], priorCast: [] });
 
       await getShowDetails(req, res, next);
 
@@ -80,6 +81,7 @@ describe('showsController', () => {
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully retrieved a show and its details',
         showWithSeasons: mockShowDetails,
+        showCast: { activeCast: [], priorCast: [] },
       });
       expect(next).not.toHaveBeenCalled();
     });

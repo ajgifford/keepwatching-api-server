@@ -31,7 +31,8 @@ export async function getShowDetails(req: Request, res: Response, next: NextFunc
   try {
     const { accountId, profileId, showId } = req.params as unknown as ShowParams;
     const showWithSeasons = await showService.getShowDetailsForProfile(accountId, profileId, showId);
-    res.status(200).json({ message: 'Successfully retrieved a show and its details', showWithSeasons });
+    const showCast = await showService.getShowCastMembers(showId);
+    res.status(200).json({ message: 'Successfully retrieved a show and its details', showWithSeasons, showCast });
   } catch (error) {
     next(error);
   }
