@@ -32,3 +32,18 @@ export const searchMovies = async (req: Request, res: Response, next: NextFuncti
     next(error);
   }
 };
+
+/**
+ * Search for people
+ *
+ * @route GET /api/v1/search/people
+ */
+export const searchPeople = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { searchString, page = 1 } = req.query as unknown as SearchQuery;
+    const searchResults = await contentDiscoveryService.searchPeople(searchString, page);
+    res.status(200).json(searchResults);
+  } catch (error) {
+    next(error);
+  }
+};

@@ -1,4 +1,4 @@
-import { getPersonDetails } from '../controllers/personController';
+import { getPersonDetails, getTMDBPersonCredits, getTMDBPersonDetails } from '../controllers/personController';
 import { authorizeAccountAccess } from '../middleware/authorizationMiddleware';
 import { validateSchema } from '@ajgifford/keepwatching-common-server';
 import { personIdParamSchema } from '@ajgifford/keepwatching-common-server/schema';
@@ -11,6 +11,20 @@ router.get(
   validateSchema(personIdParamSchema, 'params'),
   authorizeAccountAccess,
   getPersonDetails,
+);
+
+router.get(
+  '/api/v1/accounts/:accountId/profiles/:profileId/tmdbPerson/:personId',
+  validateSchema(personIdParamSchema, 'params'),
+  authorizeAccountAccess,
+  getTMDBPersonDetails,
+);
+
+router.get(
+  '/api/v1/accounts/:accountId/profiles/:profileId/tmdbPerson/:personId/credits',
+  validateSchema(personIdParamSchema, 'params'),
+  authorizeAccountAccess,
+  getTMDBPersonCredits,
 );
 
 export default router;

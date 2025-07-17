@@ -15,3 +15,31 @@ export const getPersonDetails = async (req: Request, res: Response, next: NextFu
     next(error);
   }
 };
+
+export const getTMDBPersonDetails = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { personId } = req.params as unknown as PersonIdParams;
+
+    const person = await personService.getTMDBPersonDetails(personId);
+    res.status(200).json({
+      message: 'Successfully retrieved TMDB person details',
+      person,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getTMDBPersonCredits = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { personId } = req.params as unknown as PersonIdParams;
+
+    const credits = await personService.getTMDBPersonCredits(personId);
+    res.status(200).json({
+      message: 'Successfully retrieved TMDB person credits',
+      credits,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
