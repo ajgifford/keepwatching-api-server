@@ -196,6 +196,177 @@ Retrieves all movies in a profile's favorites list with their watch status and m
 
 ---
 
+### Get Movie Details
+
+Retrieves comprehensive details for a specific movie including recommendations, similar movies, and cast information.
+
+**Endpoint:** `GET /api/v1/accounts/{accountId}/profiles/{profileId}/movies/{movieId}/details`
+
+**Authentication:** Required
+
+#### Parameters
+
+- `accountId` (path parameter, required): Unique identifier of the account
+- `profileId` (path parameter, required): Unique identifier of the profile
+- `movieId` (path parameter, required): Unique identifier of the movie
+
+#### Response Format
+
+```typescript
+{
+  message: string,
+  movie: ProfileMovie,
+  recommendedMovies: Array<{
+    id: number,
+    title: string,
+    genres: string[],
+    summary: string,
+    premiered: string,
+    image: string,
+    rating: number,
+    popularity: number,
+    country: number,
+    language: number,
+    inFavorites: boolean
+  }>,
+  similarMovies: Array<{
+    id: number,
+    title: string,
+    genres: string[],
+    summary: string,
+    premiered: string,
+    image: string,
+    rating: number,
+    popularity: number,
+    country: number,
+    language: number,
+    inFavorites: boolean
+  }>,
+  castMembers: Array<{
+    contentId: number,
+    personId: number,
+    characterName: string,
+    order: number,
+    name: string,
+    profileImage: string,
+  }>
+}
+```
+
+#### Example Response
+
+```json
+{
+  "message": "Successfully retrieved movie details",
+  "movie": {
+    "id": 12345,
+    "tmdbId": 27205,
+    "title": "Inception",
+    "description": "Cobb, a skilled thief who commits corporate espionage by infiltrating the subconscious of his targets is offered a chance to regain his old life as payment for a task considered to be impossible.",
+    "releaseDate": "2010-07-16",
+    "posterImage": "/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg",
+    "backdropImage": "/s3TBrRGB1iav7gFOCNx3H31MoES.jpg",
+    "runtime": 148,
+    "userRating": 8.4,
+    "mpaRating": "PG-13",
+    "genres": "Action, Science Fiction, Thriller",
+    "streamingServices": "Netflix",
+    "profileId": 9,
+    "watchStatus": "WATCHED"
+  },
+  "recommendedMovies": [
+    {
+      "id": 155,
+      "title": "The Dark Knight",
+      "genres": ["Action", "Science Fiction", "Thriller"],
+      "summary": "Batman raises the stakes in his war on crime. With the help of Lt. Jim Gordon and District Attorney Harvey Dent, Batman sets out to dismantle the remaining criminal organizations that plague the streets.",
+      "premiered": "2008-07-18",
+      "image": "/q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg",
+      "rating": 9.0,
+      "popularity": 4.5,
+      "country": "US",
+      "language": "en-us",
+      "inFavorites": true
+    }
+  ],
+  "similarMovies": [
+    {
+      "id": 497,
+      "title": "The Matrix",
+      "genres": ["Action", "Science Fiction", "Thriller"],
+      "summary": "Set in the 22nd century, The Matrix tells the story of a computer hacker who joins a group of underground insurgents fighting the vast and powerful computers who now rule the earth.",
+      "premiered": "1999-03-30",
+      "image": "/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg",
+      "rating": 8.2,
+      "popularity": 4.5,
+      "country": "US",
+      "language": "en-us",
+      "inFavorites": false
+    },
+    {
+      "id": 278,
+      "title": "The Shawshank Redemption",
+      "genres": ["Action", "Thriller"],
+      "summary": "Framed in the 1940s for the double murder of his wife and her lover, upstanding banker Andy Dufresne begins a new life at the Shawshank prison, where he puts his accounting skills to work for an amoral warden.",
+      "premiered": "1994-09-23",
+      "image": "/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
+      "rating": 8.7,
+      "popularity": 4.5,
+      "country": "US",
+      "language": "en-us",
+      "inFavorites": true
+    },
+    {
+      "id": 13,
+      "title": "Forrest Gump",
+      "genres": ["Action", "Drama"],
+      "summary": "A man with a low IQ has accomplished great things in his life and been present during significant historic events.",
+      "premiered": "1994-06-23",
+      "image": "/arw2vcBveWOVZr6pxd9XTd1TdQa.jpg",
+      "rating": 8.5,
+      "popularity": 4.5,
+      "country": "US",
+      "language": "en-us",
+      "inFavorites": false
+    }
+  ],
+  "castMembers": [
+    {
+      "contentId": 12345,
+      "personId": 6193,
+      "order": 0,
+      "character": "Dom Cobb",
+      "name": "Leonardo DiCaprio",
+      "profileImage": "/wo2hJpn04vbtmh0B9utCFdsQhxM.jpg"
+    },
+    {
+      "contentId": 12345,
+      "personId": 8784,
+      "characterName": "Mal",
+      "order": 1,
+      "name": "Marion Cotillard",
+      "profileImage": "/14uxt0jH28J9zn4vNQNTae3Bmr7.jpg"
+    },
+    {
+      "contentId": 12345,
+      "personId": 2524,
+      "character": "Eames",
+      "order": 2,
+      "name": "Tom Hardy",
+      "profileImage": "/d81K0RH8UX7tZj49tZaQhZ9ewH.jpg"
+    }
+  ]
+}
+```
+
+**Status Codes:**
+
+- 200: Success
+- 401: Authentication required
+- 403: Access forbidden (user doesn't own this account/profile)
+- 404: Account, profile, or movie not found
+- 500: Server error
+
 ### Add Movie to Favorites
 
 Adds a movie to a profile's favorites list. If the movie doesn't exist in the system, it will fetch details from TMDB
