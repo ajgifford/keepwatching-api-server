@@ -2,7 +2,8 @@
 
 # Search API Documentation
 
-This document describes the endpoints available for searching TV shows and movies using text-based queries with optional filtering by year and pagination support.
+This document describes the endpoints available for searching TV shows and movies using text-based queries with optional
+filtering by year and pagination support.
 
 ## Base URL
 
@@ -234,11 +235,105 @@ GET /api/v1/search/movies?searchString=Inception&year=2010&page=1
 - 401: Authentication required
 - 500: Server error
 
+### Search People
+
+Searches for people (actors, directors, producers, etc.) using a text query with pagination support.
+
+**Endpoint:** `GET /api/v1/search/people`
+
+**Authentication:** Required
+
+#### Query Parameters
+
+- `searchString` (required): The search term to find people
+- `page` (optional): Page number for pagination (default: 1)
+
+#### Example Request
+
+```
+GET /api/v1/search/people?searchString=Bryan%20Cranston&page=1
+```
+
+#### Response Format
+
+```typescript
+{
+  results: Array<PersonSearchResult>,
+  totalResults: number,
+  totalPages: number,
+  currentPage: number
+}
+```
+
+#### Example Response
+
+```json
+{
+  "results": [
+    {
+      "id": 17419,
+      "name": "Bryan Cranston",
+      "profileImage": "/7Jahy5LZX2Fo8fGJltMreAI49hC.jpg",
+      "known_for": ["Breaking Bad", "Malcolm in the Middle"],
+      "department": "Acting",
+      "popularity": 45.678
+    },
+    {
+      "id": 1532,
+      "name": "Bryan Brown",
+      "profileImage": "/abc123.jpg",
+      "known_for": ["Cocktail"],
+      "department": "Acting",
+      "popularity": 12.345
+    }
+  ],
+  "totalResults": 42,
+  "totalPages": 3,
+  "currentPage": 1
+}
+```
+
+**Status Codes:**
+
+- 200: Success
+- 400: Invalid query parameters or validation errors
+- 401: Authentication required
+- 500: Server error
+
+### cURL Examples
+
+```bash
+# Basic TV show search
+curl -H "Authorization: Bearer your_token_here" \
+  "https://api.example.com/api/v1/search/shows?searchString=Breaking%20Bad"
+
+# Movie search with year filter
+curl -H "Authorization: Bearer your_token_here" \
+  "https://api.example.com/api/v1/search/movies?searchString=Inception&year=2010"
+
+# People search
+curl -H "Authorization: Bearer your_token_here" \
+  "https://api.example.com/api/v1/search/people?searchString=Bryan%20Cranston"
+
+# Paginated search
+curl -H "Authorization: Bearer your_token_here" \
+  "https://api.example.com/api/v1/search/movies?searchString=Avengers&page=2"
+
+# Search with all parameters
+curl -H "Authorization: Bearer your_token_here" \
+  "https://api.example.com/api/v1/search/shows?searchString=Game%20of%20Thrones&year=2011&page=1"
+
+# People search with pagination
+curl -H "Authorization: Bearer your_token_here" \
+  "https://api.example.com/api/v1/search/people?searchString=Smith&page=2"
+```
+
 ## Query Parameter Validation
 
 ### Search String Validation
 
 **Requirements:**
+
 - **Required:** Yes
 - **Type:** String
 - **Minimum Length:** 1 character
@@ -276,6 +371,7 @@ GET /api/v1/search/movies?searchString=Inception&year=2010&page=1
 ### Year Validation
 
 **Requirements:**
+
 - **Required:** No
 - **Type:** String (YYYY format)
 - **Range:** 1900 - Current Year + 5
@@ -298,6 +394,7 @@ GET /api/v1/search/movies?searchString=Inception&year=2010&page=1
 ### Page Validation
 
 **Requirements:**
+
 - **Required:** No
 - **Type:** Number
 - **Default:** 1
@@ -377,7 +474,7 @@ Each response includes pagination metadata:
 ```typescript
 // Navigate through search results
 for (let page = 1; page <= totalPages && page <= 50; page++) {
-  const results = await searchMovies("Avengers", undefined, page, token);
+  const results = await searchMovies('Avengers', undefined, page, token);
   processResults(results.results);
 }
 ```
@@ -469,61 +566,53 @@ Search results are cached to improve performance:
 async function searchShows(query: string, token: string) {
   const response = await fetch(`/api/v1/search/shows?searchString=${encodeURIComponent(query)}`, {
     headers: {
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     },
   });
-  
+
   if (!response.ok) {
     throw new Error(`Search failed: ${response.statusText}`);
   }
-  
+
   return await response.json();
 }
 
 // Movie search with year filter
 async function searchMoviesByYear(query: string, year: number, token: string) {
-  const response = await fetch(
-    `/api/v1/search/movies?searchString=${encodeURIComponent(query)}&year=${year}`,
-    {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    }
-  );
-  
+  const response = await fetch(`/api/v1/search/movies?searchString=${encodeURIComponent(query)}&year=${year}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
   if (!response.ok) {
     throw new Error(`Search failed: ${response.statusText}`);
   }
-  
+
   return await response.json();
 }
 
 // Paginated search with all parameters
-async function searchMoviesWithPagination(
-  query: string,
-  year?: number,
-  page: number = 1,
-  token: string
-) {
+async function searchMoviesWithPagination(query: string, year?: number, page: number = 1, token: string) {
   const params = new URLSearchParams({
     searchString: query,
     page: page.toString(),
   });
-  
+
   if (year) {
     params.append('year', year.toString());
   }
-  
+
   const response = await fetch(`/api/v1/search/movies?${params}`, {
     headers: {
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     },
   });
-  
+
   if (!response.ok) {
     throw new Error(`Search failed: ${response.statusText}`);
   }
-  
+
   return await response.json();
 }
 
@@ -532,37 +621,39 @@ async function searchWithErrorHandling(
   endpoint: 'shows' | 'movies',
   query: string,
   options: { year?: number; page?: number } = {},
-  token: string
+  token: string,
 ) {
   try {
     const params = new URLSearchParams({
       searchString: query,
       page: (options.page || 1).toString(),
     });
-    
+
     if (options.year) {
       params.append('year', options.year.toString());
     }
-    
+
     const response = await fetch(`/api/v1/search/${endpoint}?${params}`, {
       headers: {
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
       },
     });
-    
+
     if (!response.ok) {
       if (response.status === 401) {
         throw new Error('Authentication required');
       } else if (response.status === 400) {
         const errorData = await response.json();
-        throw new Error(`Validation error: ${errorData.details?.map(d => d.message).join(', ') || 'Invalid parameters'}`);
+        throw new Error(
+          `Validation error: ${errorData.details?.map((d) => d.message).join(', ') || 'Invalid parameters'}`,
+        );
       } else if (response.status === 429) {
         throw new Error('Rate limit exceeded. Please try again later.');
       } else {
         throw new Error(`Search failed: ${response.statusText}`);
       }
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('Search error:', error);
@@ -576,30 +667,25 @@ async function searchAllPages(
   query: string,
   year?: number,
   token: string,
-  maxPages: number = 10
+  maxPages: number = 10,
 ) {
   const allResults = [];
   let currentPage = 1;
   let totalPages = 1;
-  
+
   do {
-    const response = await searchWithErrorHandling(
-      endpoint,
-      query,
-      { year, page: currentPage },
-      token
-    );
-    
+    const response = await searchWithErrorHandling(endpoint, query, { year, page: currentPage }, token);
+
     allResults.push(...response.results);
     totalPages = Math.min(response.total_pages, maxPages);
     currentPage++;
-    
+
     // Add delay to respect rate limits
     if (currentPage <= totalPages) {
-      await new Promise(resolve => setTimeout(resolve, 250));
+      await new Promise((resolve) => setTimeout(resolve, 250));
     }
   } while (currentPage <= totalPages);
-  
+
   return {
     results: allResults,
     total_results: allResults.length,
@@ -624,24 +710,24 @@ async function typeSafeSearch(
   type: 'movies' | 'shows',
   searchString: string,
   options: SearchOptions = {},
-  token: string
+  token: string,
 ): Promise<SearchResult> {
   if (!searchString.trim()) {
     throw new Error('Search string cannot be empty');
   }
-  
+
   if (searchString.length > 100) {
     throw new Error('Search string cannot exceed 100 characters');
   }
-  
+
   if (options.year && (options.year < 1900 || options.year > new Date().getFullYear() + 5)) {
     throw new Error('Year must be between 1900 and ' + (new Date().getFullYear() + 5));
   }
-  
+
   if (options.page && (options.page < 1 || options.page > 1000)) {
     throw new Error('Page must be between 1 and 1000');
   }
-  
+
   return await searchWithErrorHandling(type, searchString, options, token);
 }
 ```
@@ -649,7 +735,7 @@ async function typeSafeSearch(
 ### React Hook Example
 
 ```typescript
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 interface UseSearchOptions {
   year?: number;
@@ -667,48 +753,51 @@ export function useSearch(
   type: 'movies' | 'shows',
   searchString: string,
   options: UseSearchOptions = {},
-  token: string
+  token: string,
 ) {
   const [state, setState] = useState<SearchState>({
     data: null,
     loading: false,
     error: null,
   });
-  
+
   const { year, page = 1, debounceMs = 300 } = options;
-  
-  const performSearch = useCallback(async (query: string) => {
-    if (!query.trim()) {
-      setState({ data: null, loading: false, error: null });
-      return;
-    }
-    
-    setState(prev => ({ ...prev, loading: true, error: null }));
-    
-    try {
-      const result = await typeSafeSearch(type, query, { year, page }, token);
-      setState({ data: result, loading: false, error: null });
-    } catch (err) {
-      setState({
-        data: null,
-        loading: false,
-        error: err instanceof Error ? err.message : 'Search failed',
-      });
-    }
-  }, [type, year, page, token]);
-  
+
+  const performSearch = useCallback(
+    async (query: string) => {
+      if (!query.trim()) {
+        setState({ data: null, loading: false, error: null });
+        return;
+      }
+
+      setState((prev) => ({ ...prev, loading: true, error: null }));
+
+      try {
+        const result = await typeSafeSearch(type, query, { year, page }, token);
+        setState({ data: result, loading: false, error: null });
+      } catch (err) {
+        setState({
+          data: null,
+          loading: false,
+          error: err instanceof Error ? err.message : 'Search failed',
+        });
+      }
+    },
+    [type, year, page, token],
+  );
+
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       performSearch(searchString);
     }, debounceMs);
-    
+
     return () => clearTimeout(timeoutId);
   }, [searchString, performSearch, debounceMs]);
-  
+
   const retry = useCallback(() => {
     performSearch(searchString);
   }, [searchString, performSearch]);
-  
+
   return { ...state, retry };
 }
 ```
