@@ -143,6 +143,7 @@ The server provides a comprehensive REST API with the following main endpoints:
 
 ### [Movies](./resources/movies.md)
 - `GET /api/v1/accounts/:accountId/profiles/:profileId/movies` - Get user's movies
+- `GET /api/v1/accounts/:accountId/profiles/:profileId/movies/:movieId/details` - Get movie details
 - `POST /api/v1/accounts/:accountId/profiles/:profileId/movies/favorites` - Add movie to favorites
 - `DELETE /api/v1/accounts/:accountId/profiles/:profileId/movies/favorites/:movieId` - Remove movie from favorites
 - `PUT /api/v1/accounts/:accountId/profiles/:profileId/movies/watchstatus` - Update movie watch status
@@ -151,6 +152,12 @@ The server provides a comprehensive REST API with the following main endpoints:
 ### [Search](./resources/search.md)
 - `GET /api/v1/search/shows` - Search TV shows
 - `GET /api/v1/search/movies` - Search movies
+- `GET /api/v1/search/people` - Search people (actors, directors, crew)
+
+### [People & Cast](./resources/person.md)
+- `GET /api/v1/accounts/:accountId/profiles/:profileId/person/:personId` - Get person details (internal)
+- `GET /api/v1/accounts/:accountId/profiles/:profileId/tmdbPerson/:personId` - Get TMDB person details
+- `GET /api/v1/accounts/:accountId/profiles/:profileId/tmdbPerson/:personId/credits` - Get TMDB person credits
 
 ### [Content Discovery](./resources/discover.md)
 - `GET /api/v1/discover/top` - Discover top content
@@ -160,6 +167,8 @@ The server provides a comprehensive REST API with the following main endpoints:
 ### [File Management](./resources/file.md)
 - `POST /api/v1/upload/accounts/:accountId` - Upload account image
 - `POST /api/v1/upload/accounts/:accountId/profiles/:profileId` - Upload profile image
+- `DELETE /api/v1/upload/accounts/:accountId/image` - Delete account image
+- `DELETE /api/v1/upload/accounts/:accountId/profiles/:profileId/image` - Delete profile image
 
 ### [Statistics](./resources/statistics.md)
 - `GET /api/v1/accounts/:accountId/statistics` - Get account statistics
