@@ -111,7 +111,7 @@ export async function getRecentUpcomingForProfile(req: Request, res: Response, n
 }
 
 /**
- * Get the details of a given movie including a list of recommended and similar movies
+ * Get comprehensive movie details including recommendations and cast
  *
  * @route GET /api/v1/accounts/:accountId/profiles/:profileId/movies/:movieId/details
  */
