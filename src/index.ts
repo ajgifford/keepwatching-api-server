@@ -271,6 +271,8 @@ const gracefulShutdown = (signal: string) => {
   server.close(async () => {
     cliLogger.info('HTTP server closed');
 
+    socketService.shutdown();
+
     shutdownJobs();
 
     try {
