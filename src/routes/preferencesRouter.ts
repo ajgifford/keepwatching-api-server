@@ -25,14 +25,14 @@ router.get(
   getAccountPreferencesByType,
 );
 
-router.post(
+router.put(
   '/api/v1/accounts/:accountId/preferences/:preferenceType',
   validateSchema(preferenceRouteParamsSchema, 'params'),
   authorizeAccountAccess,
   updatePreferences,
 );
 
-router.post(
+router.put(
   '/api/v1/accounts/:accountId/preferences',
   validateSchema(accountIdParamSchema, 'params'),
   authorizeAccountAccess,
