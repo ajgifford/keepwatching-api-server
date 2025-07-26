@@ -26,7 +26,7 @@ describe('notificationsController', () => {
   beforeEach(() => {
     req = {
       params: { accountId: 1, notificationId: 123 },
-      query: {},
+      query: { hasBeenRead: true },
     };
     res = {
       status: jest.fn().mockReturnThis(),
@@ -114,7 +114,7 @@ describe('notificationsController', () => {
       ];
 
       const response: NotificationResponse = {
-        message: 'Marked notification read for account',
+        message: 'Notification marked as read',
         notifications: mockNotifications,
       };
 
@@ -122,7 +122,43 @@ describe('notificationsController', () => {
 
       await markNotificationRead(req, res, next);
 
-      expect(notificationsService.markNotificationRead).toHaveBeenCalledWith(123, 1, false);
+      expect(notificationsService.markNotificationRead).toHaveBeenCalledWith(123, 1, true, false);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(response);
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should mark a notification unread successfully', async () => {
+      const mockNotifications = [
+        {
+          id: 123,
+          message: 'New episode available',
+          startDate: new Date('2025-04-01T00:00:00Z'),
+          endDate: new Date('2025-04-30T00:00:00Z'),
+        },
+        {
+          id: 124,
+          message: 'New update available',
+          startDate: new Date('2025-04-10T00:00:00Z'),
+          endDate: new Date('2025-05-10T00:00:00Z'),
+        },
+      ];
+
+      req = {
+        params: { accountId: 1, notificationId: 123 },
+        query: { hasBeenRead: false },
+      };
+
+      const response: NotificationResponse = {
+        message: 'Notification marked as unread',
+        notifications: mockNotifications,
+      };
+
+      (notificationsService.markNotificationRead as jest.Mock).mockResolvedValue(mockNotifications);
+
+      await markNotificationRead(req, res, next);
+
+      expect(notificationsService.markNotificationRead).toHaveBeenCalledWith(123, 1, false, false);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(response);
       expect(next).not.toHaveBeenCalled();
@@ -134,7 +170,7 @@ describe('notificationsController', () => {
 
       await markNotificationRead(req, res, next);
 
-      expect(notificationsService.markNotificationRead).toHaveBeenCalledWith(123, 1, false);
+      expect(notificationsService.markNotificationRead).toHaveBeenCalledWith(123, 1, true, false);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
@@ -146,7 +182,7 @@ describe('notificationsController', () => {
 
       await markNotificationRead(req, res, next);
 
-      expect(notificationsService.markNotificationRead).toHaveBeenCalledWith(123, 1, false);
+      expect(notificationsService.markNotificationRead).toHaveBeenCalledWith(123, 1, true, false);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
@@ -171,7 +207,7 @@ describe('notificationsController', () => {
       ];
 
       const response: NotificationResponse = {
-        message: 'Marked all notifications read for account',
+        message: 'All notifications marked as read',
         notifications: mockNotifications,
       };
 
@@ -179,7 +215,43 @@ describe('notificationsController', () => {
 
       await markAllNotificationsRead(req, res, next);
 
-      expect(notificationsService.markAllNotificationsRead).toHaveBeenCalledWith(1, false);
+      expect(notificationsService.markAllNotificationsRead).toHaveBeenCalledWith(1, true, false);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(response);
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should mark all notifications unread successfully', async () => {
+      const mockNotifications = [
+        {
+          id: 123,
+          message: 'New episode available',
+          startDate: new Date('2025-04-01T00:00:00Z'),
+          endDate: new Date('2025-04-30T00:00:00Z'),
+        },
+        {
+          id: 124,
+          message: 'New update available',
+          startDate: new Date('2025-04-10T00:00:00Z'),
+          endDate: new Date('2025-05-10T00:00:00Z'),
+        },
+      ];
+
+      req = {
+        params: { accountId: 1, notificationId: 123 },
+        query: { hasBeenRead: false },
+      };
+
+      const response: NotificationResponse = {
+        message: 'All notifications marked as unread',
+        notifications: mockNotifications,
+      };
+
+      (notificationsService.markAllNotificationsRead as jest.Mock).mockResolvedValue(mockNotifications);
+
+      await markAllNotificationsRead(req, res, next);
+
+      expect(notificationsService.markAllNotificationsRead).toHaveBeenCalledWith(1, false, false);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(response);
       expect(next).not.toHaveBeenCalled();
@@ -191,7 +263,7 @@ describe('notificationsController', () => {
 
       await markAllNotificationsRead(req, res, next);
 
-      expect(notificationsService.markAllNotificationsRead).toHaveBeenCalledWith(1, false);
+      expect(notificationsService.markAllNotificationsRead).toHaveBeenCalledWith(1, true, false);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
@@ -216,7 +288,7 @@ describe('notificationsController', () => {
       ];
 
       const response: NotificationResponse = {
-        message: 'Dismissed notification for account',
+        message: 'Notification dismissed',
         notifications: mockNotifications,
       };
 
@@ -273,7 +345,7 @@ describe('notificationsController', () => {
       ];
 
       const response: NotificationResponse = {
-        message: 'Dismissed all notifications for account',
+        message: 'All notifications dismissed',
         notifications: mockNotifications,
       };
 

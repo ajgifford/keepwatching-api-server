@@ -11,6 +11,7 @@ import {
   accountIdParamSchema,
   dismissedQuerySchema,
   notificationActionParamSchema,
+  readStatusQuerySchema,
 } from '@ajgifford/keepwatching-common-server/schema';
 import express from 'express';
 
@@ -27,7 +28,7 @@ router.get(
 router.post(
   '/api/v1/accounts/:accountId/notifications/read/:notificationId',
   validateSchema(notificationActionParamSchema, 'params'),
-  validateSchema(dismissedQuerySchema, 'query'),
+  validateSchema(readStatusQuerySchema, 'query'),
   authorizeAccountAccess,
   markNotificationRead,
 );
@@ -35,7 +36,7 @@ router.post(
 router.post(
   '/api/v1/accounts/:accountId/notifications/read',
   validateSchema(accountIdParamSchema, 'params'),
-  validateSchema(dismissedQuerySchema, 'query'),
+  validateSchema(readStatusQuerySchema, 'query'),
   authorizeAccountAccess,
   markAllNotificationsRead,
 );

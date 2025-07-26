@@ -1,4 +1,9 @@
-import { AccountIdParam, DismissedQuery, NotificationActionParams } from '@ajgifford/keepwatching-common-server/schema';
+import {
+  AccountIdParam,
+  DismissedQuery,
+  NotificationActionParams,
+  ReadStatusQuery,
+} from '@ajgifford/keepwatching-common-server/schema';
 import { notificationsService } from '@ajgifford/keepwatching-common-server/services';
 import { NextFunction, Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
@@ -27,9 +32,16 @@ export const getNotifications = asyncHandler(async (req: Request, res: Response,
 export const markNotificationRead = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { accountId, notificationId } = req.params as unknown as NotificationActionParams;
-    const { includeDismissed = false } = req.query as unknown as DismissedQuery;
-    const notifications = await notificationsService.markNotificationRead(notificationId, accountId, includeDismissed);
-    res.status(200).json({ message: 'Marked notification read for account', notifications });
+    const { hasBeenRead, includeDismissed = false } = req.query as unknown as ReadStatusQuery;
+    const notifications = await notificationsService.markNotificationRead(
+      notificationId,
+      accountId,
+      hasBeenRead,
+      includeDismissed,
+    );
+    res
+      .status(200)
+      .json({ message: `Notification ${hasBeenRead ? 'marked as read' : 'marked as unread'}`, notifications });
   } catch (error) {
     next(error);
   }
@@ -43,9 +55,11 @@ export const markNotificationRead = asyncHandler(async (req: Request, res: Respo
 export const markAllNotificationsRead = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { accountId } = req.params as unknown as AccountIdParam;
-    const { includeDismissed = false } = req.query as unknown as DismissedQuery;
-    const notifications = await notificationsService.markAllNotificationsRead(accountId, includeDismissed);
-    res.status(200).json({ message: 'Marked all notifications read for account', notifications });
+    const { hasBeenRead, includeDismissed = false } = req.query as unknown as ReadStatusQuery;
+    const notifications = await notificationsService.markAllNotificationsRead(accountId, hasBeenRead, includeDismissed);
+    res
+      .status(200)
+      .json({ message: `All notifications ${hasBeenRead ? 'marked as read' : 'marked as unread'}`, notifications });
   } catch (error) {
     next(error);
   }
@@ -61,7 +75,7 @@ export const dismissNotification = asyncHandler(async (req: Request, res: Respon
     const { accountId, notificationId } = req.params as unknown as NotificationActionParams;
     const { includeDismissed = false } = req.query as unknown as DismissedQuery;
     const notifications = await notificationsService.dismissNotification(notificationId, accountId, includeDismissed);
-    res.status(200).json({ message: 'Dismissed notification for account', notifications });
+    res.status(200).json({ message: 'Notification dismissed', notifications });
   } catch (error) {
     next(error);
   }
@@ -77,7 +91,7 @@ export const dismissAllNotifications = asyncHandler(async (req: Request, res: Re
     const { accountId } = req.params as unknown as AccountIdParam;
     const { includeDismissed = false } = req.query as unknown as DismissedQuery;
     const notifications = await notificationsService.dismissAllNotifications(accountId, includeDismissed);
-    res.status(200).json({ message: 'Dismissed all notifications for account', notifications });
+    res.status(200).json({ message: 'All notifications dismissed', notifications });
   } catch (error) {
     next(error);
   }
