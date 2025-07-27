@@ -182,7 +182,10 @@ The server provides a comprehensive REST API with the following main endpoints:
 
 ### [Notifications](./resources/notifications.md)
 - `GET /api/v1/accounts/:accountId/notifications` - Get notifications
-- `POST /api/v1/accounts/:accountId/notifications/dismiss/:notificationId` - Dismiss notification
+- `POST /api/v1/accounts/:accountId/notifications/read/:notificationId` - Mark specific notification as read/unread
+- `POST /api/v1/accounts/:accountId/notifications/read` - Mark all notifications as read/unread
+- `POST /api/v1/accounts/:accountId/notifications/dismiss/:notificationId` - Dismiss specific notification
+- `POST /api/v1/accounts/:accountId/notifications/dismiss` - Dismiss all notifications
 
 ## Rate Limiting
 
