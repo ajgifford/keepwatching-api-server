@@ -118,6 +118,12 @@ The server provides a comprehensive REST API with the following main endpoints:
 - `POST /api/v1/accounts/logout` - User logout
 - `PUT /api/v1/accounts/:accountId` - Update account details
 
+### [User Preferences](./resources/preferences.md)
+- `GET /api/v1/accounts/:accountId/preferences` - Get all account preferences
+- `GET /api/v1/accounts/:accountId/preferences/:preferenceType` - Get preferences by type
+- `PUT /api/v1/accounts/:accountId/preferences/:preferenceType` - Update preferences by type
+- `PUT /api/v1/accounts/:accountId/preferences` - Update multiple preferences
+
 ### [Profiles](./resources/profile.md)
 - `GET /api/v1/accounts/:accountId/profiles` - Get all profiles
 - `GET /api/v1/accounts/:accountId/profiles/:profileId` - Get specific profile
