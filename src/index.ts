@@ -34,7 +34,7 @@ import {
 } from '@ajgifford/keepwatching-common-server/config';
 import { ErrorMessages, appLogger, cliLogger } from '@ajgifford/keepwatching-common-server/logger';
 import { responseInterceptor } from '@ajgifford/keepwatching-common-server/middleware';
-import { databaseService, initializeEmailService, socketService } from '@ajgifford/keepwatching-common-server/services';
+import { databaseService, emailService, socketService } from '@ajgifford/keepwatching-common-server/services';
 import { initScheduledJobs, shutdownJobs } from '@ajgifford/keepwatching-common-server/services';
 import {
   GlobalErrorHandler,
@@ -236,9 +236,6 @@ const startServer = async () => {
         cliLogger.warn('Email service will be disabled due to configuration errors');
         process.env.EMAIL_ENABLED = 'false';
       } else {
-        const emailConfig = getEmailConfig();
-        const emailService = initializeEmailService(emailConfig);
-
         const isConnected = await emailService.verifyConnection();
         if (!isConnected) {
           cliLogger.warn('Email service connection failed, but continuing startup');
