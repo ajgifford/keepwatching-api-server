@@ -4,6 +4,7 @@ import {
   updateMultiplePreferences,
   updatePreferences,
 } from '../controllers/preferencesController';
+import { trackAccountActivity } from '../middleware/accountActivityMiddleware';
 import { authorizeAccountAccess } from '../middleware/authorizationMiddleware';
 import { validateSchema } from '@ajgifford/keepwatching-common-server';
 import { accountIdParamSchema, preferenceRouteParamsSchema } from '@ajgifford/keepwatching-common-server/schema';
@@ -15,6 +16,7 @@ router.get(
   '/api/v1/accounts/:accountId/preferences',
   validateSchema(accountIdParamSchema, 'params'),
   authorizeAccountAccess,
+  trackAccountActivity,
   getAccountPreferences,
 );
 
@@ -22,6 +24,7 @@ router.get(
   '/api/v1/accounts/:accountId/preferences/:preferenceType',
   validateSchema(preferenceRouteParamsSchema, 'params'),
   authorizeAccountAccess,
+  trackAccountActivity,
   getAccountPreferencesByType,
 );
 
@@ -29,6 +32,7 @@ router.put(
   '/api/v1/accounts/:accountId/preferences/:preferenceType',
   validateSchema(preferenceRouteParamsSchema, 'params'),
   authorizeAccountAccess,
+  trackAccountActivity,
   updatePreferences,
 );
 
@@ -36,6 +40,7 @@ router.put(
   '/api/v1/accounts/:accountId/preferences',
   validateSchema(accountIdParamSchema, 'params'),
   authorizeAccountAccess,
+  trackAccountActivity,
   updateMultiplePreferences,
 );
 

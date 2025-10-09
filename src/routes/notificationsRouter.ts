@@ -5,6 +5,7 @@ import {
   markAllNotificationsRead,
   markNotificationRead,
 } from '../controllers/notificationsController';
+import { trackAccountActivity } from '../middleware/accountActivityMiddleware';
 import { authorizeAccountAccess } from '../middleware/authorizationMiddleware';
 import { validateSchema } from '@ajgifford/keepwatching-common-server';
 import {
@@ -22,6 +23,7 @@ router.get(
   validateSchema(accountIdParamSchema, 'params'),
   validateSchema(dismissedQuerySchema, 'query'),
   authorizeAccountAccess,
+  trackAccountActivity,
   getNotifications,
 );
 
@@ -30,6 +32,7 @@ router.post(
   validateSchema(notificationActionParamSchema, 'params'),
   validateSchema(readStatusQuerySchema, 'query'),
   authorizeAccountAccess,
+  trackAccountActivity,
   markNotificationRead,
 );
 
@@ -38,6 +41,7 @@ router.post(
   validateSchema(accountIdParamSchema, 'params'),
   validateSchema(readStatusQuerySchema, 'query'),
   authorizeAccountAccess,
+  trackAccountActivity,
   markAllNotificationsRead,
 );
 
@@ -46,6 +50,7 @@ router.post(
   validateSchema(notificationActionParamSchema, 'params'),
   validateSchema(dismissedQuerySchema, 'query'),
   authorizeAccountAccess,
+  trackAccountActivity,
   dismissNotification,
 );
 
@@ -54,6 +59,7 @@ router.post(
   validateSchema(accountIdParamSchema, 'params'),
   validateSchema(dismissedQuerySchema, 'query'),
   authorizeAccountAccess,
+  trackAccountActivity,
   dismissAllNotifications,
 );
 

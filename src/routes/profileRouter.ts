@@ -1,4 +1,5 @@
 import { addProfile, deleteProfile, editProfile, getProfile, getProfiles } from '../controllers/profileController';
+import { trackAccountActivity } from '../middleware/accountActivityMiddleware';
 import { authorizeAccountAccess } from '../middleware/authorizationMiddleware';
 import { validateRequest, validateSchema } from '@ajgifford/keepwatching-common-server';
 import {
@@ -14,12 +15,14 @@ router.get(
   '/api/v1/accounts/:accountId/profiles',
   validateSchema(accountIdParamSchema, 'params'),
   authorizeAccountAccess,
+  trackAccountActivity,
   getProfiles,
 );
 router.get(
   '/api/v1/accounts/:accountId/profiles/:profileId',
   validateSchema(accountAndProfileIdsParamSchema, 'params'),
   authorizeAccountAccess,
+  trackAccountActivity,
   getProfile,
 );
 router.post(
@@ -27,6 +30,7 @@ router.post(
   validateSchema(accountIdParamSchema, 'params'),
   authorizeAccountAccess,
   validateRequest(profileNameBodySchema),
+  trackAccountActivity,
   addProfile,
 );
 router.put(
@@ -34,12 +38,14 @@ router.put(
   validateSchema(accountAndProfileIdsParamSchema, 'params'),
   authorizeAccountAccess,
   validateRequest(profileNameBodySchema),
+  trackAccountActivity,
   editProfile,
 );
 router.delete(
   '/api/v1/accounts/:accountId/profiles/:profileId',
   validateSchema(accountAndProfileIdsParamSchema, 'params'),
   authorizeAccountAccess,
+  trackAccountActivity,
   deleteProfile,
 );
 

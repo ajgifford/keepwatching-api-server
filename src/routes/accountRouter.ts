@@ -1,4 +1,5 @@
 import { editAccount, googleLogin, login, logout, register } from '../controllers/accountController';
+import { trackAccountActivity } from '../middleware/accountActivityMiddleware';
 import { authenticateUser } from '../middleware/authenticationMiddleware';
 import { authorizeAccountAccess } from '../middleware/authorizationMiddleware';
 import { validateRequest, validateSchema } from '@ajgifford/keepwatching-common-server';
@@ -23,6 +24,7 @@ router.put(
   authenticateUser,
   authorizeAccountAccess,
   validateRequest(updateAccountBodySchema),
+  trackAccountActivity,
   editAccount,
 );
 
