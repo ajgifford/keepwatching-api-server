@@ -21,7 +21,6 @@ import {
   getAppVersion,
   getCertsKeyPath,
   getCertsServerPath,
-  getEmailConfig,
   getLogDirectory,
   getPort,
   getRateLimitMax,
@@ -34,6 +33,7 @@ import {
 } from '@ajgifford/keepwatching-common-server/config';
 import { ErrorMessages, appLogger, cliLogger } from '@ajgifford/keepwatching-common-server/logger';
 import { responseInterceptor } from '@ajgifford/keepwatching-common-server/middleware';
+import { trackUserActivity } from '@ajgifford/keepwatching-common-server/middleware';
 import { databaseService, emailService, socketService } from '@ajgifford/keepwatching-common-server/services';
 import { initScheduledJobs, shutdownJobs } from '@ajgifford/keepwatching-common-server/services';
 import {
@@ -175,6 +175,7 @@ app.get('/health', (req: Request, res: Response) => {
 });
 
 app.use(accountRouter);
+app.use(trackUserActivity);
 app.use(authenticateUser, profileRouter);
 app.use(authenticateUser, searchRouter);
 app.use(authenticateUser, discoverRouter);
