@@ -10,6 +10,10 @@ jest.mock('@controllers/accountController', () => ({
   editAccount: jest.fn((_req, res) => res.status(200).send('account edited')),
 }));
 
+jest.mock('@middleware/accountActivityMiddleware', () => ({
+  trackAccountActivity: (_req: any, _res: any, next: () => any) => next(),
+}));
+
 jest.mock('@middleware/authenticationMiddleware', () => ({
   authenticateUser: (_req: any, _res: any, next: () => any) => next(),
 }));
