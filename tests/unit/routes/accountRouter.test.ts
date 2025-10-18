@@ -8,6 +8,7 @@ jest.mock('@controllers/accountController', () => ({
   googleLogin: jest.fn((_req, res) => res.status(200).send('google logged in')),
   logout: jest.fn((_req, res) => res.status(200).send('logged out')),
   editAccount: jest.fn((_req, res) => res.status(200).send('account edited')),
+  deleteAccount: jest.fn((_req, res) => res.status(200).send('account deleted')),
 }));
 
 jest.mock('@middleware/accountActivityMiddleware', () => ({
@@ -23,8 +24,8 @@ jest.mock('@middleware/authorizationMiddleware', () => ({
 }));
 
 jest.mock('@ajgifford/keepwatching-common-server', () => ({
-  validateSchema: (_schema: any, _location: any) => (_req: any, _res: any, next: () => any) => next(),
-  validateRequest: (_schema: any) => (_req: any, _res: any, next: () => any) => next(),
+  validateSchema: () => (_req: any, _res: any, next: () => any) => next(),
+  validateRequest: () => (_req: any, _res: any, next: () => any) => next(),
 }));
 
 const app = express();
@@ -60,5 +61,11 @@ describe('Account Router', () => {
     const res = await request(app).put('/api/v1/accounts/123').send({});
     expect(res.status).toBe(200);
     expect(res.text).toBe('account edited');
+  });
+
+  it('DELETE /api/v1/accounts/:accountId', async () => {
+    const res = await request(app).delete('/api/v1/accounts/123');
+    expect(res.status).toBe(200);
+    expect(res.text).toBe('account deleted');
   });
 });

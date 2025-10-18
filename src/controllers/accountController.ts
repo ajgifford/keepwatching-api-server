@@ -150,3 +150,19 @@ export const editAccount = asyncHandler(async (req: Request, res: Response, next
     next(error);
   }
 });
+
+/**
+ * Deletes an account.
+ *
+ * @route DELETE /api/v1/accounts/:accountId
+ */
+export const deleteAccount = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { accountId } = req.params as unknown as AccountIdParam;
+
+    await accountService.deleteAccount(accountId);
+    res.json({ message: 'Account deleted successfully' });
+  } catch (error) {
+    next(error);
+  }
+});

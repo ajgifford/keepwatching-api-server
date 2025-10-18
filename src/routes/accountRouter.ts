@@ -1,4 +1,4 @@
-import { editAccount, googleLogin, login, logout, register } from '../controllers/accountController';
+import { deleteAccount, editAccount, googleLogin, login, logout, register } from '../controllers/accountController';
 import { trackAccountActivity } from '../middleware/accountActivityMiddleware';
 import { authenticateUser } from '../middleware/authenticationMiddleware';
 import { authorizeAccountAccess } from '../middleware/authorizationMiddleware';
@@ -27,5 +27,6 @@ router.put(
   trackAccountActivity,
   editAccount,
 );
+router.delete('/api/v1/accounts/:accountId', validateSchema(accountIdParamSchema, 'params'), deleteAccount);
 
 export default router;
