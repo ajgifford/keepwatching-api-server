@@ -1,4 +1,12 @@
-import { getAccountStatistics, getProfileStatistics } from '../controllers/statisticsController';
+import {
+  getAccountStatistics,
+  getActivityTimeline,
+  getDailyActivity,
+  getMonthlyActivity,
+  getProfileStatistics,
+  getWatchingVelocity,
+  getWeeklyActivity,
+} from '../controllers/statisticsController';
 import { trackAccountActivity } from '../middleware/accountActivityMiddleware';
 import { authorizeAccountAccess } from '../middleware/authorizationMiddleware';
 import { validateSchema } from '@ajgifford/keepwatching-common-server';
@@ -21,6 +29,48 @@ router.get(
   authorizeAccountAccess,
   trackAccountActivity,
   getProfileStatistics,
+);
+
+// Watching velocity statistics
+router.get(
+  '/api/v1/accounts/:accountId/profiles/:profileId/statistics/velocity',
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
+  trackAccountActivity,
+  getWatchingVelocity,
+);
+
+// Activity timelines
+router.get(
+  '/api/v1/accounts/:accountId/profiles/:profileId/statistics/activity/daily',
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
+  trackAccountActivity,
+  getDailyActivity,
+);
+
+router.get(
+  '/api/v1/accounts/:accountId/profiles/:profileId/statistics/activity/weekly',
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
+  trackAccountActivity,
+  getWeeklyActivity,
+);
+
+router.get(
+  '/api/v1/accounts/:accountId/profiles/:profileId/statistics/activity/monthly',
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
+  trackAccountActivity,
+  getMonthlyActivity,
+);
+
+router.get(
+  '/api/v1/accounts/:accountId/profiles/:profileId/statistics/activity/timeline',
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
+  trackAccountActivity,
+  getActivityTimeline,
 );
 
 export default router;
