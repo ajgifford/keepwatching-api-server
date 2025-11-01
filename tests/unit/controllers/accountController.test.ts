@@ -1,5 +1,5 @@
 import { accountService } from '@ajgifford/keepwatching-common-server/services';
-import { editAccount, googleLogin, login, logout, register } from '@controllers/accountController';
+import { deleteAccount, editAccount, googleLogin, login, logout, register } from '@controllers/accountController';
 
 // Mock the external packages
 jest.mock('@ajgifford/keepwatching-common-server/services', () => ({
@@ -9,6 +9,7 @@ jest.mock('@ajgifford/keepwatching-common-server/services', () => ({
     googleLogin: jest.fn(),
     logout: jest.fn(),
     editAccount: jest.fn(),
+    deleteAccount: jest.fn(),
   },
 }));
 
@@ -262,6 +263,21 @@ describe('accountController', () => {
       expect(res.json).toHaveBeenCalledWith({ message: 'Account logged out' });
       expect(next).not.toHaveBeenCalled();
     });
+
+    it('should handle errors', async () => {
+      req.body = {
+        accountId: '1',
+      };
+      const error = new Error('Account not found');
+      (accountService.logout as jest.Mock).mockRejectedValue(error);
+
+      await logout(req, res, next);
+
+      expect(accountService.logout).toHaveBeenCalledWith('1');
+      expect(next).toHaveBeenCalledWith(error);
+      expect(res.status).not.toHaveBeenCalled();
+      expect(res.json).not.toHaveBeenCalled();
+    });
   });
 
   describe('editAccount', () => {
@@ -296,6 +312,31 @@ describe('accountController', () => {
       await editAccount(req, res, next);
 
       expect(accountService.editAccount).toHaveBeenCalledWith(1, 'Updated Account Name', 12);
+      expect(next).toHaveBeenCalledWith(error);
+      expect(res.status).not.toHaveBeenCalled();
+      expect(res.json).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('deleteAccount', () => {
+    it('should handle account deletion successfully', async () => {
+      (accountService.deleteAccount as jest.Mock).mockResolvedValue(undefined);
+
+      await deleteAccount(req, res, next);
+
+      expect(accountService.deleteAccount).toHaveBeenCalledWith(1);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ message: 'Account deleted successfully' });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should handle errors', async () => {
+      const error = new Error('Account not found');
+      (accountService.deleteAccount as jest.Mock).mockRejectedValue(error);
+
+      await deleteAccount(req, res, next);
+
+      expect(accountService.deleteAccount).toHaveBeenCalledWith(1);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();

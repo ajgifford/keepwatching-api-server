@@ -1,12 +1,13 @@
 import { contentDiscoveryService } from '@ajgifford/keepwatching-common-server/services';
 import { MediaType } from '@ajgifford/keepwatching-types';
-import { searchMovies, searchShows } from '@controllers/searchController';
+import { searchMovies, searchPeople, searchShows } from '@controllers/searchController';
 
 // Mock the services before using them
 jest.mock('@ajgifford/keepwatching-common-server/services', () => ({
   MediaType: { SHOW: 'show', MOVIE: 'movie' },
   contentDiscoveryService: {
     searchMedia: jest.fn(),
+    searchPeople: jest.fn(),
   },
 }));
 
@@ -194,6 +195,68 @@ describe('searchController', () => {
       await searchMovies(req, res, next);
 
       expect(contentDiscoveryService.searchMedia).toHaveBeenCalled();
+      expect(res.status).not.toHaveBeenCalled();
+      expect(res.json).not.toHaveBeenCalled();
+      expect(next).toHaveBeenCalledWith(error);
+    });
+  });
+
+  describe('searchPeople', () => {
+    it('should search for people with all parameters', async () => {
+      req.query = {
+        searchString: 'Tom Cruise',
+        page: 2,
+      };
+
+      const mockSearchResults = {
+        results: [{ id: '456', name: 'Tom Cruise', known_for: ['Top Gun'], department: 'Acting', popularity: 56.3 }],
+        totalPages: 5,
+        totalResults: 10,
+        currentPage: 2,
+      };
+
+      (contentDiscoveryService.searchPeople as jest.Mock).mockResolvedValue(mockSearchResults);
+
+      await searchPeople(req, res, next);
+
+      expect(contentDiscoveryService.searchPeople).toHaveBeenCalledWith('Tom Cruise', 2);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(mockSearchResults);
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should search for people with default page', async () => {
+      req.query = {
+        searchString: 'Tom Cruise',
+      };
+
+      const mockSearchResults = {
+        results: [{ id: '456', name: 'Tom Cruise', known_for: ['Top Gun'], department: 'Acting', popularity: 56.3 }],
+        totalPages: 5,
+        totalResults: 10,
+        currentPage: 1,
+      };
+
+      (contentDiscoveryService.searchPeople as jest.Mock).mockResolvedValue(mockSearchResults);
+
+      await searchPeople(req, res, next);
+
+      expect(contentDiscoveryService.searchPeople).toHaveBeenCalledWith('Tom Cruise', 1);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(mockSearchResults);
+    });
+
+    it('should handle errors properly', async () => {
+      req.query = {
+        searchString: 'Tom Cruise',
+      };
+
+      const error = new Error('Search failed');
+      (contentDiscoveryService.searchPeople as jest.Mock).mockRejectedValue(error);
+
+      await searchPeople(req, res, next);
+
+      expect(contentDiscoveryService.searchPeople).toHaveBeenCalled();
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
       expect(next).toHaveBeenCalledWith(error);
