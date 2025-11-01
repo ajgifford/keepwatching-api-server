@@ -5,6 +5,8 @@ import {
   getDailyActivity,
   getMonthlyActivity,
   getProfileStatistics,
+  getSeasonalViewingStats,
+  getTimeToWatchStats,
   getWatchStreakStats,
   getWatchingVelocity,
   getWeeklyActivity,
@@ -33,7 +35,6 @@ router.get(
   getProfileStatistics,
 );
 
-// Watching velocity statistics
 router.get(
   '/api/v1/accounts/:accountId/profiles/:profileId/statistics/velocity',
   validateSchema(accountAndProfileIdsParamSchema, 'params'),
@@ -42,7 +43,6 @@ router.get(
   getWatchingVelocity,
 );
 
-// Activity timelines
 router.get(
   '/api/v1/accounts/:accountId/profiles/:profileId/statistics/activity/daily',
   validateSchema(accountAndProfileIdsParamSchema, 'params'),
@@ -75,7 +75,6 @@ router.get(
   getActivityTimeline,
 );
 
-// Binge-watching statistics
 router.get(
   '/api/v1/accounts/:accountId/profiles/:profileId/statistics/binge',
   validateSchema(accountAndProfileIdsParamSchema, 'params'),
@@ -84,13 +83,28 @@ router.get(
   getBingeWatchingStats,
 );
 
-// Watch streak statistics
 router.get(
   '/api/v1/accounts/:accountId/profiles/:profileId/statistics/streaks',
   validateSchema(accountAndProfileIdsParamSchema, 'params'),
   authorizeAccountAccess,
   trackAccountActivity,
   getWatchStreakStats,
+);
+
+router.get(
+  '/api/v1/accounts/:accountId/profiles/:profileId/statistics/time-to-watch',
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
+  trackAccountActivity,
+  getTimeToWatchStats,
+);
+
+router.get(
+  '/api/v1/accounts/:accountId/profiles/:profileId/statistics/seasonal',
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
+  trackAccountActivity,
+  getSeasonalViewingStats,
 );
 
 export default router;

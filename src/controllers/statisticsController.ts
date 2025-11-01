@@ -176,3 +176,41 @@ export async function getWatchStreakStats(req: Request, res: Response, next: Nex
     next(error);
   }
 }
+
+/**
+ * Get time-to-watch statistics for a profile
+ *
+ * @route GET /api/v1/accounts/:accountId/profiles/:profileId/statistics/time-to-watch
+ */
+export async function getTimeToWatchStats(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
+    const results = await statisticsService.getTimeToWatchStats(profileId);
+
+    res.status(200).json({
+      message: 'Successfully retrieved time-to-watch statistics',
+      results,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Get seasonal viewing pattern statistics for a profile
+ *
+ * @route GET /api/v1/accounts/:accountId/profiles/:profileId/statistics/seasonal
+ */
+export async function getSeasonalViewingStats(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
+    const results = await statisticsService.getSeasonalViewingStats(profileId);
+
+    res.status(200).json({
+      message: 'Successfully retrieved seasonal viewing statistics',
+      results,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
