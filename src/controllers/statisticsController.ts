@@ -214,3 +214,22 @@ export async function getSeasonalViewingStats(req: Request, res: Response, next:
     next(error);
   }
 }
+
+/**
+ * Get milestone statistics for a profile
+ *
+ * @route GET /api/v1/accounts/:accountId/profiles/:profileId/statistics/milestones
+ */
+export async function getMilestoneStats(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
+    const results = await statisticsService.getMilestoneStats(profileId);
+
+    res.status(200).json({
+      message: 'Successfully retrieved milestone statistics',
+      results,
+    });
+  } catch (error) {
+    next(error);
+  }
+}

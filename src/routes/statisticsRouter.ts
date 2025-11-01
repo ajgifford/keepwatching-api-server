@@ -3,6 +3,7 @@ import {
   getActivityTimeline,
   getBingeWatchingStats,
   getDailyActivity,
+  getMilestoneStats,
   getMonthlyActivity,
   getProfileStatistics,
   getSeasonalViewingStats,
@@ -105,6 +106,14 @@ router.get(
   authorizeAccountAccess,
   trackAccountActivity,
   getSeasonalViewingStats,
+);
+
+router.get(
+  '/api/v1/accounts/:accountId/profiles/:profileId/statistics/milestones',
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
+  trackAccountActivity,
+  getMilestoneStats,
 );
 
 export default router;

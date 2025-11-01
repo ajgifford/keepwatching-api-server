@@ -14,6 +14,7 @@ jest.mock('@controllers/statisticsController', () => ({
   getWatchStreakStats: jest.fn((_req, res) => res.status(200).send('watch streak statistics')),
   getTimeToWatchStats: jest.fn((_req, res) => res.status(200).send('time to watch statistics')),
   getSeasonalViewingStats: jest.fn((_req, res) => res.status(200).send('seasonal viewing statistics')),
+  getMilestoneStats: jest.fn((_req, res) => res.status(200).send('milestone statistics')),
 }));
 
 jest.mock('@middleware/accountActivityMiddleware', () => ({
@@ -97,5 +98,11 @@ describe('Statistics Router', () => {
     const res = await request(app).get('/api/v1/accounts/123/profiles/456/statistics/seasonal');
     expect(res.status).toBe(200);
     expect(res.text).toBe('seasonal viewing statistics');
+  });
+
+  it('GET /api/v1/accounts/:accountId/profiles/:profileId/statistics/milestones', async () => {
+    const res = await request(app).get('/api/v1/accounts/123/profiles/456/statistics/milestones');
+    expect(res.status).toBe(200);
+    expect(res.text).toBe('milestone statistics');
   });
 });
