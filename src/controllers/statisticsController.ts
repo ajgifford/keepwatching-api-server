@@ -138,3 +138,41 @@ export async function getActivityTimeline(req: Request, res: Response, next: Nex
     next(error);
   }
 }
+
+/**
+ * Get binge-watching statistics for a profile
+ *
+ * @route GET /api/v1/accounts/:accountId/profiles/:profileId/statistics/binge
+ */
+export async function getBingeWatchingStats(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
+    const results = await statisticsService.getBingeWatchingStats(profileId);
+
+    res.status(200).json({
+      message: 'Successfully retrieved binge-watching statistics',
+      results,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Get watch streak statistics for a profile
+ *
+ * @route GET /api/v1/accounts/:accountId/profiles/:profileId/statistics/streaks
+ */
+export async function getWatchStreakStats(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
+    const results = await statisticsService.getWatchStreakStats(profileId);
+
+    res.status(200).json({
+      message: 'Successfully retrieved watch streak statistics',
+      results,
+    });
+  } catch (error) {
+    next(error);
+  }
+}

@@ -1,9 +1,11 @@
 import {
   getAccountStatistics,
   getActivityTimeline,
+  getBingeWatchingStats,
   getDailyActivity,
   getMonthlyActivity,
   getProfileStatistics,
+  getWatchStreakStats,
   getWatchingVelocity,
   getWeeklyActivity,
 } from '../controllers/statisticsController';
@@ -71,6 +73,24 @@ router.get(
   authorizeAccountAccess,
   trackAccountActivity,
   getActivityTimeline,
+);
+
+// Binge-watching statistics
+router.get(
+  '/api/v1/accounts/:accountId/profiles/:profileId/statistics/binge',
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
+  trackAccountActivity,
+  getBingeWatchingStats,
+);
+
+// Watch streak statistics
+router.get(
+  '/api/v1/accounts/:accountId/profiles/:profileId/statistics/streaks',
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
+  trackAccountActivity,
+  getWatchStreakStats,
 );
 
 export default router;
