@@ -123,7 +123,7 @@ export const googleLogin = asyncHandler(async (req: Request, res: Response, next
 export const logout = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { accountId }: AccountIdParam = req.body;
-    accountService.logout(accountId);
+    await accountService.logout(accountId);
     res.status(200).json({ message: 'Account logged out' });
   } catch (error) {
     next(error);
@@ -161,7 +161,7 @@ export const deleteAccount = asyncHandler(async (req: Request, res: Response, ne
     const { accountId } = req.params as unknown as AccountIdParam;
 
     await accountService.deleteAccount(accountId);
-    res.json({ message: 'Account deleted successfully' });
+    res.status(200).json({ message: 'Account deleted successfully' });
   } catch (error) {
     next(error);
   }
