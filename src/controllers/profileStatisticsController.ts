@@ -1,25 +1,6 @@
-import { AccountAndProfileIdsParams, AccountIdParam } from '@ajgifford/keepwatching-common-server/schema';
-import { statisticsService } from '@ajgifford/keepwatching-common-server/services';
+import { AccountAndProfileIdsParams } from '@ajgifford/keepwatching-common-server/schema';
+import { profileStatisticsService } from '@ajgifford/keepwatching-common-server/services';
 import { NextFunction, Request, Response } from 'express';
-
-/**
- * Get statistics (shows, movies and watch progress) for an account
- *
- * @route GET /api/v1/accounts/:accountId/statistics
- */
-export async function getAccountStatistics(req: Request, res: Response, next: NextFunction) {
-  try {
-    const { accountId } = req.params as unknown as AccountIdParam;
-    const results = await statisticsService.getAccountStatistics(accountId);
-
-    res.status(200).json({
-      message: 'Successfully retrieved account statistics',
-      results,
-    });
-  } catch (error) {
-    next(error);
-  }
-}
 
 /**
  * Get statistics (shows, movies and watch progress) for a profile
@@ -29,7 +10,7 @@ export async function getAccountStatistics(req: Request, res: Response, next: Ne
 export async function getProfileStatistics(req: Request, res: Response, next: NextFunction) {
   try {
     const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
-    const results = await statisticsService.getProfileStatistics(profileId);
+    const results = await profileStatisticsService.getProfileStatistics(profileId);
 
     res.status(200).json({
       message: 'Successfully retrieved profile statistics',
@@ -49,7 +30,7 @@ export async function getWatchingVelocity(req: Request, res: Response, next: Nex
   try {
     const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
     const days = req.query.days ? parseInt(req.query.days as string, 10) : 30;
-    const results = await statisticsService.getWatchingVelocity(profileId, days);
+    const results = await profileStatisticsService.getWatchingVelocity(profileId, days);
 
     res.status(200).json({
       message: 'Successfully retrieved watching velocity statistics',
@@ -69,7 +50,7 @@ export async function getDailyActivity(req: Request, res: Response, next: NextFu
   try {
     const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
     const days = req.query.days ? parseInt(req.query.days as string, 10) : 30;
-    const results = await statisticsService.getDailyActivity(profileId, days);
+    const results = await profileStatisticsService.getDailyActivity(profileId, days);
 
     res.status(200).json({
       message: 'Successfully retrieved daily activity',
@@ -89,7 +70,7 @@ export async function getWeeklyActivity(req: Request, res: Response, next: NextF
   try {
     const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
     const weeks = req.query.weeks ? parseInt(req.query.weeks as string, 10) : 12;
-    const results = await statisticsService.getWeeklyActivity(profileId, weeks);
+    const results = await profileStatisticsService.getWeeklyActivity(profileId, weeks);
 
     res.status(200).json({
       message: 'Successfully retrieved weekly activity',
@@ -109,7 +90,7 @@ export async function getMonthlyActivity(req: Request, res: Response, next: Next
   try {
     const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
     const months = req.query.months ? parseInt(req.query.months as string, 10) : 12;
-    const results = await statisticsService.getMonthlyActivity(profileId, months);
+    const results = await profileStatisticsService.getMonthlyActivity(profileId, months);
 
     res.status(200).json({
       message: 'Successfully retrieved monthly activity',
@@ -128,7 +109,7 @@ export async function getMonthlyActivity(req: Request, res: Response, next: Next
 export async function getActivityTimeline(req: Request, res: Response, next: NextFunction) {
   try {
     const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
-    const results = await statisticsService.getActivityTimeline(profileId);
+    const results = await profileStatisticsService.getActivityTimeline(profileId);
 
     res.status(200).json({
       message: 'Successfully retrieved activity timeline',
@@ -147,7 +128,7 @@ export async function getActivityTimeline(req: Request, res: Response, next: Nex
 export async function getBingeWatchingStats(req: Request, res: Response, next: NextFunction) {
   try {
     const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
-    const results = await statisticsService.getBingeWatchingStats(profileId);
+    const results = await profileStatisticsService.getBingeWatchingStats(profileId);
 
     res.status(200).json({
       message: 'Successfully retrieved binge-watching statistics',
@@ -166,7 +147,7 @@ export async function getBingeWatchingStats(req: Request, res: Response, next: N
 export async function getWatchStreakStats(req: Request, res: Response, next: NextFunction) {
   try {
     const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
-    const results = await statisticsService.getWatchStreakStats(profileId);
+    const results = await profileStatisticsService.getWatchStreakStats(profileId);
 
     res.status(200).json({
       message: 'Successfully retrieved watch streak statistics',
@@ -185,7 +166,7 @@ export async function getWatchStreakStats(req: Request, res: Response, next: Nex
 export async function getTimeToWatchStats(req: Request, res: Response, next: NextFunction) {
   try {
     const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
-    const results = await statisticsService.getTimeToWatchStats(profileId);
+    const results = await profileStatisticsService.getTimeToWatchStats(profileId);
 
     res.status(200).json({
       message: 'Successfully retrieved time-to-watch statistics',
@@ -204,7 +185,7 @@ export async function getTimeToWatchStats(req: Request, res: Response, next: Nex
 export async function getSeasonalViewingStats(req: Request, res: Response, next: NextFunction) {
   try {
     const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
-    const results = await statisticsService.getSeasonalViewingStats(profileId);
+    const results = await profileStatisticsService.getSeasonalViewingStats(profileId);
 
     res.status(200).json({
       message: 'Successfully retrieved seasonal viewing statistics',
@@ -223,7 +204,7 @@ export async function getSeasonalViewingStats(req: Request, res: Response, next:
 export async function getMilestoneStats(req: Request, res: Response, next: NextFunction) {
   try {
     const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
-    const results = await statisticsService.getMilestoneStats(profileId);
+    const results = await profileStatisticsService.getMilestoneStats(profileId);
 
     res.status(200).json({
       message: 'Successfully retrieved milestone statistics',
@@ -242,7 +223,7 @@ export async function getMilestoneStats(req: Request, res: Response, next: NextF
 export async function getContentDepthStats(req: Request, res: Response, next: NextFunction) {
   try {
     const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
-    const results = await statisticsService.getContentDepthStats(profileId);
+    const results = await profileStatisticsService.getContentDepthStats(profileId);
 
     res.status(200).json({
       message: 'Successfully retrieved content depth statistics',
@@ -261,7 +242,7 @@ export async function getContentDepthStats(req: Request, res: Response, next: Ne
 export async function getContentDiscoveryStats(req: Request, res: Response, next: NextFunction) {
   try {
     const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
-    const results = await statisticsService.getContentDiscoveryStats(profileId);
+    const results = await profileStatisticsService.getContentDiscoveryStats(profileId);
 
     res.status(200).json({
       message: 'Successfully retrieved content discovery statistics',
@@ -280,7 +261,7 @@ export async function getContentDiscoveryStats(req: Request, res: Response, next
 export async function getAbandonmentRiskStats(req: Request, res: Response, next: NextFunction) {
   try {
     const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
-    const results = await statisticsService.getAbandonmentRiskStats(profileId);
+    const results = await profileStatisticsService.getAbandonmentRiskStats(profileId);
 
     res.status(200).json({
       message: 'Successfully retrieved abandonment risk statistics',
@@ -299,7 +280,7 @@ export async function getAbandonmentRiskStats(req: Request, res: Response, next:
 export async function getUnairedContentStats(req: Request, res: Response, next: NextFunction) {
   try {
     const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
-    const results = await statisticsService.getUnairedContentStats(profileId);
+    const results = await profileStatisticsService.getUnairedContentStats(profileId);
 
     res.status(200).json({
       message: 'Successfully retrieved unaired content statistics',
