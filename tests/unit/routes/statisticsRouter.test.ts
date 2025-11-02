@@ -15,6 +15,10 @@ jest.mock('@controllers/statisticsController', () => ({
   getTimeToWatchStats: jest.fn((_req, res) => res.status(200).send('time to watch statistics')),
   getSeasonalViewingStats: jest.fn((_req, res) => res.status(200).send('seasonal viewing statistics')),
   getMilestoneStats: jest.fn((_req, res) => res.status(200).send('milestone statistics')),
+  getContentDepthStats: jest.fn((_req, res) => res.status(200).send('content depth statistics')),
+  getContentDiscoveryStats: jest.fn((_req, res) => res.status(200).send('content discovery statistics')),
+  getAbandonmentRiskStats: jest.fn((_req, res) => res.status(200).send('abandonment risk statistics')),
+  getUnairedContentStats: jest.fn((_req, res) => res.status(200).send('unaired content statistics')),
 }));
 
 jest.mock('@middleware/accountActivityMiddleware', () => ({
@@ -104,5 +108,29 @@ describe('Statistics Router', () => {
     const res = await request(app).get('/api/v1/accounts/123/profiles/456/statistics/milestones');
     expect(res.status).toBe(200);
     expect(res.text).toBe('milestone statistics');
+  });
+
+  it('GET /api/v1/accounts/:accountId/profiles/:profileId/statistics/content-depth', async () => {
+    const res = await request(app).get('/api/v1/accounts/123/profiles/456/statistics/content-depth');
+    expect(res.status).toBe(200);
+    expect(res.text).toBe('content depth statistics');
+  });
+
+  it('GET /api/v1/accounts/:accountId/profiles/:profileId/statistics/content-discovery', async () => {
+    const res = await request(app).get('/api/v1/accounts/123/profiles/456/statistics/content-discovery');
+    expect(res.status).toBe(200);
+    expect(res.text).toBe('content discovery statistics');
+  });
+
+  it('GET /api/v1/accounts/:accountId/profiles/:profileId/statistics/abandonment-risk', async () => {
+    const res = await request(app).get('/api/v1/accounts/123/profiles/456/statistics/abandonment-risk');
+    expect(res.status).toBe(200);
+    expect(res.text).toBe('abandonment risk statistics');
+  });
+
+  it('GET /api/v1/accounts/:accountId/profiles/:profileId/statistics/unaired-content', async () => {
+    const res = await request(app).get('/api/v1/accounts/123/profiles/456/statistics/unaired-content');
+    expect(res.status).toBe(200);
+    expect(res.text).toBe('unaired content statistics');
   });
 });

@@ -233,3 +233,79 @@ export async function getMilestoneStats(req: Request, res: Response, next: NextF
     next(error);
   }
 }
+
+/**
+ * Get content depth statistics for a profile
+ *
+ * @route GET /api/v1/accounts/:accountId/profiles/:profileId/statistics/content-depth
+ */
+export async function getContentDepthStats(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
+    const results = await statisticsService.getContentDepthStats(profileId);
+
+    res.status(200).json({
+      message: 'Successfully retrieved content depth statistics',
+      results,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Get content discovery statistics for a profile
+ *
+ * @route GET /api/v1/accounts/:accountId/profiles/:profileId/statistics/content-discovery
+ */
+export async function getContentDiscoveryStats(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
+    const results = await statisticsService.getContentDiscoveryStats(profileId);
+
+    res.status(200).json({
+      message: 'Successfully retrieved content discovery statistics',
+      results,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Get abandonment risk statistics for a profile
+ *
+ * @route GET /api/v1/accounts/:accountId/profiles/:profileId/statistics/abandonment-risk
+ */
+export async function getAbandonmentRiskStats(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
+    const results = await statisticsService.getAbandonmentRiskStats(profileId);
+
+    res.status(200).json({
+      message: 'Successfully retrieved abandonment risk statistics',
+      results,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Get unaired content statistics for a profile
+ *
+ * @route GET /api/v1/accounts/:accountId/profiles/:profileId/statistics/unaired-content
+ */
+export async function getUnairedContentStats(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
+    const results = await statisticsService.getUnairedContentStats(profileId);
+
+    res.status(200).json({
+      message: 'Successfully retrieved unaired content statistics',
+      results,
+    });
+  } catch (error) {
+    next(error);
+  }
+}

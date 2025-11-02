@@ -1,13 +1,17 @@
 import {
+  getAbandonmentRiskStats,
   getAccountStatistics,
   getActivityTimeline,
   getBingeWatchingStats,
+  getContentDepthStats,
+  getContentDiscoveryStats,
   getDailyActivity,
   getMilestoneStats,
   getMonthlyActivity,
   getProfileStatistics,
   getSeasonalViewingStats,
   getTimeToWatchStats,
+  getUnairedContentStats,
   getWatchStreakStats,
   getWatchingVelocity,
   getWeeklyActivity,
@@ -114,6 +118,38 @@ router.get(
   authorizeAccountAccess,
   trackAccountActivity,
   getMilestoneStats,
+);
+
+router.get(
+  '/api/v1/accounts/:accountId/profiles/:profileId/statistics/content-depth',
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
+  trackAccountActivity,
+  getContentDepthStats,
+);
+
+router.get(
+  '/api/v1/accounts/:accountId/profiles/:profileId/statistics/content-discovery',
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
+  trackAccountActivity,
+  getContentDiscoveryStats,
+);
+
+router.get(
+  '/api/v1/accounts/:accountId/profiles/:profileId/statistics/abandonment-risk',
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
+  trackAccountActivity,
+  getAbandonmentRiskStats,
+);
+
+router.get(
+  '/api/v1/accounts/:accountId/profiles/:profileId/statistics/unaired-content',
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
+  trackAccountActivity,
+  getUnairedContentStats,
 );
 
 export default router;
