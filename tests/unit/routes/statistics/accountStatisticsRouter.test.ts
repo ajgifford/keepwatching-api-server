@@ -15,6 +15,7 @@ jest.mock('@controllers/accountStatisticsController', () => ({
   getAccountContentDiscoveryStats: jest.fn((_req, res) => res.status(200).send('content discovery statistics')),
   getAccountAbandonmentRiskStats: jest.fn((_req, res) => res.status(200).send('abandonment risk statistics')),
   getAccountUnairedContentStats: jest.fn((_req, res) => res.status(200).send('unaired content statistics')),
+  getProfileComparison: jest.fn((_req, res) => res.status(200).send('profile comparison statistics')),
 }));
 
 jest.mock('@middleware/accountActivityMiddleware', () => ({
@@ -104,5 +105,11 @@ describe('Account Statistics Router', () => {
     const res = await request(app).get('/api/v1/accounts/123/statistics/unaired-content');
     expect(res.status).toBe(200);
     expect(res.text).toBe('unaired content statistics');
+  });
+
+  it('GET /api/v1/accounts/:accountId/statistics/profile-comparison', async () => {
+    const res = await request(app).get('/api/v1/accounts/123/statistics/profile-comparison');
+    expect(res.status).toBe(200);
+    expect(res.text).toBe('profile comparison statistics');
   });
 });

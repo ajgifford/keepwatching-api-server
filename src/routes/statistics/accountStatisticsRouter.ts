@@ -11,6 +11,7 @@ import {
   getAccountUnairedContentStats,
   getAccountWatchStreakStats,
   getAccountWatchingVelocity,
+  getProfileComparison,
 } from '../../controllers/accountStatisticsController';
 import { trackAccountActivity } from '../../middleware/accountActivityMiddleware';
 import { authorizeAccountAccess } from '../../middleware/authorizationMiddleware';
@@ -114,6 +115,14 @@ router.get(
   authorizeAccountAccess,
   trackAccountActivity,
   getAccountUnairedContentStats,
+);
+
+router.get(
+  '/api/v1/accounts/:accountId/statistics/profile-comparison',
+  validateSchema(accountIdParamSchema, 'params'),
+  authorizeAccountAccess,
+  trackAccountActivity,
+  getProfileComparison,
 );
 
 export default router;
