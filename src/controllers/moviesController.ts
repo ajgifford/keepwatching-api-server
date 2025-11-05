@@ -78,10 +78,10 @@ export async function removeFavorite(req: Request, res: Response, next: NextFunc
  */
 export async function updateMovieWatchStatus(req: Request, res: Response, next: NextFunction) {
   try {
-    const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
+    const { accountId, profileId } = req.params as unknown as AccountAndProfileIdsParams;
     const { movieId, status }: MovieWatchStatusBody = req.body;
 
-    await moviesService.updateMovieWatchStatus(profileId, movieId, status);
+    await moviesService.updateMovieWatchStatus(accountId, profileId, movieId, status);
 
     res.status(200).json({ message: `Successfully updated the watch status to '${status}'` });
   } catch (error) {

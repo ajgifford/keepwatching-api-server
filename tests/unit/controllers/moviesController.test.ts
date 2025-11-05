@@ -136,7 +136,7 @@ describe('moviesController', () => {
 
       await updateMovieWatchStatus(req, res, next);
 
-      expect(moviesService.updateMovieWatchStatus).toHaveBeenCalledWith(123, 12345, 'WATCHED');
+      expect(moviesService.updateMovieWatchStatus).toHaveBeenCalledWith(1, 123, 12345, 'WATCHED');
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: "Successfully updated the watch status to 'WATCHED'",
@@ -150,7 +150,7 @@ describe('moviesController', () => {
 
       await updateMovieWatchStatus(req, res, next);
 
-      expect(moviesService.updateMovieWatchStatus).toHaveBeenCalledWith(123, 12345, 'WATCHED');
+      expect(moviesService.updateMovieWatchStatus).toHaveBeenCalledWith(1, 123, 12345, 'WATCHED');
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
