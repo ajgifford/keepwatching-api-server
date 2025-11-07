@@ -7,7 +7,7 @@
   "private": true,
   "dependencies": {
     "@ajgifford/keepwatching-common-server": "^0.7.6",
-    "@ajgifford/keepwatching-types": "^0.7.1",
+    "@ajgifford/keepwatching-types": "^0.7.2",
     "@express-rate-limit/tsconfig": "^1.0.2",
     "axios": "1.12.2",
     "axios-retry": "^4.5.0",
