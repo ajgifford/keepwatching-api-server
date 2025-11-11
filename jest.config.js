@@ -1,12 +1,21 @@
-const { pathsToModuleNameMapper } = require('ts-jest');
-const { compilerOptions } = require('./tsconfig.json');
-
-module.exports = {
-  preset: 'ts-jest',
+export default {
+  preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'node',
+  extensionsToTreatAsEsm: ['.ts'],
   roots: ['<rootDir>/src', '<rootDir>/tests'],
   transform: {
-    '^.+\\.tsx?$': 'ts-jest',
+    '^.+\\.tsx?$': [
+      'ts-jest',
+      {
+        useESM: true,
+      },
+    ],
+    '^.+\\.jsx?$': [
+      'ts-jest',
+      {
+        useESM: true,
+      },
+    ],
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   testMatch: ['**/__tests__/**/*.[jt]s?(x)', '**/?(*.)+(spec|test).[jt]s?(x)'],
@@ -16,7 +25,13 @@ module.exports = {
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov'],
   testPathIgnorePatterns: ['/node_modules/', '/dist/'],
+  transformIgnorePatterns: ['node_modules/(?!@ajgifford)'],
   moduleNameMapper: {
-    ...pathsToModuleNameMapper(compilerOptions.paths, { prefix: '<rootDir>/' }),
+    '^vitest$': '<rootDir>/tests/mocks/vitest.ts',
+    '^@controllers/(.*)$': '<rootDir>/src/controllers/$1',
+    '^@middleware/(.*)$': '<rootDir>/src/middleware/$1',
+    '^@routes/(.*)$': '<rootDir>/src/routes/$1',
+    '^@utils/(.*)$': '<rootDir>/src/utils/$1',
+    '^(\\.{1,2}/.*)\\.js$': '$1',
   },
 };

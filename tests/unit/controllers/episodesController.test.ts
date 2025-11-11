@@ -1,4 +1,4 @@
-import { episodesService } from '@ajgifford/keepwatching-common-server/testing';
+import { episodesService } from '@ajgifford/keepwatching-common-server/services';
 import {
   getEpisodesForSeason,
   getRecentEpisodes,
@@ -7,7 +7,13 @@ import {
 } from '@controllers/episodesController';
 
 jest.mock('@ajgifford/keepwatching-common-server/services', () => ({
-  episodesService: episodesService,
+  episodesService: {
+    updateEpisodeWatchStatus: jest.fn(),
+    getEpisodesForSeason: jest.fn(),
+    getUpcomingEpisodes: jest.fn(),
+    getUpcomingEpisodesForProfile: jest.fn(),
+    getRecentEpisodesForProfile: jest.fn(),
+  },
 }));
 
 describe('episodesController', () => {

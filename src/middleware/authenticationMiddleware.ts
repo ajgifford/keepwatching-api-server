@@ -1,9 +1,9 @@
+import serviceAccount from '../../certs/keepwatching-service-account.json';
 import { NextFunction, Request, Response } from 'express';
 import admin from 'firebase-admin';
 
-const serviceAccount: object = require('../../certs/keepwatching-service-account.json');
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
+  credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
 });
 
 export const authenticateUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {

@@ -1,4 +1,4 @@
-import { showService } from '@ajgifford/keepwatching-common-server/testing';
+import { showService } from '@ajgifford/keepwatching-common-server/services';
 import {
   addFavorite,
   getProfileEpisodes,
@@ -10,7 +10,19 @@ import {
   updateShowWatchStatus,
 } from '@controllers/showsController';
 
-jest.mock('@ajgifford/keepwatching-common-server/services', () => ({ showService: showService }));
+jest.mock('@ajgifford/keepwatching-common-server/services', () => ({
+  showService: {
+    getShowsForProfile: jest.fn(),
+    getShowDetailsForProfile: jest.fn(),
+    getShowCastMembers: jest.fn(),
+    getEpisodesForProfile: jest.fn(),
+    addShowToFavorites: jest.fn(),
+    removeShowFromFavorites: jest.fn(),
+    updateShowWatchStatus: jest.fn(),
+    getShowRecommendations: jest.fn(),
+    getSimilarShows: jest.fn(),
+  },
+}));
 
 describe('showsController', () => {
   let req: any;

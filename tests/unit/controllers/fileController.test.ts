@@ -1,7 +1,7 @@
 import { BadRequestError } from '@ajgifford/keepwatching-common-server';
 import { getUploadDirectory } from '@ajgifford/keepwatching-common-server/config';
 import { appLogger } from '@ajgifford/keepwatching-common-server/logger';
-import { accountService, profileService } from '@ajgifford/keepwatching-common-server/testing';
+import { accountService, profileService } from '@ajgifford/keepwatching-common-server/services';
 import { uploadAccountImage, uploadProfileImage } from '@controllers/fileController';
 import uploadFileMiddleware from '@middleware/uploadMiddleware';
 import { NextFunction, Request, Response } from 'express';
@@ -32,8 +32,15 @@ jest.mock('@ajgifford/keepwatching-common-server/utils', () => ({
 }));
 
 jest.mock('@ajgifford/keepwatching-common-server/services', () => ({
-  accountService: accountService,
-  profileService: profileService,
+  accountService: {
+    findAccountById: jest.fn(),
+    updateAccountImage: jest.fn(),
+  },
+  profileService: {
+    findProfileById: jest.fn(),
+    updateProfileImage: jest.fn(),
+    invalidateProfileCache: jest.fn(),
+  },
 }));
 
 describe('fileController', () => {

@@ -1,8 +1,12 @@
-import { contentDiscoveryService } from '@ajgifford/keepwatching-common-server/testing';
+import { contentDiscoveryService } from '@ajgifford/keepwatching-common-server/services';
 import { discoverChangesContent, discoverTopContent, discoverTrendingContent } from '@controllers/discoverController';
 
 jest.mock('@ajgifford/keepwatching-common-server/services', () => ({
-  contentDiscoveryService: contentDiscoveryService,
+  contentDiscoveryService: {
+    discoverTopContent: jest.fn(),
+    discoverChangesContent: jest.fn(),
+    discoverTrendingContent: jest.fn(),
+  },
 }));
 
 describe('discoverController', () => {

@@ -1,4 +1,4 @@
-import { moviesService } from '@ajgifford/keepwatching-common-server/testing';
+import { moviesService } from '@ajgifford/keepwatching-common-server/services';
 import {
   addFavorite,
   getMovies,
@@ -8,7 +8,14 @@ import {
 } from '@controllers/moviesController';
 
 jest.mock('@ajgifford/keepwatching-common-server/services', () => ({
-  moviesService: moviesService,
+  moviesService: {
+    getMoviesForProfile: jest.fn(),
+    addMovieToFavorites: jest.fn(),
+    removeMovieFromFavorites: jest.fn(),
+    updateMovieWatchStatus: jest.fn(),
+    getRecentMoviesForProfile: jest.fn(),
+    getUpcomingMoviesForProfile: jest.fn(),
+  },
 }));
 
 describe('moviesController', () => {

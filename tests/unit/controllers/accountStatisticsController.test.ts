@@ -1,4 +1,4 @@
-import { accountStatisticsService } from '@ajgifford/keepwatching-common-server/testing';
+import { accountStatisticsService } from '@ajgifford/keepwatching-common-server/services';
 import {
   getAccountAbandonmentRiskStats,
   getAccountActivityTimeline,
@@ -15,7 +15,23 @@ import {
   getProfileComparison,
 } from '@controllers/accountStatisticsController';
 
-jest.mock('@ajgifford/keepwatching-common-server/services', () => ({ accountStatisticsService }));
+jest.mock('@ajgifford/keepwatching-common-server/services', () => ({
+  accountStatisticsService: {
+    getAccountStatistics: jest.fn(),
+    getAccountWatchingVelocity: jest.fn(),
+    getAccountActivityTimeline: jest.fn(),
+    getAccountBingeWatchingStats: jest.fn(),
+    getAccountWatchStreakStats: jest.fn(),
+    getAccountTimeToWatchStats: jest.fn(),
+    getAccountSeasonalViewingStats: jest.fn(),
+    getAccountMilestoneStats: jest.fn(),
+    getAccountContentDepthStats: jest.fn(),
+    getAccountContentDiscoveryStats: jest.fn(),
+    getAccountAbandonmentRiskStats: jest.fn(),
+    getAccountUnairedContentStats: jest.fn(),
+    getProfileComparison: jest.fn(),
+  },
+}));
 
 describe('accountStatisticsController', () => {
   let req: any;

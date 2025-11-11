@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   apps: [
     {
       name: 'keepwatching-api-server',
@@ -8,13 +8,13 @@ module.exports = {
       watch: false,
       env: {
         NODE_ENV: 'production',
-        PORT: 3033
+        PORT: 3033,
       },
       env_production: {
         NODE_ENV: 'production',
-        PORT: 3033
+        PORT: 3033,
       },
-      group: "cert-access"
+      group: 'cert-access',
     },
     {
       name: 'keepwatching-api-server-dev',

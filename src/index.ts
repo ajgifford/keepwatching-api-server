@@ -1,5 +1,3 @@
-import 'module-alias/register';
-
 import 'dotenv/config';
 
 import { authenticateUser } from './middleware/authenticationMiddleware';
@@ -67,16 +65,8 @@ const LOG_DIRECTORY = getLogDirectory();
 const SERVICE_ACCOUNT_PATH = getServiceAccountPath();
 const SERVICE_NAME = getServiceName();
 
-const serviceAccount: object = require(SERVICE_ACCOUNT_PATH);
+const serviceAccount = JSON.parse(fs.readFileSync(SERVICE_ACCOUNT_PATH, 'utf-8'));
 initializeFirebase(serviceAccount, SERVICE_NAME);
-
-declare global {
-  namespace Express {
-    interface Request {
-      user?: admin.auth.DecodedIdToken;
-    }
-  }
-}
 
 GlobalErrorHandler.initialize();
 GlobalErrorHandler.overrideConsoleError();
