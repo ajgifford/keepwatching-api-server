@@ -25,7 +25,7 @@ export default {
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov'],
   testPathIgnorePatterns: ['/node_modules/', '/dist/'],
-  transformIgnorePatterns: ['node_modules/(?!@ajgifford)'],
+  transformIgnorePatterns: ['node_modules/(?!(@ajgifford|uuid)/)'],
   moduleNameMapper: {
     '^vitest$': '<rootDir>/tests/mocks/vitest.ts',
     '^@controllers/(.*)$': '<rootDir>/src/controllers/$1',
