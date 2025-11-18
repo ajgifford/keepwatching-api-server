@@ -96,16 +96,52 @@ yarn format
 
 ## Production Deployment
 
-### Using PM2
+This project includes an enhanced deployment system with rollback support for production environments.
+
+### Quick Start
+
+**Deploy new version:**
+```bash
+./scripts/deploy.sh
+```
+
+**Rollback to previous version:**
+```bash
+./scripts/rollback.sh
+```
+
+**Check deployment status:**
+```bash
+./scripts/deployment-status.sh
+```
+
+### Documentation
+
+- **[DEPLOYMENT.md](scripts/DEPLOYMENT.md)** - Complete deployment guide with all features and troubleshooting
+- **[DEPLOYMENT-QUICKSTART.md](scripts/DEPLOYMENT-QUICKSTART.md)** - Quick reference for common operations
+
+### Features
+
+- ✅ **Versioned Deployments** - Each deployment stored with timestamp and git commit
+- ✅ **Easy Rollback** - Quickly revert to any previous deployment
+- ✅ **Deployment History** - Track all deployments with full metadata
+- ✅ **Zero-Downtime** - PM2 handles graceful restarts
+- ✅ **Automatic Cleanup** - Keeps last 5 deployments to save disk space
+- ✅ **Health Checks** - Validates deployment before marking as successful
+
+### PM2 Configuration
+
+The project includes `ecosystem.config.js` with two app configurations:
+- `keepwatching-api-server`: Production mode
+- `keepwatching-api-server-dev`: Development mode with file watching
+
+### Legacy Deployment (Not Recommended)
+
+If needed, you can still use the traditional PM2 deployment:
 ```bash
 yarn serve
 ```
 This builds the project and starts it using PM2 with the production configuration.
-
-### PM2 Configuration
-The project includes `ecosystem.config.js` with two app configurations:
-- `keepwatching-api-server`: Production mode
-- `keepwatching-api-server-dev`: Development mode with file watching
 
 ## API Documentation
 

@@ -10,6 +10,9 @@ lerna-debug.log*
 # Certs
 certs
 
+# Deployments
+deployments/
+
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 

@@ -15,6 +15,7 @@ export default {
         PORT: 3033,
       },
       group: 'cert-access',
+      max_memory_restart: '500M',
     },
     {
       name: 'keepwatching-api-server-dev',
