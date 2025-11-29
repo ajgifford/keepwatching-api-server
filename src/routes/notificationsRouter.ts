@@ -8,6 +8,7 @@ import {
 import { trackAccountActivity } from '../middleware/accountActivityMiddleware';
 import { authorizeAccountAccess } from '../middleware/authorizationMiddleware';
 import { validateSchema } from '@ajgifford/keepwatching-common-server';
+import { logRequestContext } from '@ajgifford/keepwatching-common-server/middleware';
 import {
   accountIdParamSchema,
   dismissedQuerySchema,
@@ -20,6 +21,7 @@ const router = express.Router();
 
 router.get(
   '/api/v1/accounts/:accountId/notifications',
+  logRequestContext,
   validateSchema(accountIdParamSchema, 'params'),
   validateSchema(dismissedQuerySchema, 'query'),
   authorizeAccountAccess,
@@ -29,6 +31,7 @@ router.get(
 
 router.post(
   '/api/v1/accounts/:accountId/notifications/read/:notificationId',
+  logRequestContext,
   validateSchema(notificationActionParamSchema, 'params'),
   validateSchema(readStatusQuerySchema, 'query'),
   authorizeAccountAccess,
@@ -38,6 +41,7 @@ router.post(
 
 router.post(
   '/api/v1/accounts/:accountId/notifications/read',
+  logRequestContext,
   validateSchema(accountIdParamSchema, 'params'),
   validateSchema(readStatusQuerySchema, 'query'),
   authorizeAccountAccess,
@@ -47,6 +51,7 @@ router.post(
 
 router.post(
   '/api/v1/accounts/:accountId/notifications/dismiss/:notificationId',
+  logRequestContext,
   validateSchema(notificationActionParamSchema, 'params'),
   validateSchema(dismissedQuerySchema, 'query'),
   authorizeAccountAccess,
@@ -56,6 +61,7 @@ router.post(
 
 router.post(
   '/api/v1/accounts/:accountId/notifications/dismiss',
+  logRequestContext,
   validateSchema(accountIdParamSchema, 'params'),
   validateSchema(dismissedQuerySchema, 'query'),
   authorizeAccountAccess,

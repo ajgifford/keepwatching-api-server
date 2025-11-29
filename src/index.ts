@@ -31,8 +31,13 @@ import {
 } from '@ajgifford/keepwatching-common-server/config';
 import { ErrorMessages, appLogger, cliLogger } from '@ajgifford/keepwatching-common-server/logger';
 import { responseInterceptor } from '@ajgifford/keepwatching-common-server/middleware';
-import { databaseService, emailService, socketService } from '@ajgifford/keepwatching-common-server/services';
-import { initScheduledJobs, shutdownJobs } from '@ajgifford/keepwatching-common-server/services';
+import {
+  databaseService,
+  emailService,
+  redisPubSubService,
+  shutdownJobs,
+  socketService,
+} from '@ajgifford/keepwatching-common-server/services';
 import {
   DbMonitor,
   GlobalErrorHandler,
@@ -255,10 +260,23 @@ const startServer = async () => {
       }
     }
 
-    initScheduledJobs(
-      () => socketService.notifyShowsUpdate(),
-      () => socketService.notifyMoviesUpdate(),
-    );
+    // Initialize Redis pub/sub to receive job completion events
+    cliLogger.info('Initializing Redis pub/sub service...');
+    await redisPubSubService.initialize();
+    cliLogger.info('Redis pub/sub service initialized');
+
+    // Subscribe to content update events from admin-server
+    cliLogger.info('Subscribing to content update events...');
+    await redisPubSubService.subscribeToShowsUpdates((event) => {
+      cliLogger.info(`Received shows update event: ${event.message}`);
+      socketService.notifyShowsUpdate(event.message);
+    });
+
+    await redisPubSubService.subscribeToMoviesUpdates((event) => {
+      cliLogger.info(`Received movies update event: ${event.message}`);
+      socketService.notifyMoviesUpdate(event.message);
+    });
+    cliLogger.info('Subscribed to content update events');
 
     server.listen(port, () => {
       cliLogger.info(`Server is running on https://localhost:${port}`);
@@ -283,6 +301,12 @@ const gracefulShutdown = (signal: string) => {
     socketService.shutdown();
 
     shutdownJobs();
+
+    try {
+      await redisPubSubService.disconnect();
+    } catch (err) {
+      cliLogger.error('Error during Redis pub/sub shutdown', err);
+    }
 
     try {
       await databaseService.shutdown();

@@ -3,6 +3,7 @@ import { trackAccountActivity } from '../middleware/accountActivityMiddleware';
 import { authenticateUser } from '../middleware/authenticationMiddleware';
 import { authorizeAccountAccess } from '../middleware/authorizationMiddleware';
 import { validateRequest, validateSchema } from '@ajgifford/keepwatching-common-server';
+import { logRequestContext } from '@ajgifford/keepwatching-common-server/middleware';
 import {
   accountIdParamSchema,
   accountLoginBodySchema,
@@ -14,12 +15,13 @@ import express from 'express';
 
 const router = express.Router();
 
-router.post('/api/v1/accounts/register', validateSchema(registerAccountBodySchema), register);
-router.post('/api/v1/accounts/login', validateSchema(accountLoginBodySchema), login);
+router.post('/api/v1/accounts/register', logRequestContext, validateSchema(registerAccountBodySchema), register);
+router.post('/api/v1/accounts/login', logRequestContext, validateSchema(accountLoginBodySchema), login);
 router.post('/api/v1/accounts/googleLogin', validateSchema(googleLoginBodySchema), googleLogin);
 router.post('/api/v1/accounts/logout', logout);
 router.put(
   '/api/v1/accounts/:accountId',
+  logRequestContext,
   validateSchema(accountIdParamSchema, 'params'),
   authenticateUser,
   authorizeAccountAccess,
@@ -27,6 +29,11 @@ router.put(
   trackAccountActivity,
   editAccount,
 );
-router.delete('/api/v1/accounts/:accountId', validateSchema(accountIdParamSchema, 'params'), deleteAccount);
+router.delete(
+  '/api/v1/accounts/:accountId',
+  logRequestContext,
+  validateSchema(accountIdParamSchema, 'params'),
+  deleteAccount,
+);
 
 export default router;

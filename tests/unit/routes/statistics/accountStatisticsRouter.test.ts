@@ -30,6 +30,10 @@ jest.mock('@ajgifford/keepwatching-common-server', () => ({
   validateSchema: () => (_req: any, _res: any, next: () => any) => next(),
 }));
 
+jest.mock('@ajgifford/keepwatching-common-server/middleware', () => ({
+  logRequestContext: (_req: any, _res: any, next: () => any) => next(),
+}));
+
 const app = express();
 app.use(express.json());
 app.use(router);

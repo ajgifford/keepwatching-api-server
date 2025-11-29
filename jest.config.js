@@ -24,8 +24,9 @@ export default {
   collectCoverageFrom: ['src/**/*.ts', '!src/index.ts'],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov'],
+  coverageProvider: 'v8',
   testPathIgnorePatterns: ['/node_modules/', '/dist/'],
-  transformIgnorePatterns: ['node_modules/(?!(@ajgifford|uuid)/)'],
+  transformIgnorePatterns: ['node_modules/(?!(@ajgifford|uuid|node-fetch|gaxios|gcp-metadata|data-uri-to-buffer|fetch-blob|formdata-polyfill)/)'],
   moduleNameMapper: {
     '^vitest$': '<rootDir>/tests/mocks/vitest.ts',
     '^@controllers/(.*)$': '<rootDir>/src/controllers/$1',

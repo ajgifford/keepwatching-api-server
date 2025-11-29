@@ -2,6 +2,7 @@ import { getSeasonsForShow, updateSeasonWatchStatus } from '../controllers/seaso
 import { trackAccountActivity } from '../middleware/accountActivityMiddleware';
 import { authorizeAccountAccess } from '../middleware/authorizationMiddleware';
 import { validateRequest, validateSchema } from '@ajgifford/keepwatching-common-server';
+import { logRequestContext } from '@ajgifford/keepwatching-common-server/middleware';
 import {
   accountAndProfileIdsParamSchema,
   seasonWatchStatusBodySchema,
@@ -12,6 +13,7 @@ const router = express.Router();
 
 router.put(
   '/api/v1/accounts/:accountId/profiles/:profileId/seasons/watchstatus',
+  logRequestContext,
   validateSchema(accountAndProfileIdsParamSchema, 'params'),
   authorizeAccountAccess,
   validateRequest(seasonWatchStatusBodySchema),
@@ -21,6 +23,7 @@ router.put(
 
 router.get(
   '/api/v1/accounts/:accountId/profiles/:profileId/shows/:showId/seasons',
+  logRequestContext,
   validateSchema(accountAndProfileIdsParamSchema, 'params'),
   authorizeAccountAccess,
   trackAccountActivity,

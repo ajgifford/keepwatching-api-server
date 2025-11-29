@@ -7,6 +7,7 @@ import {
 import { trackAccountActivity } from '../middleware/accountActivityMiddleware';
 import { authorizeAccountAccess } from '../middleware/authorizationMiddleware';
 import { validateRequest, validateSchema } from '@ajgifford/keepwatching-common-server';
+import { logRequestContext } from '@ajgifford/keepwatching-common-server/middleware';
 import {
   accountAndProfileIdsParamSchema,
   episodeWatchStatusBodySchema,
@@ -17,6 +18,7 @@ const router = express.Router();
 
 router.put(
   '/api/v1/accounts/:accountId/profiles/:profileId/episodes/watchStatus',
+  logRequestContext,
   validateSchema(accountAndProfileIdsParamSchema, 'params'),
   authorizeAccountAccess,
   validateRequest(episodeWatchStatusBodySchema),
@@ -26,6 +28,7 @@ router.put(
 
 router.get(
   '/api/v1/accounts/:accountId/profiles/:profileId/seasons/:seasonId/episodes',
+  logRequestContext,
   validateSchema(accountAndProfileIdsParamSchema, 'params'),
   authorizeAccountAccess,
   trackAccountActivity,
@@ -34,6 +37,7 @@ router.get(
 
 router.get(
   '/api/v1/accounts/:accountId/profiles/:profileId/episodes/upcoming',
+  logRequestContext,
   validateSchema(accountAndProfileIdsParamSchema, 'params'),
   authorizeAccountAccess,
   trackAccountActivity,
@@ -42,6 +46,7 @@ router.get(
 
 router.get(
   '/api/v1/accounts/:accountId/profiles/:profileId/episodes/recent',
+  logRequestContext,
   validateSchema(accountAndProfileIdsParamSchema, 'params'),
   authorizeAccountAccess,
   trackAccountActivity,

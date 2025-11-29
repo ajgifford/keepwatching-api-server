@@ -9,6 +9,7 @@ import {
 import { trackAccountActivity } from '../middleware/accountActivityMiddleware';
 import { authorizeAccountAccess } from '../middleware/authorizationMiddleware';
 import { validateRequest, validateSchema } from '@ajgifford/keepwatching-common-server';
+import { logRequestContext } from '@ajgifford/keepwatching-common-server/middleware';
 import {
   accountAndProfileIdsParamSchema,
   addMovieFavoriteBodySchema,
@@ -22,6 +23,7 @@ const router = express.Router();
 
 router.get(
   '/api/v1/accounts/:accountId/profiles/:profileId/movies',
+  logRequestContext,
   validateSchema(accountAndProfileIdsParamSchema, 'params'),
   authorizeAccountAccess,
   trackAccountActivity,
@@ -30,6 +32,7 @@ router.get(
 
 router.post(
   '/api/v1/accounts/:accountId/profiles/:profileId/movies/favorites',
+  logRequestContext,
   validateSchema(accountAndProfileIdsParamSchema, 'params'),
   authorizeAccountAccess,
   validateRequest(addMovieFavoriteBodySchema),
@@ -39,6 +42,7 @@ router.post(
 
 router.delete(
   '/api/v1/accounts/:accountId/profiles/:profileId/movies/favorites/:movieId',
+  logRequestContext,
   validateSchema(removeMovieFavoriteParamSchema, 'params'),
   authorizeAccountAccess,
   trackAccountActivity,
@@ -47,6 +51,7 @@ router.delete(
 
 router.put(
   '/api/v1/accounts/:accountId/profiles/:profileId/movies/watchstatus',
+  logRequestContext,
   validateSchema(accountAndProfileIdsParamSchema, 'params'),
   authorizeAccountAccess,
   validateRequest(movieWatchStatusBodySchema),
@@ -56,6 +61,7 @@ router.put(
 
 router.get(
   '/api/v1/accounts/:accountId/profiles/:profileId/movies/recentUpcoming',
+  logRequestContext,
   validateSchema(accountAndProfileIdsParamSchema, 'params'),
   authorizeAccountAccess,
   trackAccountActivity,
@@ -64,6 +70,7 @@ router.get(
 
 router.get(
   '/api/v1/accounts/:accountId/profiles/:profileId/movies/:movieId/details',
+  logRequestContext,
   validateSchema(movieParamsSchema, 'params'),
   authorizeAccountAccess,
   trackAccountActivity,

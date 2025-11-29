@@ -2,6 +2,7 @@ import { addProfile, deleteProfile, editProfile, getProfile, getProfiles } from 
 import { trackAccountActivity } from '../middleware/accountActivityMiddleware';
 import { authorizeAccountAccess } from '../middleware/authorizationMiddleware';
 import { validateRequest, validateSchema } from '@ajgifford/keepwatching-common-server';
+import { logRequestContext } from '@ajgifford/keepwatching-common-server/middleware';
 import {
   accountAndProfileIdsParamSchema,
   accountIdParamSchema,
@@ -13,6 +14,7 @@ const router = express.Router();
 
 router.get(
   '/api/v1/accounts/:accountId/profiles',
+  logRequestContext,
   validateSchema(accountIdParamSchema, 'params'),
   authorizeAccountAccess,
   trackAccountActivity,
@@ -20,6 +22,7 @@ router.get(
 );
 router.get(
   '/api/v1/accounts/:accountId/profiles/:profileId',
+  logRequestContext,
   validateSchema(accountAndProfileIdsParamSchema, 'params'),
   authorizeAccountAccess,
   trackAccountActivity,
@@ -27,6 +30,7 @@ router.get(
 );
 router.post(
   '/api/v1/accounts/:accountId/profiles',
+  logRequestContext,
   validateSchema(accountIdParamSchema, 'params'),
   authorizeAccountAccess,
   validateRequest(profileNameBodySchema),
@@ -35,6 +39,7 @@ router.post(
 );
 router.put(
   '/api/v1/accounts/:accountId/profiles/:profileId',
+  logRequestContext,
   validateSchema(accountAndProfileIdsParamSchema, 'params'),
   authorizeAccountAccess,
   validateRequest(profileNameBodySchema),
@@ -43,6 +48,7 @@ router.put(
 );
 router.delete(
   '/api/v1/accounts/:accountId/profiles/:profileId',
+  logRequestContext,
   validateSchema(accountAndProfileIdsParamSchema, 'params'),
   authorizeAccountAccess,
   trackAccountActivity,
