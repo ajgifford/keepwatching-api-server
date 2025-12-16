@@ -2,12 +2,12 @@
 # yarn lockfile v1
 
 
-"@ajgifford/keepwatching-common-server@^0.10.4":
-  version "0.10.4"
-  resolved "https://npm.pkg.github.com/download/@ajgifford/keepwatching-common-server/0.10.4/ead3d6876388f79d4c4fc35ebf11767aa636fdae#ead3d6876388f79d4c4fc35ebf11767aa636fdae"
-  integrity sha512-RV//pFX9cKR/OGp0ukILF9BgHpZfb4H8UdSVB43sPHp7pcPz8TNEX16kUzZTb5NljEIBwQFQPixAw3sKhj4LZg==
+"@ajgifford/keepwatching-common-server@^0.10.5":
+  version "0.10.5"
+  resolved "https://npm.pkg.github.com/download/@ajgifford/keepwatching-common-server/0.10.5/e3b281727f9b2b14c37259044bf516574aa242f6#e3b281727f9b2b14c37259044bf516574aa242f6"
+  integrity sha512-aq6L4e7phXoQjrqYFRoh5qlo0oc06491tfg08/RVX4hvGcnQp6ZpPlF3f4VSQ5wYxsmFHEXNlrb6I9fwuvselg==
   dependencies:
-    "@ajgifford/keepwatching-types" "^0.7.10"
+    "@ajgifford/keepwatching-types" "^0.7.11"
     axios "1.13.2"
     axios-retry "^4.5.0"
     cron-parser "5.4.0"
@@ -27,10 +27,10 @@
     winston-daily-rotate-file "^5.0.0"
     zod "^3.25.76"
 
-"@ajgifford/keepwatching-types@^0.7.10":
-  version "0.7.10"
-  resolved "https://npm.pkg.github.com/download/@ajgifford/keepwatching-types/0.7.10/2b50c2632b2e9b1d30f07a9861f08fd1af8d45d5#2b50c2632b2e9b1d30f07a9861f08fd1af8d45d5"
-  integrity sha512-CQsbaf/BkJqoVyWnlATsDlnepzRODnkzbWLG88A4sHytkFnTL37JmExc+gGZ5speYpWuTyIyf683RCYGZD36lg==
+"@ajgifford/keepwatching-types@^0.7.11":
+  version "0.7.11"
+  resolved "https://npm.pkg.github.com/download/@ajgifford/keepwatching-types/0.7.11/8bdf22bf4b999a6e844d1a79c75e8a5c42b102bd#8bdf22bf4b999a6e844d1a79c75e8a5c42b102bd"
+  integrity sha512-QEExLcVhok9R5C67XH7569bnEvMZHQCwWwer7EB7RH8+5B7623DRjjIKmTxe9SdIVP7QjNBIhiw2EUWbFdYBWw==
 
 "@babel/code-frame@^7.0.0", "@babel/code-frame@^7.27.1":
   version "7.27.1"
