@@ -7,7 +7,7 @@
   "author": "Andy Gifford",
   "private": true,
   "dependencies": {
-    "@ajgifford/keepwatching-common-server": "^0.10.5",
+    "@ajgifford/keepwatching-common-server": "^0.10.6",
     "@ajgifford/keepwatching-types": "^0.7.11",
     "@express-rate-limit/tsconfig": "^1.0.2",
     "axios": "1.13.2",
@@ -74,7 +74,8 @@
     "glob": "^11.1.0",
     "js-yaml": "^4.1.1",
     "jws": "^4.0.1",
-    "body-parser": "^2.2.1"
+    "body-parser": "^2.2.1",
+    "qs": "6.14.1"
   },
   "scripts": {
     "build": "tsup",
