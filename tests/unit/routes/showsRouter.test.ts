@@ -4,11 +4,12 @@ import request from 'supertest';
 
 jest.mock('@controllers/showsController', () => ({
   getShows: jest.fn((_req, res) => res.status(200).send('shows')),
+  getShowDetails: jest.fn((_req, res) => res.status(200).send('show details')),
+  getProfileEpisodes: jest.fn((_req, res) => res.status(200).send('profile episodes')),
   addFavorite: jest.fn((_req, res) => res.status(201).send('favorite added')),
   removeFavorite: jest.fn((_req, res) => res.status(200).send('favorite removed')),
   updateShowWatchStatus: jest.fn((_req, res) => res.status(200).send('show watch status updated')),
-  getShowDetails: jest.fn((_req, res) => res.status(200).send('show details')),
-  getProfileEpisodes: jest.fn((_req, res) => res.status(200).send('profile episodes')),
+  markShowAsPriorWatched: jest.fn((_req, res) => res.status(200).send('prior show marked as watched')),
   getShowRecommendations: jest.fn((_req, res) => res.status(200).send('show recommendations')),
   getSimilarShows: jest.fn((_req, res) => res.status(200).send('similar shows')),
 }));
@@ -77,5 +78,11 @@ describe('Shows Router', () => {
     const res = await request(app).get('/api/v1/accounts/123/profiles/456/shows/789/similar');
     expect(res.status).toBe(200);
     expect(res.text).toBe('similar shows');
+  });
+
+  it('PUT /api/v1/accounts/:accountId/profiles/:profileId/shows/priorWatchStatus', async () => {
+    const res = await request(app).put('/api/v1/accounts/123/profiles/456/shows/priorWatchStatus');
+    expect(res.status).toBe(200);
+    expect(res.text).toBe('prior show marked as watched');
   });
 });
