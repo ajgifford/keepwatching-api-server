@@ -2,9 +2,10 @@ import {
   AccountAndProfileIdsParams,
   AddShowFavoriteBody,
   ShowParams,
+  ShowPriorWatchBody,
   ShowWatchStatusBody,
 } from '@ajgifford/keepwatching-common-server/schema';
-import { showService } from '@ajgifford/keepwatching-common-server/services';
+import { showService, watchHistoryService } from '@ajgifford/keepwatching-common-server/services';
 import { NextFunction, Request, Response } from 'express';
 
 /**
@@ -108,6 +109,33 @@ export async function updateShowWatchStatus(req: Request, res: Response, next: N
     const statusData = await showService.updateShowWatchStatus(accountId, profileId, showId, status);
 
     res.status(200).json({ message: `Successfully updated the watch status to '${status}'`, statusData });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Mark prior seasons of a show as previously watched.
+ * Uses each episode's air date as watched_at so statistics remain accurate.
+ *
+ * @route PUT /api/v1/accounts/:accountId/profiles/:profileId/shows/priorWatchStatus
+ */
+export async function markShowAsPriorWatched(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { accountId, profileId } = req.params as unknown as AccountAndProfileIdsParams;
+    const { showId, upToSeasonNumber }: ShowPriorWatchBody = req.body;
+
+    const statusData = await watchHistoryService.markShowAsPriorWatched(
+      accountId,
+      profileId,
+      showId,
+      upToSeasonNumber,
+    );
+
+    res.status(200).json({
+      message: 'Successfully marked prior seasons as previously watched',
+      statusData,
+    });
   } catch (error) {
     next(error);
   }

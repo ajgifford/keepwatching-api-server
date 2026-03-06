@@ -5,6 +5,7 @@ import {
   getShowRecommendations,
   getShows,
   getSimilarShows,
+  markShowAsPriorWatched,
   removeFavorite,
   updateShowWatchStatus,
 } from '../controllers/showsController';
@@ -16,6 +17,7 @@ import {
   accountAndProfileIdsParamSchema,
   addShowFavoriteBodySchema,
   showParamsSchema,
+  showPriorWatchBodySchema,
   showWatchStatusBodySchema,
 } from '@ajgifford/keepwatching-common-server/schema';
 import express from 'express';
@@ -58,6 +60,16 @@ router.put(
   logRequestContext,
   trackAccountActivity,
   updateShowWatchStatus,
+);
+
+router.put(
+  '/api/v1/accounts/:accountId/profiles/:profileId/shows/priorWatchStatus',
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
+  validateRequest(showPriorWatchBodySchema),
+  logRequestContext,
+  trackAccountActivity,
+  markShowAsPriorWatched,
 );
 
 router.get(
