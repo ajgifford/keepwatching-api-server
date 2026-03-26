@@ -244,3 +244,18 @@ export async function getProfileComparison(req: Request, res: Response, next: Ne
     next(error);
   }
 }
+
+/**
+ * Get rewatch statistics across all profiles in an account
+ *
+ * @route GET /api/v1/accounts/:accountId/statistics/rewatches
+ */
+export async function getAccountRewatchStats(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { accountId } = req.params as unknown as AccountIdParam;
+    const results = await accountStatisticsService.getAccountRewatchStats(accountId);
+    res.status(200).json({ message: 'Successfully retrieved account rewatch statistics', results });
+  } catch (error) {
+    next(error);
+  }
+}

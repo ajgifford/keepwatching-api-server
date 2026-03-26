@@ -5,6 +5,7 @@ import {
   getAccountContentDepthStats,
   getAccountContentDiscoveryStats,
   getAccountMilestoneStats,
+  getAccountRewatchStats,
   getAccountSeasonalViewingStats,
   getAccountStatistics,
   getAccountTimeToWatchStats,
@@ -137,6 +138,15 @@ router.get(
   authorizeAccountAccess,
   trackAccountActivity,
   getProfileComparison,
+);
+
+router.get(
+  '/api/v1/accounts/:accountId/statistics/rewatches',
+  logRequestContext,
+  validateSchema(accountIdParamSchema, 'params'),
+  authorizeAccountAccess,
+  trackAccountActivity,
+  getAccountRewatchStats,
 );
 
 export default router;

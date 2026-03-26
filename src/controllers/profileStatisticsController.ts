@@ -290,3 +290,22 @@ export async function getUnairedContentStats(req: Request, res: Response, next: 
     next(error);
   }
 }
+
+/**
+ * Get rewatch statistics for a profile
+ *
+ * @route GET /api/v1/accounts/:accountId/profiles/:profileId/statistics/rewatches
+ */
+export async function getRewatchStats(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
+    const results = await profileStatisticsService.getRewatchStats(profileId);
+
+    res.status(200).json({
+      message: 'Successfully retrieved rewatch statistics',
+      results,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
