@@ -129,12 +129,12 @@ export async function recordEpisodeRewatch(req: Request, res: Response, next: Ne
  * Retrieve paginated watch history for a profile.
  *
  * @route GET /api/v1/accounts/:accountId/profiles/:profileId/watchHistory
- * Query params: page, pageSize, contentType, sortOrder, dateFrom, dateTo, isPriorWatchOnly, searchQuery
+ * Query params: page, pageSize, contentType, sortOrder, dateFrom, dateTo, isPriorWatchOnly, excludePriorWatch, searchQuery
  */
 export async function getWatchHistory(req: Request, res: Response, next: NextFunction) {
   try {
     const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
-    const { page, pageSize, contentType, sortOrder, dateFrom, dateTo, isPriorWatchOnly, searchQuery } =
+    const { page, pageSize, contentType, sortOrder, dateFrom, dateTo, isPriorWatchOnly, excludePriorWatch, searchQuery } =
       req.query as unknown as WatchHistoryQuery;
     const history = await watchHistoryService.getHistoryForProfile(
       profileId,
@@ -146,6 +146,7 @@ export async function getWatchHistory(req: Request, res: Response, next: NextFun
       dateTo,
       isPriorWatchOnly,
       searchQuery,
+      excludePriorWatch,
     );
     res.status(200).json({ message: 'Successfully retrieved watch history', ...history });
   } catch (error) {
