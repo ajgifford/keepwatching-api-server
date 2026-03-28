@@ -5,6 +5,7 @@ import request from 'supertest';
 jest.mock('@controllers/seasonsController', () => ({
   updateSeasonWatchStatus: jest.fn((_req, res) => res.status(200).send('season watch status updated')),
   getSeasonsForShow: jest.fn((_req, res) => res.status(200).send('seasons for show')),
+  markSeasonIdsAsPriorWatched: jest.fn((_req, res) => res.status(200).send('mark season as prior watch')),
 }));
 
 jest.mock('@middleware/accountActivityMiddleware', () => ({
@@ -35,5 +36,11 @@ describe('Seasons Router', () => {
     const res = await request(app).get('/api/v1/accounts/123/profiles/456/shows/789/seasons');
     expect(res.status).toBe(200);
     expect(res.text).toBe('seasons for show');
+  });
+
+  it('PUT /api/v1/accounts/:accountId/profiles/:profileId/seasons/priorWatchStatus', async () => {
+    const res = await request(app).put('/api/v1/accounts/123/profiles/456/seasons/priorWatchStatus');
+    expect(res.status).toBe(200);
+    expect(res.text).toBe('mark season as prior watch');
   });
 });
