@@ -2,6 +2,7 @@ import 'dotenv/config';
 
 import { authenticateUser } from './middleware/authenticationMiddleware';
 import accountRouter from './routes/accountRouter';
+import calendarRouter from './routes/calendarRouter';
 import discoverRouter from './routes/discoverRouter';
 import episodesRouter from './routes/episodesRouter';
 import fileRouter from './routes/fileRouter';
@@ -184,6 +185,7 @@ app.use(authenticateUser, fileRouter);
 app.use(authenticateUser, notificationsRouter);
 app.use(authenticateUser, statisticsRouter);
 app.use(authenticateUser, watchHistoryRouter);
+app.use(authenticateUser, calendarRouter);
 
 const server = https.createServer(credentials, app);
 const io = new Server(server, {
