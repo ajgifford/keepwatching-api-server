@@ -1,10 +1,13 @@
-import { seasonsService } from '@ajgifford/keepwatching-common-server/services';
-import { getSeasonsForShow, updateSeasonWatchStatus } from '@controllers/seasonsController';
+import { seasonsService, watchHistoryService } from '@ajgifford/keepwatching-common-server/services';
+import { getSeasonsForShow, markSeasonIdsAsPriorWatched, updateSeasonWatchStatus } from '@controllers/seasonsController';
 
 jest.mock('@ajgifford/keepwatching-common-server/services', () => ({
   seasonsService: {
     updateSeasonWatchStatus: jest.fn(),
     getSeasonsForShow: jest.fn(),
+  },
+  watchHistoryService: {
+    markSeasonIdsAsPriorWatched: jest.fn(),
   },
 }));
 
@@ -86,6 +89,37 @@ describe('seasonsController', () => {
       await getSeasonsForShow(req, res, next);
 
       expect(seasonsService.getSeasonsForShow).toHaveBeenCalledWith(123, '200');
+      expect(next).toHaveBeenCalledWith(error);
+      expect(res.status).not.toHaveBeenCalled();
+      expect(res.json).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('markSeasonIdsAsPriorWatched', () => {
+    it('should mark specific seasons as previously watched', async () => {
+      req.body = { seasonIds: [1, 2, 3], showId: 456 };
+      const mockResult = { updatedEpisodes: 30 };
+      (watchHistoryService.markSeasonIdsAsPriorWatched as jest.Mock).mockResolvedValue(mockResult);
+
+      await markSeasonIdsAsPriorWatched(req, res, next);
+
+      expect(watchHistoryService.markSeasonIdsAsPriorWatched).toHaveBeenCalledWith(1, 123, 456, [1, 2, 3]);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Successfully marked seasons as previously watched',
+        statusData: mockResult,
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should handle errors from the service', async () => {
+      req.body = { seasonIds: [1, 2, 3], showId: 456 };
+      const error = new Error('Failed to mark seasons as prior watched');
+      (watchHistoryService.markSeasonIdsAsPriorWatched as jest.Mock).mockRejectedValue(error);
+
+      await markSeasonIdsAsPriorWatched(req, res, next);
+
+      expect(watchHistoryService.markSeasonIdsAsPriorWatched).toHaveBeenCalledWith(1, 123, 456, [1, 2, 3]);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();

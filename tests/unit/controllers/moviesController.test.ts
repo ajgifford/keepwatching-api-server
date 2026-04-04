@@ -1,6 +1,7 @@
 import { moviesService } from '@ajgifford/keepwatching-common-server/services';
 import {
   addFavorite,
+  getMovieDetails,
   getMovies,
   getRecentUpcomingForProfile,
   removeFavorite,
@@ -15,6 +16,10 @@ jest.mock('@ajgifford/keepwatching-common-server/services', () => ({
     updateMovieWatchStatus: jest.fn(),
     getRecentMoviesForProfile: jest.fn(),
     getUpcomingMoviesForProfile: jest.fn(),
+    getMovieDetailsForProfile: jest.fn(),
+    getMovieRecommendations: jest.fn(),
+    getSimilarMovies: jest.fn(),
+    getMovieCastMembers: jest.fn(),
   },
 }));
 
@@ -208,6 +213,49 @@ describe('moviesController', () => {
 
       expect(moviesService.getRecentMoviesForProfile).toHaveBeenCalledWith(123);
       expect(moviesService.getUpcomingMoviesForProfile).toHaveBeenCalledWith(123);
+      expect(next).toHaveBeenCalledWith(error);
+      expect(res.status).not.toHaveBeenCalled();
+      expect(res.json).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getMovieDetails', () => {
+    it('should get comprehensive movie details', async () => {
+      req.params = { accountId: 1, profileId: 123, movieId: 456 };
+      const mockMovie = { movieId: 456, title: 'Inception', watchStatus: 'WATCHED' };
+      const mockRecommendations = [{ id: 501, title: 'Recommended Movie' }];
+      const mockSimilar = [{ id: 601, title: 'Similar Movie' }];
+      const mockCast = [{ personId: 1, name: 'Actor One' }];
+
+      (moviesService.getMovieDetailsForProfile as jest.Mock).mockResolvedValue(mockMovie);
+      (moviesService.getMovieRecommendations as jest.Mock).mockResolvedValue(mockRecommendations);
+      (moviesService.getSimilarMovies as jest.Mock).mockResolvedValue(mockSimilar);
+      (moviesService.getMovieCastMembers as jest.Mock).mockResolvedValue(mockCast);
+
+      await getMovieDetails(req, res, next);
+
+      expect(moviesService.getMovieDetailsForProfile).toHaveBeenCalledWith(123, 456);
+      expect(moviesService.getMovieRecommendations).toHaveBeenCalledWith(123, 456);
+      expect(moviesService.getSimilarMovies).toHaveBeenCalledWith(123, 456);
+      expect(moviesService.getMovieCastMembers).toHaveBeenCalledWith(456);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Successfully retrieved movie details',
+        movie: mockMovie,
+        recommendedMovies: mockRecommendations,
+        similarMovies: mockSimilar,
+        castMembers: mockCast,
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should handle errors', async () => {
+      req.params = { accountId: 1, profileId: 123, movieId: 456 };
+      const error = new Error('Failed to get movie details');
+      (moviesService.getMovieDetailsForProfile as jest.Mock).mockRejectedValue(error);
+
+      await getMovieDetails(req, res, next);
+
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();

@@ -1,4 +1,4 @@
-import { showService } from '@ajgifford/keepwatching-common-server/services';
+import { showService, watchHistoryService } from '@ajgifford/keepwatching-common-server/services';
 import {
   addFavorite,
   getProfileEpisodes,
@@ -6,6 +6,7 @@ import {
   getShowRecommendations,
   getShows,
   getSimilarShows,
+  markShowAsPriorWatched,
   removeFavorite,
   updateShowWatchStatus,
 } from '@controllers/showsController';
@@ -21,6 +22,9 @@ jest.mock('@ajgifford/keepwatching-common-server/services', () => ({
     updateShowWatchStatus: jest.fn(),
     getShowRecommendations: jest.fn(),
     getSimilarShows: jest.fn(),
+  },
+  watchHistoryService: {
+    markShowAsPriorWatched: jest.fn(),
   },
 }));
 
@@ -301,6 +305,37 @@ describe('showsController', () => {
       await getSimilarShows(req, res, next);
 
       expect(showService.getSimilarShows).toHaveBeenCalledWith(123, 456);
+      expect(next).toHaveBeenCalledWith(error);
+      expect(res.status).not.toHaveBeenCalled();
+      expect(res.json).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('markShowAsPriorWatched', () => {
+    it('should mark prior seasons as previously watched', async () => {
+      req.body = { showId: 456, upToSeasonNumber: 3 };
+      const mockResult = { updatedEpisodes: 42 };
+      (watchHistoryService.markShowAsPriorWatched as jest.Mock).mockResolvedValue(mockResult);
+
+      await markShowAsPriorWatched(req, res, next);
+
+      expect(watchHistoryService.markShowAsPriorWatched).toHaveBeenCalledWith(1, 123, 456, 3);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Successfully marked prior seasons as previously watched',
+        statusData: mockResult,
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should handle errors', async () => {
+      req.body = { showId: 456, upToSeasonNumber: 3 };
+      const error = new Error('Failed to mark show as prior watched');
+      (watchHistoryService.markShowAsPriorWatched as jest.Mock).mockRejectedValue(error);
+
+      await markShowAsPriorWatched(req, res, next);
+
+      expect(watchHistoryService.markShowAsPriorWatched).toHaveBeenCalledWith(1, 123, 456, 3);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
