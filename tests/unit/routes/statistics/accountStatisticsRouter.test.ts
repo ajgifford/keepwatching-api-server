@@ -2,6 +2,25 @@ import router from '@routes/statisticsRouter';
 import express from 'express';
 import request from 'supertest';
 
+jest.mock('@controllers/profileStatisticsController', () => ({
+  getProfileStatistics: jest.fn(),
+  getWatchingVelocity: jest.fn(),
+  getDailyActivity: jest.fn(),
+  getWeeklyActivity: jest.fn(),
+  getMonthlyActivity: jest.fn(),
+  getActivityTimeline: jest.fn(),
+  getBingeWatchingStats: jest.fn(),
+  getWatchStreakStats: jest.fn(),
+  getTimeToWatchStats: jest.fn(),
+  getSeasonalViewingStats: jest.fn(),
+  getMilestoneStats: jest.fn(),
+  getContentDepthStats: jest.fn(),
+  getContentDiscoveryStats: jest.fn(),
+  getAbandonmentRiskStats: jest.fn(),
+  getUnairedContentStats: jest.fn(),
+  getRewatchStats: jest.fn(),
+}));
+
 jest.mock('@controllers/accountStatisticsController', () => ({
   getAccountStatistics: jest.fn((_req, res) => res.status(200).send('account statistics')),
   getAccountWatchingVelocity: jest.fn((_req, res) => res.status(200).send('watch velocity statistics')),
