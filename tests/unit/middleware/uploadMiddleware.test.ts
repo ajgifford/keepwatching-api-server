@@ -148,21 +148,11 @@ describe('uploadMiddleware', () => {
   describe('file size validation', () => {
     it('should reject files larger than 5MB', () => {
       const maxSize = 5 * 1024 * 1024; // 5MB
-      const fileSizes = [
-        { size: 6 * 1024 * 1024, shouldFail: true }, // 6MB
-        { size: 10 * 1024 * 1024, shouldFail: true }, // 10MB
-        { size: 4 * 1024 * 1024, shouldFail: false }, // 4MB
-        { size: 5 * 1024 * 1024, shouldFail: false }, // Exactly 5MB
-        { size: 1024, shouldFail: false }, // 1KB
-      ];
+      const oversized = [6 * 1024 * 1024, 10 * 1024 * 1024]; // 6MB, 10MB
+      const valid = [4 * 1024 * 1024, 5 * 1024 * 1024, 1024]; // 4MB, exactly 5MB, 1KB
 
-      fileSizes.forEach(({ size, shouldFail }) => {
-        if (shouldFail) {
-          expect(size).toBeGreaterThan(maxSize);
-        } else {
-          expect(size).toBeLessThanOrEqual(maxSize);
-        }
-      });
+      oversized.forEach((size) => expect(size).toBeGreaterThan(maxSize));
+      valid.forEach((size) => expect(size).toBeLessThanOrEqual(maxSize));
     });
   });
 

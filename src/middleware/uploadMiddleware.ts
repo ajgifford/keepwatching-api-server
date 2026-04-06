@@ -60,7 +60,7 @@ const uploadFile = multer({
 // Enhanced upload middleware with proper error handling
 const uploadFileMiddleware = (req: Request, res: Response): Promise<void> => {
   return new Promise((resolve, reject) => {
-    uploadFile(req, res, (error: any) => {
+    uploadFile(req, res, (error) => {
       if (error) {
         // Handle Multer-specific errors
         if (error instanceof MulterError) {

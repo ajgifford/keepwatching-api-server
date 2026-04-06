@@ -141,12 +141,13 @@ export const uploadAccountImage = asyncHandler(async (req: Request, res: Respons
         }
       });
     }
-  } catch (error: any) {
+  } catch (error) {
     // Handle structured upload errors
-    if (error.status && error.code) {
-      res.status(error.status).json({
-        message: error.message,
-        code: error.code,
+    if (error !== null && typeof error === 'object' && 'status' in error && 'code' in error) {
+      const uploadError = error as { status: number; code: string; message: string };
+      res.status(uploadError.status).json({
+        message: uploadError.message,
+        code: uploadError.code,
       });
       return;
     }
@@ -301,12 +302,13 @@ export const uploadProfileImage = asyncHandler(async (req: Request, res: Respons
         }
       });
     }
-  } catch (error: any) {
+  } catch (error) {
     // Handle structured upload errors
-    if (error.status && error.code) {
-      res.status(error.status).json({
-        message: error.message,
-        code: error.code,
+    if (error !== null && typeof error === 'object' && 'status' in error && 'code' in error) {
+      const uploadError = error as { status: number; code: string; message: string };
+      res.status(uploadError.status).json({
+        message: uploadError.message,
+        code: uploadError.code,
       });
       return;
     }
