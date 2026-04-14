@@ -7,8 +7,8 @@
   "author": "Andy Gifford",
   "private": true,
   "dependencies": {
-    "@ajgifford/keepwatching-common-server": "^0.14.2",
-    "@ajgifford/keepwatching-types": "^0.10.0",
+    "@ajgifford/keepwatching-common-server": "^0.15.0",
+    "@ajgifford/keepwatching-types": "^0.11.1",
     "@express-rate-limit/tsconfig": "^1.0.2",
     "axios": "1.14.0",
     "axios-retry": "^4.5.0",

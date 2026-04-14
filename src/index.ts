@@ -3,6 +3,7 @@ import 'dotenv/config';
 import { authenticateUser } from './middleware/authenticationMiddleware';
 import accountRouter from './routes/accountRouter';
 import calendarRouter from './routes/calendarRouter';
+import communityRecommendationsRouter from './routes/communityRecommendationsRouter';
 import discoverRouter from './routes/discoverRouter';
 import episodesRouter from './routes/episodesRouter';
 import fileRouter from './routes/fileRouter';
@@ -11,6 +12,7 @@ import notificationsRouter from './routes/notificationsRouter';
 import personRouter from './routes/personRouter';
 import preferencesRouter from './routes/preferencesRouter';
 import profileRouter from './routes/profileRouter';
+import ratingsRouter from './routes/ratingsRouter';
 import searchRouter from './routes/searchRouter';
 import seasonsRouter from './routes/seasonsRouter';
 import showsRouter from './routes/showsRouter';
@@ -172,6 +174,8 @@ app.get('/health', (req: Request, res: Response) => {
 });
 
 app.use(accountRouter);
+app.use(authenticateUser, communityRecommendationsRouter);
+app.use(authenticateUser, ratingsRouter);
 app.use(authenticateUser, profileRouter);
 app.use(authenticateUser, searchRouter);
 app.use(authenticateUser, discoverRouter);
