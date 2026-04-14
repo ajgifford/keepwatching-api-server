@@ -131,7 +131,7 @@ This project includes an enhanced deployment system with rollback support for pr
 
 ### PM2 Configuration
 
-The project includes `ecosystem.config.js` with two app configurations:
+The project includes `ecosystem.config.cjs` with two app configurations:
 - `keepwatching-api-server`: Production mode
 - `keepwatching-api-server-dev`: Development mode with file watching
 

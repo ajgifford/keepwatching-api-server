@@ -5,16 +5,19 @@ Quick reference for common deployment operations.
 ## 🧪 Test Before Deploying
 
 **Run automated tests:**
+
 ```bash
 ./scripts/test-deployment.sh
 ```
 
 **Test deployment (dry-run):**
+
 ```bash
 ./scripts/deploy.sh --dry-run
 ```
 
 **Test rollback (dry-run):**
+
 ```bash
 ./scripts/rollback.sh --dry-run
 ```
@@ -28,11 +31,13 @@ Quick reference for common deployment operations.
 ## ⏮️ Rollback to Previous Version
 
 **Interactive (recommended):**
+
 ```bash
 ./scripts/rollback.sh
 ```
 
 **Direct rollback:**
+
 ```bash
 ./scripts/rollback.sh 20241117_150045_e4f5g6h
 ```
@@ -40,16 +45,19 @@ Quick reference for common deployment operations.
 ## 📊 Check Deployment Status
 
 **All information:**
+
 ```bash
 ./scripts/deployment-status.sh
 ```
 
 **Current deployment only:**
+
 ```bash
 ./scripts/deployment-status.sh --current
 ```
 
 **Deployment history only:**
+
 ```bash
 ./scripts/deployment-status.sh --history
 ```
@@ -57,16 +65,19 @@ Quick reference for common deployment operations.
 ## 📝 Check PM2 Status
 
 **View status:**
+
 ```bash
 pm2 status
 ```
 
 **View logs:**
+
 ```bash
 pm2 logs keepwatching-api-server
 ```
 
 **Monitor in real-time:**
+
 ```bash
 pm2 monit
 ```
@@ -141,7 +152,7 @@ pm2 logs keepwatching-api-server --err
 pm2 status
 
 # Start if not running
-pm2 start ecosystem.config.js --only keepwatching-api-server --env production
+pm2 start ecosystem.config.cjs --only keepwatching-api-server --env production
 
 # Or restart
 pm2 restart keepwatching-api-server

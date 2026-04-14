@@ -258,7 +258,7 @@ main() {
         else
             log_warning "PM2 app not running, starting it..."
             cd "$CURRENT_LINK"
-            pm2 start ecosystem.config.js --only "$PM2_APP_NAME" --env production
+            pm2 start ecosystem.config.cjs --only "$PM2_APP_NAME" --env production
         fi
         # Wait for app to start
         sleep 5

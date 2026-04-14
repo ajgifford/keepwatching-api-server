@@ -66,20 +66,17 @@ The application follows a standard MVC-like pattern with clear separation of con
 **Routers → Middleware → Controllers → Services (from common package)**
 
 - **Routers** (`src/routes/`): Define API endpoints, apply middleware, and route to controllers
-
   - Use schema validation via `validateSchema` and `validateRequest` from common package
   - Authentication via `authenticateUser` middleware (Firebase JWT verification)
   - Authorization via `authorizeAccountAccess` and similar middleware
 
 - **Controllers** (`src/controllers/`): Handle HTTP request/response logic
-
   - Wrapped with `asyncHandler` for automatic error handling
   - Extract validated data from request (body, params, query)
   - Call service methods from `@ajgifford/keepwatching-common-server/services`
   - Return structured JSON responses
 
 - **Middleware** (`src/middleware/`):
-
   - `authenticationMiddleware.ts`: Firebase token verification
   - `authorizationMiddleware.ts`: Resource access control (account/profile ownership)
   - `uploadMiddleware.ts`: Multer configuration for file uploads
@@ -231,7 +228,7 @@ yarn test:watch accountController.test.ts
 
 ## PM2 Deployment
 
-PM2 configuration in `ecosystem.config.js`:
+PM2 configuration in `ecosystem.config.cjs`:
 
 - **Production**: `keepwatching-api-server` - runs built code from `dist/`
 - **Development**: `keepwatching-api-server-dev` - runs `yarn dev` with file watching

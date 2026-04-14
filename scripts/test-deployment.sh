@@ -121,7 +121,7 @@ main() {
     # Test 5: Check project files
     log_info "Phase 5: Checking project files..."
     run_test "package.json exists" "[ -f ./package.json ]"
-    run_test "ecosystem.config.js exists" "[ -f ./ecosystem.config.js ]"
+    run_test "ecosystem.config.cjs exists" "[ -f ./ecosystem.config.cjs ]"
     run_test "node_modules directory exists" "[ -d ./node_modules ]"
     echo ""
 

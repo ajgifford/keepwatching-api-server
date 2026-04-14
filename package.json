@@ -92,7 +92,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:ci": "jest --ci --coverage",
-    "serve": "yarn build && pm2 start ecosystem.config.js --only keepwatching-api-server --env production",
+    "serve": "yarn build && pm2 start ecosystem.config.cjs --only keepwatching-api-server --env production",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --config ./.prettierrc.js . --write",
