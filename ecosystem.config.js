@@ -1,4 +1,4 @@
-export default {
+module.exports = {
   apps: [
     {
       name: 'keepwatching-api-server',
@@ -14,7 +14,6 @@ export default {
         NODE_ENV: 'production',
         PORT: 3033,
       },
-      group: 'cert-access',
       max_memory_restart: '500M',
     },
     {
