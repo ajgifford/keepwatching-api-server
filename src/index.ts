@@ -45,6 +45,7 @@ import {
 import {
   DbMonitor,
   GlobalErrorHandler,
+  getFirebaseAdmin,
   initializeFirebase,
   loadStreamingService,
   shutdownFirebase,
@@ -54,7 +55,6 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { Express, NextFunction, Request, Response } from 'express';
 import rateLimit from 'express-rate-limit';
-import admin from 'firebase-admin';
 import fs from 'fs';
 import helmet from 'helmet';
 import https from 'https';
@@ -211,7 +211,7 @@ io.use(async (socket, next) => {
       return next(new Error('Authentication error: No account id provided'));
     }
 
-    const decodedToken = await admin.auth().verifyIdToken(token);
+    const decodedToken = await getFirebaseAdmin(SERVICE_NAME)!.auth().verifyIdToken(token);
     socket.data.userId = decodedToken.uid;
     socket.data.email = decodedToken.email;
     socket.data.accountId = account_id;

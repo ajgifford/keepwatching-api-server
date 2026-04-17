@@ -1,10 +1,6 @@
-import serviceAccount from '../../certs/keepwatching-service-account.json';
+import { getServiceName } from '@ajgifford/keepwatching-common-server/config';
+import { getFirebaseAdmin } from '@ajgifford/keepwatching-common-server/utils';
 import { NextFunction, Request, Response } from 'express';
-import admin from 'firebase-admin';
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
-});
 
 export const authenticateUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -16,7 +12,12 @@ export const authenticateUser = async (req: Request, res: Response, next: NextFu
     }
 
     const idToken = authHeader.split(' ')[1];
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const firebaseApp = getFirebaseAdmin(getServiceName());
+    if (!firebaseApp) {
+      res.status(500).json({ error: 'Authentication service unavailable' });
+      return;
+    }
+    const decodedToken = await firebaseApp.auth().verifyIdToken(idToken);
     req.user = decodedToken;
     next();
   } catch (error) {
