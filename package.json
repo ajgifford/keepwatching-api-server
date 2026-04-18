@@ -50,6 +50,7 @@
     "eslint-plugin-jest": "^29.15.1",
     "globals": "^17.4.0",
     "jest": "^30.3.0",
+    "jest-html-reporter": "^4.4.0",
     "jest-mock-extended": "^4.0.0",
     "mock-socket": "^9.3.1",
     "prettier": "^3.8.1",

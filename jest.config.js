@@ -1,32 +1,71 @@
 export default {
+  // Use ts-jest preset for TypeScript support
   preset: 'ts-jest/presets/default-esm',
+
+  // Test environment
   testEnvironment: 'node',
+
+  // ESM support
   extensionsToTreatAsEsm: ['.ts'],
-  roots: ['<rootDir>/src', '<rootDir>/tests'],
-  transform: {
-    '^.+\\.ts$': [
-      'ts-jest',
-      {
-        useESM: true,
-      },
-    ],
-  },
-  moduleFileExtensions: ['ts', 'js', 'json', 'node'],
-  testMatch: ['**/__tests__/**/*.ts', '**/?(*.)+(spec|test).ts'],
-  setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
-  collectCoverage: false,
-  collectCoverageFrom: ['src/**/*.ts', '!src/index.ts'],
-  coverageDirectory: 'coverage',
-  coverageReporters: ['text', 'lcov'],
-  coverageProvider: 'v8',
-  testPathIgnorePatterns: ['/node_modules/', '/dist/'],
-  transformIgnorePatterns: ['node_modules/(?!(@ajgifford|uuid|node-fetch|gaxios|gcp-metadata|data-uri-to-buffer|fetch-blob|formdata-polyfill)/)'],
+
+  // Module name mapper for path aliases (matching tsconfig.json paths)
   moduleNameMapper: {
-    '^vitest$': '<rootDir>/tests/mocks/vitest.ts',
     '^@controllers/(.*)$': '<rootDir>/src/controllers/$1',
     '^@middleware/(.*)$': '<rootDir>/src/middleware/$1',
     '^@routes/(.*)$': '<rootDir>/src/routes/$1',
     '^@utils/(.*)$': '<rootDir>/src/utils/$1',
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
+  
+  // Transform configuration for ts-jest with ESM
+  transform: {
+    '^.+\\.ts$': [
+      'ts-jest',
+      {
+        useESM: true,
+        tsconfig: './tests/tsconfig.json',
+      },
+    ],
+    '^.+\\.js$': [
+      'ts-jest',
+      {
+        useESM: true,
+        tsconfig: {
+          allowJs: true,
+          module: 'esnext',
+          moduleResolution: 'bundler',
+          esModuleInterop: true,
+          allowSyntheticDefaultImports: true,
+        },
+      },
+    ],
+  },
+
+  "reporters": [
+    "default",
+    ["./node_modules/jest-html-reporter", {
+      "pageTitle": "Test Report"
+    }]
+  ],
+
+  // Test match patterns
+  testMatch: ['**/tests/**/*.test.ts', '**/tests/**/*.spec.ts'],
+
+  // Setup files
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
+
+  // Coverage configuration
+  collectCoverageFrom: ['src/**/*.ts', '!src/index.ts', '!src/testing/**/*', '!dist/**', '!tests/**'],
+  coverageDirectory: 'coverage',
+  coverageReporters: ['text', 'lcov'],
+  coverageProvider: 'v8',
+  
+  // Module file extensions
+  moduleFileExtensions: ['ts', 'js', 'json'],
+
+  // Ignore patterns
+  testPathIgnorePatterns: ['/node_modules/', '/dist/'],
+
+  // Transform ESM modules from @ajgifford scope and uuid (ESM-only in v13+)
+  transformIgnorePatterns: ['node_modules/(?!(@ajgifford|uuid|node-fetch|gaxios|gcp-metadata|data-uri-to-buffer|fetch-blob|formdata-polyfill)/)'],
 };
