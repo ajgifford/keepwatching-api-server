@@ -142,13 +142,26 @@ describe('moviesController', () => {
   });
 
   describe('updateMovieWatchStatus', () => {
-    it('should update movie watch status', async () => {
+    it('should update movie watch status with only required fields', async () => {
       req.body = { movieId: 12345, status: 'WATCHED' };
       (moviesService.updateMovieWatchStatus as jest.Mock).mockResolvedValue(true);
 
       await updateMovieWatchStatus(req, res, next);
 
-      expect(moviesService.updateMovieWatchStatus).toHaveBeenCalledWith(1, 123, 12345, 'WATCHED');
+      expect(moviesService.updateMovieWatchStatus).toHaveBeenCalledWith(1, 123, 12345, 'WATCHED', undefined, undefined);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: "Successfully updated the watch status to 'WATCHED'",
+      });
+    });
+
+    it('should forward isPriorWatch and watchedAt to the service', async () => {
+      req.body = { movieId: 12345, status: 'WATCHED', isPriorWatch: true, watchedAt: '2001-07-27' };
+      (moviesService.updateMovieWatchStatus as jest.Mock).mockResolvedValue(true);
+
+      await updateMovieWatchStatus(req, res, next);
+
+      expect(moviesService.updateMovieWatchStatus).toHaveBeenCalledWith(1, 123, 12345, 'WATCHED', true, '2001-07-27');
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: "Successfully updated the watch status to 'WATCHED'",
@@ -162,7 +175,7 @@ describe('moviesController', () => {
 
       await updateMovieWatchStatus(req, res, next);
 
-      expect(moviesService.updateMovieWatchStatus).toHaveBeenCalledWith(1, 123, 12345, 'WATCHED');
+      expect(moviesService.updateMovieWatchStatus).toHaveBeenCalledWith(1, 123, 12345, 'WATCHED', undefined, undefined);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
