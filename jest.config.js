@@ -60,7 +60,7 @@ export default {
   // Coverage configuration
   collectCoverageFrom: ['src/**/*.ts', '!src/index.ts', '!src/testing/**/*', '!dist/**', '!tests/**'],
   coverageDirectory: 'coverage',
-  coverageReporters: ['text', 'lcov'],
+  coverageReporters: ['text', 'lcov', 'json-summary'],
   coverageProvider: 'v8',
 
   // Module file extensions
