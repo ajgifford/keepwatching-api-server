@@ -346,7 +346,7 @@ describe('fileController', () => {
       );
       expect(appLogger.warn).toHaveBeenCalledWith('Error deleting previous profile image file', {
         error: 'Unexpected error',
-        filePath: 'uploads\\profiles\\old-profile.jpg',
+        filePath: path.join(getUploadDirectory(), 'profiles', 'old-profile.jpg'),
       });
       expect(res.status).toHaveBeenCalledWith(200);
       expect(next).not.toHaveBeenCalled();
