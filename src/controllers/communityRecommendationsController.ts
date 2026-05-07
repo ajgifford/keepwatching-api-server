@@ -1,6 +1,6 @@
 import {
-  ContentRecommendationDetailsParams,
   CommunityRecommendationsQuery,
+  ContentRecommendationDetailsParams,
   RatingProfileParams,
   SendRecommendationBody,
 } from '@ajgifford/keepwatching-common-server/schema';

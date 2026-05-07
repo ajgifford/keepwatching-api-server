@@ -2,7 +2,8 @@
 
 # Seasons API Documentation
 
-This document describes the endpoints available for managing TV show seasons, including retrieving season data and updating season-level watch status.
+This document describes the endpoints available for managing TV show seasons, including retrieving season data and
+updating season-level watch status.
 
 ## Base URL
 
@@ -19,6 +20,7 @@ Authorization: Bearer <your_access_token>
 ## Data Structures
 
 ### Season Object
+
 ```typescript
 {
   season_id: number,
@@ -42,6 +44,7 @@ Authorization: Bearer <your_access_token>
 ```
 
 ### Episode Object (within Season)
+
 ```typescript
 {
   episode_id: number,
@@ -184,6 +187,7 @@ Retrieves all seasons for a specific show with their episodes and watch status i
 ```
 
 **Status Codes:**
+
 - 200: Success
 - 401: Authentication required
 - 403: Access forbidden
@@ -223,7 +227,7 @@ Updates the watch status of a season, with optional recursive updates to all epi
 
 ```typescript
 {
-  message: string
+  message: string;
 }
 ```
 
@@ -236,6 +240,7 @@ Updates the watch status of a season, with optional recursive updates to all epi
 ```
 
 **Status Codes:**
+
 - 200: Status updated successfully
 - 400: Invalid request body or status
 - 401: Authentication required
@@ -256,16 +261,19 @@ Updates the watch status of a season, with optional recursive updates to all epi
 When `recursive: true` is specified:
 
 #### COMPLETED Status
+
 - Marks all episodes in the season as `WATCHED`
 - Updates season watch progress to 100%
 - May trigger parent show status update if all seasons are completed
 
 #### NOT_WATCHING Status
+
 - Sets season status to `NOT_WATCHING`
 - Preserves individual episode watch status
 - Does not affect parent show status
 
 #### WATCHING Status
+
 - Sets season status to `WATCHING`
 - Does not modify individual episode status
 - Sets parent show status to `WATCHING` if not already set
@@ -281,6 +289,7 @@ The system automatically calculates season status based on episode progress:
 ### Watch Progress Calculation
 
 Season watch progress is calculated as:
+
 ```
 watchProgress = (watchedEpisodes / totalEpisodes) * 100
 ```
@@ -288,11 +297,13 @@ watchProgress = (watchedEpisodes / totalEpisodes) * 100
 ## Episode Management within Seasons
 
 ### Episode Loading
+
 - Episodes are loaded with season data by default
 - Episode watch status reflects individual tracking
 - Episode metadata includes runtime, air dates, and crew information
 
 ### Episode Status Updates
+
 - Individual episode updates automatically recalculate season progress
 - Use the [Episodes API](./episodes.md) for granular episode management
 - Season-level updates can cascade to episodes when recursive
@@ -300,6 +311,7 @@ watchProgress = (watchedEpisodes / totalEpisodes) * 100
 ## Parent Show Integration
 
 ### Show Status Impact
+
 Season status changes can affect the parent show:
 
 - **Show becomes COMPLETED**: When all seasons are completed
@@ -307,6 +319,7 @@ Season status changes can affect the parent show:
 - **Show remains NOT_WATCHING**: When all seasons are not watching
 
 ### Cache Management
+
 - Season updates invalidate show-level cache
 - Episode data cache is refreshed when season status changes
 - Statistics cache is automatically updated
@@ -356,8 +369,8 @@ Season status changes can affect the parent show:
 async function getSeasonsForShow(accountId: number, profileId: number, showId: number, token: string) {
   const response = await fetch(`/api/v1/accounts/${accountId}/profiles/${profileId}/shows/${showId}/seasons`, {
     headers: {
-      'Authorization': `Bearer ${token}`
-    }
+      Authorization: `Bearer ${token}`,
+    },
   });
   return await response.json();
 }
@@ -369,15 +382,15 @@ async function updateSeasonWatchStatus(
   seasonId: number,
   status: 'WATCHING' | 'COMPLETED' | 'NOT_WATCHING',
   recursive: boolean,
-  token: string
+  token: string,
 ) {
   const response = await fetch(`/api/v1/accounts/${accountId}/profiles/${profileId}/seasons/watchstatus`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ seasonId, status, recursive })
+    body: JSON.stringify({ seasonId, status, recursive }),
   });
   return await response.json();
 }
@@ -398,24 +411,24 @@ async function completeEntireSeason(accountId: number, profileId: number, season
 async function getSeasonProgressSummary(accountId: number, profileId: number, showId: number, token: string) {
   const response = await getSeasonsForShow(accountId, profileId, showId, token);
   const seasons = response.results;
-  
-  const summary = seasons.map(season => ({
+
+  const summary = seasons.map((season) => ({
     seasonNumber: season.season_number,
     name: season.name,
     progress: season.watchProgress,
     status: season.watchStatus,
     watchedEpisodes: season.watchedEpisodes,
     totalEpisodes: season.totalEpisodes,
-    totalRuntime: season.totalRuntime
+    totalRuntime: season.totalRuntime,
   }));
-  
+
   const overallProgress = seasons.reduce((total, season) => total + season.watchProgress, 0) / seasons.length;
-  
+
   return {
     seasons: summary,
     overallProgress: Math.round(overallProgress * 10) / 10,
     totalSeasons: seasons.length,
-    completedSeasons: seasons.filter(s => s.watchStatus === 'COMPLETED').length
+    completedSeasons: seasons.filter((s) => s.watchStatus === 'COMPLETED').length,
   };
 }
 
@@ -425,26 +438,25 @@ async function batchUpdateSeasons() {
   const accountId = 123;
   const profileId = 456;
   const showId = 1;
-  
+
   try {
     // Get all seasons
     const seasonsData = await getSeasonsForShow(accountId, profileId, showId, token);
     const seasons = seasonsData.results;
-    
+
     // Mark first three seasons as completed
     for (let i = 0; i < Math.min(3, seasons.length); i++) {
       const season = seasons[i];
       console.log(`Completing season ${season.season_number}: ${season.name}`);
       await completeEntireSeason(accountId, profileId, season.season_id, token);
-      
+
       // Small delay to avoid rate limiting
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
-    
+
     // Get updated progress summary
     const progressSummary = await getSeasonProgressSummary(accountId, profileId, showId, token);
     console.log('Updated progress:', progressSummary);
-    
   } catch (error) {
     console.error('Batch season update failed:', error);
   }
@@ -483,16 +495,19 @@ curl -X PUT \
 ## Performance Considerations
 
 ### Caching Strategy
+
 - Season data is cached for 30 minutes
 - Cache is invalidated when season or episode status changes
 - Episode data within seasons is cached separately
 
 ### Batch Operations
+
 - Use recursive updates for bulk episode status changes
 - Minimize individual episode API calls when possible
 - Consider rate limiting for bulk operations
 
 ### Data Loading
+
 - Season data includes episode metadata for efficiency
 - Episode details are pre-loaded to reduce additional API calls
 - Images are served via TMDB CDN for optimal performance
@@ -500,11 +515,13 @@ curl -X PUT \
 ## Integration Notes
 
 ### Related Endpoints
+
 - Use [Shows API](./shows.md) for show-level operations
 - Use [Episodes API](./episodes.md) for individual episode tracking
 - Use [Statistics API](./statistics.md) for season-level progress analytics
 
 ### Data Consistency
+
 - Season status automatically affects show status
 - Episode updates within seasons trigger season recalculation
 - All updates maintain referential integrity

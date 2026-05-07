@@ -64,9 +64,7 @@ describe('Watch History Router', () => {
   });
 
   it('POST /api/v1/accounts/:accountId/profiles/:profileId/watchHistory/dismiss', async () => {
-    const res = await request(app)
-      .post('/api/v1/accounts/1/profiles/123/watchHistory/dismiss')
-      .send({ showId: 456 });
+    const res = await request(app).post('/api/v1/accounts/1/profiles/123/watchHistory/dismiss').send({ showId: 456 });
     expect(res.status).toBe(200);
     expect(res.text).toBe('show dismissed');
   });

@@ -125,12 +125,7 @@ export async function markShowAsPriorWatched(req: Request, res: Response, next: 
     const { accountId, profileId } = req.params as unknown as AccountAndProfileIdsParams;
     const { showId, upToSeasonNumber }: ShowPriorWatchBody = req.body;
 
-    const statusData = await watchHistoryService.markShowAsPriorWatched(
-      accountId,
-      profileId,
-      showId,
-      upToSeasonNumber,
-    );
+    const statusData = await watchHistoryService.markShowAsPriorWatched(accountId, profileId, showId, upToSeasonNumber);
 
     res.status(200).json({
       message: 'Successfully marked prior seasons as previously watched',

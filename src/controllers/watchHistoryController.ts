@@ -134,8 +134,17 @@ export async function recordEpisodeRewatch(req: Request, res: Response, next: Ne
 export async function getWatchHistory(req: Request, res: Response, next: NextFunction) {
   try {
     const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
-    const { page, pageSize, contentType, sortOrder, dateFrom, dateTo, isPriorWatchOnly, excludePriorWatch, searchQuery } =
-      req.query as unknown as WatchHistoryQuery;
+    const {
+      page,
+      pageSize,
+      contentType,
+      sortOrder,
+      dateFrom,
+      dateTo,
+      isPriorWatchOnly,
+      excludePriorWatch,
+      searchQuery,
+    } = req.query as unknown as WatchHistoryQuery;
     const history = await watchHistoryService.getHistoryForProfile(
       profileId,
       page,

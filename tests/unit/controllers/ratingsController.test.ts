@@ -80,7 +80,15 @@ describe('ratingsController', () => {
 
       await upsertRating(req, res, next);
 
-      expect(ratingsService.upsertRating).toHaveBeenCalledWith(456, 'show', 42, 5, 'Amazing!', 'Breaking Bad', '/poster.jpg');
+      expect(ratingsService.upsertRating).toHaveBeenCalledWith(
+        456,
+        'show',
+        42,
+        5,
+        'Amazing!',
+        'Breaking Bad',
+        '/poster.jpg',
+      );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Rating saved successfully',

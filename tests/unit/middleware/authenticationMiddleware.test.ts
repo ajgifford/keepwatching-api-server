@@ -1,5 +1,5 @@
-import { authenticateUser } from '@middleware/authenticationMiddleware';
 import { getFirebaseAdmin } from '@ajgifford/keepwatching-common-server/utils';
+import { authenticateUser } from '@middleware/authenticationMiddleware';
 import { NextFunction, Request, Response } from 'express';
 
 jest.mock('@ajgifford/keepwatching-common-server/utils', () => ({

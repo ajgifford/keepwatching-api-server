@@ -1,5 +1,9 @@
 import { seasonsService, watchHistoryService } from '@ajgifford/keepwatching-common-server/services';
-import { getSeasonsForShow, markSeasonIdsAsPriorWatched, updateSeasonWatchStatus } from '@controllers/seasonsController';
+import {
+  getSeasonsForShow,
+  markSeasonIdsAsPriorWatched,
+  updateSeasonWatchStatus,
+} from '@controllers/seasonsController';
 
 jest.mock('@ajgifford/keepwatching-common-server/services', () => ({
   seasonsService: {

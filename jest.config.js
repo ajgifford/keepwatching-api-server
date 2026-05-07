@@ -16,7 +16,7 @@ export default {
     '^@utils/(.*)$': '<rootDir>/src/utils/$1',
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
-  
+
   // Transform configuration for ts-jest with ESM
   transform: {
     '^.+\\.ts$': [
@@ -41,11 +41,14 @@ export default {
     ],
   },
 
-  "reporters": [
-    "default",
-    ["./node_modules/jest-html-reporter", {
-      "pageTitle": "Test Report"
-    }]
+  reporters: [
+    'default',
+    [
+      './node_modules/jest-html-reporter',
+      {
+        pageTitle: 'Test Report',
+      },
+    ],
   ],
 
   // Test match patterns
@@ -59,7 +62,7 @@ export default {
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov'],
   coverageProvider: 'v8',
-  
+
   // Module file extensions
   moduleFileExtensions: ['ts', 'js', 'json'],
 
@@ -67,5 +70,7 @@ export default {
   testPathIgnorePatterns: ['/node_modules/', '/dist/'],
 
   // Transform ESM modules from @ajgifford scope and uuid (ESM-only in v13+)
-  transformIgnorePatterns: ['node_modules/(?!(@ajgifford|uuid|node-fetch|gaxios|gcp-metadata|data-uri-to-buffer|fetch-blob|formdata-polyfill)/)'],
+  transformIgnorePatterns: [
+    'node_modules/(?!(@ajgifford|uuid|node-fetch|gaxios|gcp-metadata|data-uri-to-buffer|fetch-blob|formdata-polyfill)/)',
+  ],
 };

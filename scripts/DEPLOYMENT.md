@@ -1,6 +1,7 @@
 # KeepWatching API Server - Deployment Guide
 
-This guide covers the enhanced deployment system with rollback support for the KeepWatching API Server running on Raspberry Pi 5.
+This guide covers the enhanced deployment system with rollback support for the KeepWatching API Server running on
+Raspberry Pi 5.
 
 ## Overview
 
@@ -225,6 +226,7 @@ Run the automated test suite to validate all components:
 ```
 
 This script tests:
+
 - ✓ Script existence and executability
 - ✓ Required system commands (git, yarn, pm2, rsync, curl)
 - ✓ Git repository status
@@ -271,6 +273,7 @@ Both `deploy.sh` and `rollback.sh` support dry-run mode, which simulates the ope
 ```
 
 This will show you exactly what would happen during a deployment without:
+
 - Creating deployment directories
 - Installing dependencies
 - Building the application
@@ -549,7 +552,8 @@ readlink deployments/current
 
 ### Issue: Health check always fails
 
-**Solution**: Either fix the health endpoint or disable health checks by commenting out the `health_check` call in the scripts.
+**Solution**: Either fix the health endpoint or disable health checks by commenting out the `health_check` call in the
+scripts.
 
 ### Issue: "current" symlink is broken
 
@@ -655,5 +659,4 @@ For issues or questions:
 
 ---
 
-**Last Updated**: 2024-11-17
-**Version**: 1.0.0
+**Last Updated**: 2024-11-17 **Version**: 1.0.0

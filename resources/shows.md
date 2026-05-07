@@ -2,7 +2,8 @@
 
 # Shows API Documentation
 
-This document describes the endpoints available for managing TV shows, including adding/removing favorites, updating watch status, and discovering new content.
+This document describes the endpoints available for managing TV shows, including adding/removing favorites, updating
+watch status, and discovering new content.
 
 ## Base URL
 
@@ -19,6 +20,7 @@ Authorization: Bearer <your_access_token>
 ## Data Structures
 
 ### Show Object
+
 ```typescript
 {
   show_id: number,
@@ -52,6 +54,7 @@ Authorization: Bearer <your_access_token>
 ```
 
 ### Show Details Object
+
 ```typescript
 {
   ...Show,
@@ -164,6 +167,7 @@ Retrieves all shows in a profile's favorites list with their current watch statu
 ```
 
 **Status Codes:**
+
 - 200: Success
 - 401: Authentication required
 - 403: Access forbidden
@@ -258,6 +262,7 @@ Retrieves comprehensive details for a specific show including seasons, episodes,
 ```
 
 **Status Codes:**
+
 - 200: Success
 - 401: Authentication required
 - 403: Access forbidden
@@ -268,7 +273,8 @@ Retrieves comprehensive details for a specific show including seasons, episodes,
 
 ### Add Show to Favorites
 
-Adds a TV show to a profile's favorites list. If the show doesn't exist in the system, it will be fetched from TMDB and created.
+Adds a TV show to a profile's favorites list. If the show doesn't exist in the system, it will be fetched from TMDB and
+created.
 
 **Endpoint:** `POST /api/v1/accounts/{accountId}/profiles/{profileId}/shows/favorites`
 
@@ -341,6 +347,7 @@ Adds a TV show to a profile's favorites list. If the show doesn't exist in the s
 ```
 
 **Status Codes:**
+
 - 200: Show added successfully
 - 400: Invalid request body or TMDB ID
 - 401: Authentication required
@@ -400,6 +407,7 @@ Removes a TV show from a profile's favorites list.
 ```
 
 **Status Codes:**
+
 - 200: Show removed successfully
 - 401: Authentication required
 - 403: Access forbidden
@@ -472,6 +480,7 @@ Updates the watch status of a show, with optional recursive updates to all seaso
 ```
 
 **Status Codes:**
+
 - 200: Status updated successfully
 - 400: Invalid request body or status
 - 401: Authentication required
@@ -561,6 +570,7 @@ Retrieves comprehensive episode data for a profile including recent, upcoming, a
 ```
 
 **Status Codes:**
+
 - 200: Success
 - 401: Authentication required
 - 403: Access forbidden
@@ -638,6 +648,7 @@ Retrieves personalized show recommendations based on a specific show and viewing
 ```
 
 **Status Codes:**
+
 - 200: Success
 - 401: Authentication required
 - 403: Access forbidden
@@ -703,6 +714,7 @@ Retrieves shows that are similar to a specific show based on genre, themes, and 
 ```
 
 **Status Codes:**
+
 - 200: Success
 - 401: Authentication required
 - 403: Access forbidden
@@ -770,9 +782,9 @@ async function addShowToFavorites(accountId: number, profileId: number, tmdbId: 
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ showTMDBId: tmdbId })
+    body: JSON.stringify({ showTMDBId: tmdbId }),
   });
   return await response.json();
 }
@@ -781,28 +793,28 @@ async function addShowToFavorites(accountId: number, profileId: number, tmdbId: 
 async function getShowDetails(accountId: number, profileId: number, showId: number, token: string) {
   const response = await fetch(`/api/v1/accounts/${accountId}/profiles/${profileId}/shows/${showId}/details`, {
     headers: {
-      'Authorization': `Bearer ${token}`
-    }
+      Authorization: `Bearer ${token}`,
+    },
   });
   return await response.json();
 }
 
 // Update watch status
 async function updateShowWatchStatus(
-  accountId: number, 
-  profileId: number, 
-  showId: number, 
-  status: string, 
+  accountId: number,
+  profileId: number,
+  showId: number,
+  status: string,
   recursive: boolean,
-  token: string
+  token: string,
 ) {
   const response = await fetch(`/api/v1/accounts/${accountId}/profiles/${profileId}/shows/watchstatus`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ showId, status, recursive })
+    body: JSON.stringify({ showId, status, recursive }),
   });
   return await response.json();
 }
@@ -812,8 +824,8 @@ async function removeShowFromFavorites(accountId: number, profileId: number, sho
   const response = await fetch(`/api/v1/accounts/${accountId}/profiles/${profileId}/shows/favorites/${showId}`, {
     method: 'DELETE',
     headers: {
-      'Authorization': `Bearer ${token}`
-    }
+      Authorization: `Bearer ${token}`,
+    },
   });
   return await response.json();
 }
@@ -822,8 +834,8 @@ async function removeShowFromFavorites(accountId: number, profileId: number, sho
 async function getShowRecommendations(accountId: number, profileId: number, showId: number, token: string) {
   const response = await fetch(`/api/v1/accounts/${accountId}/profiles/${profileId}/shows/${showId}/recommendations`, {
     headers: {
-      'Authorization': `Bearer ${token}`
-    }
+      Authorization: `Bearer ${token}`,
+    },
   });
   return await response.json();
 }
@@ -834,31 +846,30 @@ async function manageShowLifecycle() {
   const accountId = 123;
   const profileId = 456;
   const tmdbId = 1396; // Breaking Bad
-  
+
   try {
     // 1. Add show to favorites
     console.log('Adding show to favorites...');
     const addResult = await addShowToFavorites(accountId, profileId, tmdbId, token);
     const showId = addResult.addedShow.show_id;
-    
+
     // 2. Get detailed show information
     console.log('Fetching show details...');
     const showDetails = await getShowDetails(accountId, profileId, showId, token);
     console.log(`Added: ${showDetails.show.title} (${showDetails.show.totalEpisodes} episodes)`);
-    
+
     // 3. Mark as currently watching
     console.log('Setting watch status to WATCHING...');
     await updateShowWatchStatus(accountId, profileId, showId, 'WATCHING', false, token);
-    
+
     // 4. Get recommendations based on this show
     console.log('Getting recommendations...');
     const recommendations = await getShowRecommendations(accountId, profileId, showId, token);
     console.log(`Found ${recommendations.shows.length} recommended shows`);
-    
+
     // 5. Eventually mark as completed (with recursive episode updates)
     console.log('Marking as completed...');
     await updateShowWatchStatus(accountId, profileId, showId, 'COMPLETED', true, token);
-    
   } catch (error) {
     console.error('Error managing show:', error);
   }
@@ -907,17 +918,20 @@ curl -H "Authorization: Bearer your_token_here" \
 ## Performance Optimization
 
 ### Caching Strategy
+
 - Show metadata is cached for 1 hour
 - Watch status updates invalidate relevant caches
 - Episode data is cached per profile for 5 minutes
 - Recommendations are cached for 30 minutes
 
 ### Batch Operations
+
 - Use recursive updates for bulk episode status changes
 - Minimize individual episode update calls
 - Leverage the episode management endpoints for detailed tracking
 
 ### Data Loading
+
 - Show lists include essential metadata for quick rendering
 - Detailed show information requires separate API call
 - Episode data is lazily loaded as needed
@@ -925,12 +939,14 @@ curl -H "Authorization: Bearer your_token_here" \
 ## Integration Notes
 
 ### TMDB Integration
+
 - All show metadata is sourced from The Movie Database
 - Images are served via TMDB CDN URLs
 - Show data is automatically updated when TMDB information changes
 - Cast, crew, and trailer information is fetched in real-time
 
 ### Related Endpoints
+
 - Use [Seasons API](./seasons.md) for season-level operations
 - Use [Episodes API](./episodes.md) for episode-level tracking
 - Use [Search API](./search.md) to find shows to add

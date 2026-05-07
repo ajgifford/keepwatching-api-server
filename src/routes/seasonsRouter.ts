@@ -1,4 +1,8 @@
-import { getSeasonsForShow, markSeasonIdsAsPriorWatched, updateSeasonWatchStatus } from '../controllers/seasonsController';
+import {
+  getSeasonsForShow,
+  markSeasonIdsAsPriorWatched,
+  updateSeasonWatchStatus,
+} from '../controllers/seasonsController';
 import { trackAccountActivity } from '../middleware/accountActivityMiddleware';
 import { authorizeAccountAccess } from '../middleware/authorizationMiddleware';
 import { validateRequest, validateSchema } from '@ajgifford/keepwatching-common-server';
