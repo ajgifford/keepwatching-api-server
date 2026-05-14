@@ -46,6 +46,9 @@ jobs:
     needs: validate
     if: ${{ inputs.deploy == true }}
 
+    env:
+      GIT_NPM_TOKEN: ${{ secrets.GIT_NPM_TOKEN }}
+
     steps:
       - name: Connect to Tailscale
         uses: tailscale/github-action@v4
@@ -72,6 +75,7 @@ jobs:
           host: ${{ secrets.PI_HOST }}
           username: ${{ secrets.PI_USER }}
           key: ${{ secrets.PI_SSH_KEY }}
+          envs: GIT_NPM_TOKEN
           script: |
             cd ${{ secrets.PI_APP_PATH }}
             bash scripts/deploy.sh
