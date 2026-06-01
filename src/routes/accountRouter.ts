@@ -2,6 +2,7 @@ import { deleteAccount, editAccount, googleLogin, login, logout, register } from
 import { trackAccountActivity } from '../middleware/accountActivityMiddleware';
 import { authenticateUser } from '../middleware/authenticationMiddleware';
 import { authorizeAccountAccess } from '../middleware/authorizationMiddleware';
+import { verifyCaptcha } from '../middleware/captchaMiddleware';
 import { validateRequest, validateSchema } from '@ajgifford/keepwatching-common-server';
 import { logRequestContext } from '@ajgifford/keepwatching-common-server/middleware';
 import {
@@ -15,8 +16,14 @@ import express from 'express';
 
 const router = express.Router();
 
-router.post('/api/v1/accounts/register', logRequestContext, validateSchema(registerAccountBodySchema), register);
-router.post('/api/v1/accounts/login', logRequestContext, validateSchema(accountLoginBodySchema), login);
+router.post(
+  '/api/v1/accounts/register',
+  logRequestContext,
+  verifyCaptcha,
+  validateSchema(registerAccountBodySchema),
+  register,
+);
+router.post('/api/v1/accounts/login', logRequestContext, verifyCaptcha, validateSchema(accountLoginBodySchema), login);
 router.post('/api/v1/accounts/googleLogin', validateSchema(googleLoginBodySchema), googleLogin);
 router.post('/api/v1/accounts/logout', logout);
 router.put(
