@@ -1,6 +1,7 @@
 import { getFirebaseAdmin } from '@ajgifford/keepwatching-common-server/utils';
 import { authenticateUser } from '@middleware/authenticationMiddleware';
 import { NextFunction, Request, Response } from 'express';
+import { getAuth } from 'firebase-admin/auth';
 
 jest.mock('@ajgifford/keepwatching-common-server/utils', () => ({
   getFirebaseAdmin: jest.fn(),
@@ -8,6 +9,10 @@ jest.mock('@ajgifford/keepwatching-common-server/utils', () => ({
 
 jest.mock('@ajgifford/keepwatching-common-server/config', () => ({
   getServiceName: jest.fn().mockReturnValue('test-service'),
+}));
+
+jest.mock('firebase-admin/auth', () => ({
+  getAuth: jest.fn(),
 }));
 
 describe('authenticationMiddleware', () => {
@@ -18,9 +23,8 @@ describe('authenticationMiddleware', () => {
 
   beforeEach(() => {
     mockVerifyIdToken = jest.fn();
-    (getFirebaseAdmin as jest.Mock).mockReturnValue({
-      auth: jest.fn(() => ({ verifyIdToken: mockVerifyIdToken })),
-    });
+    (getFirebaseAdmin as jest.Mock).mockReturnValue({});
+    (getAuth as jest.Mock).mockReturnValue({ verifyIdToken: mockVerifyIdToken });
 
     mockRequest = {
       headers: {},
