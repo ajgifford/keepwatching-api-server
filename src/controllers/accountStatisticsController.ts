@@ -29,7 +29,8 @@ export async function getAccountStatistics(req: Request, res: Response, next: Ne
 export async function getAccountWatchingVelocity(req: Request, res: Response, next: NextFunction) {
   try {
     const { accountId } = req.params as unknown as AccountIdParam;
-    const results = await accountStatisticsService.getAccountWatchingVelocity(accountId);
+    const days = req.query.days ? parseInt(req.query.days as string, 10) : 30;
+    const results = await accountStatisticsService.getAccountWatchingVelocity(accountId, days);
 
     res.status(200).json({
       message: 'Successfully retrieved account watching velocity statistics',
@@ -48,7 +49,8 @@ export async function getAccountWatchingVelocity(req: Request, res: Response, ne
 export async function getAccountActivityTimeline(req: Request, res: Response, next: NextFunction) {
   try {
     const { accountId } = req.params as unknown as AccountIdParam;
-    const results = await accountStatisticsService.getAccountActivityTimeline(accountId);
+    const days = req.query.days ? parseInt(req.query.days as string, 10) : 36500;
+    const results = await accountStatisticsService.getAccountActivityTimeline(accountId, days);
 
     res.status(200).json({
       message: 'Successfully retrieved account activity timeline statistics',
@@ -67,7 +69,8 @@ export async function getAccountActivityTimeline(req: Request, res: Response, ne
 export async function getAccountBingeWatchingStats(req: Request, res: Response, next: NextFunction) {
   try {
     const { accountId } = req.params as unknown as AccountIdParam;
-    const results = await accountStatisticsService.getAccountBingeWatchingStats(accountId);
+    const days = req.query.days ? parseInt(req.query.days as string, 10) : 36500;
+    const results = await accountStatisticsService.getAccountBingeWatchingStats(accountId, days);
 
     res.status(200).json({
       message: 'Successfully retrieved account binge watching statistics',
@@ -86,7 +89,8 @@ export async function getAccountBingeWatchingStats(req: Request, res: Response, 
 export async function getAccountWatchStreakStats(req: Request, res: Response, next: NextFunction) {
   try {
     const { accountId } = req.params as unknown as AccountIdParam;
-    const results = await accountStatisticsService.getAccountWatchStreakStats(accountId);
+    const days = req.query.days ? parseInt(req.query.days as string, 10) : 36500;
+    const results = await accountStatisticsService.getAccountWatchStreakStats(accountId, days);
 
     res.status(200).json({
       message: 'Successfully retrieved account watch streak statistics',
@@ -105,7 +109,8 @@ export async function getAccountWatchStreakStats(req: Request, res: Response, ne
 export async function getAccountTimeToWatchStats(req: Request, res: Response, next: NextFunction) {
   try {
     const { accountId } = req.params as unknown as AccountIdParam;
-    const results = await accountStatisticsService.getAccountTimeToWatchStats(accountId);
+    const days = req.query.days ? parseInt(req.query.days as string, 10) : 36500;
+    const results = await accountStatisticsService.getAccountTimeToWatchStats(accountId, days);
 
     res.status(200).json({
       message: 'Successfully retrieved account time to watch statistics',
@@ -124,7 +129,8 @@ export async function getAccountTimeToWatchStats(req: Request, res: Response, ne
 export async function getAccountSeasonalViewingStats(req: Request, res: Response, next: NextFunction) {
   try {
     const { accountId } = req.params as unknown as AccountIdParam;
-    const results = await accountStatisticsService.getAccountSeasonalViewingStats(accountId);
+    const days = req.query.days ? parseInt(req.query.days as string, 10) : 36500;
+    const results = await accountStatisticsService.getAccountSeasonalViewingStats(accountId, days);
 
     res.status(200).json({
       message: 'Successfully retrieved account seasonal viewing statistics',
@@ -162,7 +168,8 @@ export async function getAccountMilestoneStats(req: Request, res: Response, next
 export async function getAccountContentDepthStats(req: Request, res: Response, next: NextFunction) {
   try {
     const { accountId } = req.params as unknown as AccountIdParam;
-    const results = await accountStatisticsService.getAccountContentDepthStats(accountId);
+    const days = req.query.days ? parseInt(req.query.days as string, 10) : 36500;
+    const results = await accountStatisticsService.getAccountContentDepthStats(accountId, days);
 
     res.status(200).json({
       message: 'Successfully retrieved account content depth statistics',
@@ -181,7 +188,8 @@ export async function getAccountContentDepthStats(req: Request, res: Response, n
 export async function getAccountContentDiscoveryStats(req: Request, res: Response, next: NextFunction) {
   try {
     const { accountId } = req.params as unknown as AccountIdParam;
-    const results = await accountStatisticsService.getAccountContentDiscoveryStats(accountId);
+    const days = req.query.days ? parseInt(req.query.days as string, 10) : 30;
+    const results = await accountStatisticsService.getAccountContentDiscoveryStats(accountId, days);
 
     res.status(200).json({
       message: 'Successfully retrieved account content discovery statistics',

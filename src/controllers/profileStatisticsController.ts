@@ -109,7 +109,8 @@ export async function getMonthlyActivity(req: Request, res: Response, next: Next
 export async function getActivityTimeline(req: Request, res: Response, next: NextFunction) {
   try {
     const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
-    const results = await profileStatisticsService.getActivityTimeline(profileId);
+    const days = req.query.days ? parseInt(req.query.days as string, 10) : 36500;
+    const results = await profileStatisticsService.getActivityTimeline(profileId, days);
 
     res.status(200).json({
       message: 'Successfully retrieved activity timeline',
@@ -128,7 +129,8 @@ export async function getActivityTimeline(req: Request, res: Response, next: Nex
 export async function getBingeWatchingStats(req: Request, res: Response, next: NextFunction) {
   try {
     const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
-    const results = await profileStatisticsService.getBingeWatchingStats(profileId);
+    const days = req.query.days ? parseInt(req.query.days as string, 10) : 36500;
+    const results = await profileStatisticsService.getBingeWatchingStats(profileId, days);
 
     res.status(200).json({
       message: 'Successfully retrieved binge-watching statistics',
@@ -147,7 +149,8 @@ export async function getBingeWatchingStats(req: Request, res: Response, next: N
 export async function getWatchStreakStats(req: Request, res: Response, next: NextFunction) {
   try {
     const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
-    const results = await profileStatisticsService.getWatchStreakStats(profileId);
+    const days = req.query.days ? parseInt(req.query.days as string, 10) : 36500;
+    const results = await profileStatisticsService.getWatchStreakStats(profileId, days);
 
     res.status(200).json({
       message: 'Successfully retrieved watch streak statistics',
@@ -166,7 +169,8 @@ export async function getWatchStreakStats(req: Request, res: Response, next: Nex
 export async function getTimeToWatchStats(req: Request, res: Response, next: NextFunction) {
   try {
     const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
-    const results = await profileStatisticsService.getTimeToWatchStats(profileId);
+    const days = req.query.days ? parseInt(req.query.days as string, 10) : 36500;
+    const results = await profileStatisticsService.getTimeToWatchStats(profileId, days);
 
     res.status(200).json({
       message: 'Successfully retrieved time-to-watch statistics',
@@ -185,7 +189,8 @@ export async function getTimeToWatchStats(req: Request, res: Response, next: Nex
 export async function getSeasonalViewingStats(req: Request, res: Response, next: NextFunction) {
   try {
     const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
-    const results = await profileStatisticsService.getSeasonalViewingStats(profileId);
+    const days = req.query.days ? parseInt(req.query.days as string, 10) : 36500;
+    const results = await profileStatisticsService.getSeasonalViewingStats(profileId, days);
 
     res.status(200).json({
       message: 'Successfully retrieved seasonal viewing statistics',
@@ -223,7 +228,8 @@ export async function getMilestoneStats(req: Request, res: Response, next: NextF
 export async function getContentDepthStats(req: Request, res: Response, next: NextFunction) {
   try {
     const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
-    const results = await profileStatisticsService.getContentDepthStats(profileId);
+    const days = req.query.days ? parseInt(req.query.days as string, 10) : 36500;
+    const results = await profileStatisticsService.getContentDepthStats(profileId, days);
 
     res.status(200).json({
       message: 'Successfully retrieved content depth statistics',
@@ -242,7 +248,8 @@ export async function getContentDepthStats(req: Request, res: Response, next: Ne
 export async function getContentDiscoveryStats(req: Request, res: Response, next: NextFunction) {
   try {
     const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
-    const results = await profileStatisticsService.getContentDiscoveryStats(profileId);
+    const days = req.query.days ? parseInt(req.query.days as string, 10) : 30;
+    const results = await profileStatisticsService.getContentDiscoveryStats(profileId, days);
 
     res.status(200).json({
       message: 'Successfully retrieved content discovery statistics',

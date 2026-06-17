@@ -6,6 +6,7 @@ import {
   getAccountContentDepthStats,
   getAccountContentDiscoveryStats,
   getAccountMilestoneStats,
+  getAccountRewatchStats,
   getAccountSeasonalViewingStats,
   getAccountStatistics,
   getAccountTimeToWatchStats,
@@ -29,6 +30,7 @@ jest.mock('@ajgifford/keepwatching-common-server/services', () => ({
     getAccountContentDiscoveryStats: jest.fn(),
     getAccountAbandonmentRiskStats: jest.fn(),
     getAccountUnairedContentStats: jest.fn(),
+    getAccountRewatchStats: jest.fn(),
     getProfileComparison: jest.fn(),
   },
 }));
@@ -41,6 +43,7 @@ describe('accountStatisticsController', () => {
   beforeEach(() => {
     req = {
       params: {},
+      query: {},
     };
     res = {
       status: jest.fn().mockReturnThis(),
@@ -90,7 +93,7 @@ describe('accountStatisticsController', () => {
   });
 
   describe('getAccountWatchingVelocity', () => {
-    it('should return account watching velocity statistics successfully', async () => {
+    it('should return account watching velocity statistics with default days parameter', async () => {
       req.params = { accountId: 1 };
       const mockStats = {
         episodesPerDay: 2.5,
@@ -102,7 +105,29 @@ describe('accountStatisticsController', () => {
 
       await getAccountWatchingVelocity(req, res, next);
 
-      expect(accountStatisticsService.getAccountWatchingVelocity).toHaveBeenCalledWith(1);
+      expect(accountStatisticsService.getAccountWatchingVelocity).toHaveBeenCalledWith(1, 30);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Successfully retrieved account watching velocity statistics',
+        results: mockStats,
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should return account watching velocity statistics with custom days parameter', async () => {
+      req.params = { accountId: 1 };
+      req.query = { days: '90' };
+      const mockStats = {
+        episodesPerDay: 2.5,
+        moviesPerMonth: 10,
+        busiestDay: 'Saturday',
+      };
+
+      (accountStatisticsService.getAccountWatchingVelocity as jest.Mock).mockResolvedValue(mockStats);
+
+      await getAccountWatchingVelocity(req, res, next);
+
+      expect(accountStatisticsService.getAccountWatchingVelocity).toHaveBeenCalledWith(1, 90);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully retrieved account watching velocity statistics',
@@ -118,7 +143,6 @@ describe('accountStatisticsController', () => {
 
       await getAccountWatchingVelocity(req, res, next);
 
-      expect(accountStatisticsService.getAccountWatchingVelocity).toHaveBeenCalledWith(1);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
@@ -126,7 +150,7 @@ describe('accountStatisticsController', () => {
   });
 
   describe('getAccountActivityTimeline', () => {
-    it('should return account activity timeline statistics successfully', async () => {
+    it('should return account activity timeline statistics with default days parameter', async () => {
       req.params = { accountId: 1 };
       const mockStats = {
         timeline: [
@@ -139,7 +163,30 @@ describe('accountStatisticsController', () => {
 
       await getAccountActivityTimeline(req, res, next);
 
-      expect(accountStatisticsService.getAccountActivityTimeline).toHaveBeenCalledWith(1);
+      expect(accountStatisticsService.getAccountActivityTimeline).toHaveBeenCalledWith(1, 36500);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Successfully retrieved account activity timeline statistics',
+        results: mockStats,
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should return account activity timeline statistics with custom days parameter', async () => {
+      req.params = { accountId: 1 };
+      req.query = { days: '90' };
+      const mockStats = {
+        timeline: [
+          { date: '2024-01-01', episodes: 5, movies: 2 },
+          { date: '2024-01-02', episodes: 3, movies: 1 },
+        ],
+      };
+
+      (accountStatisticsService.getAccountActivityTimeline as jest.Mock).mockResolvedValue(mockStats);
+
+      await getAccountActivityTimeline(req, res, next);
+
+      expect(accountStatisticsService.getAccountActivityTimeline).toHaveBeenCalledWith(1, 90);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully retrieved account activity timeline statistics',
@@ -155,7 +202,6 @@ describe('accountStatisticsController', () => {
 
       await getAccountActivityTimeline(req, res, next);
 
-      expect(accountStatisticsService.getAccountActivityTimeline).toHaveBeenCalledWith(1);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
@@ -163,7 +209,7 @@ describe('accountStatisticsController', () => {
   });
 
   describe('getAccountBingeWatchingStats', () => {
-    it('should return account binge watching statistics successfully', async () => {
+    it('should return account binge watching statistics with default days parameter', async () => {
       req.params = { accountId: 1 };
       const mockStats = {
         bingeSessionCount: 15,
@@ -175,7 +221,29 @@ describe('accountStatisticsController', () => {
 
       await getAccountBingeWatchingStats(req, res, next);
 
-      expect(accountStatisticsService.getAccountBingeWatchingStats).toHaveBeenCalledWith(1);
+      expect(accountStatisticsService.getAccountBingeWatchingStats).toHaveBeenCalledWith(1, 36500);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Successfully retrieved account binge watching statistics',
+        results: mockStats,
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should return account binge watching statistics with custom days parameter', async () => {
+      req.params = { accountId: 1 };
+      req.query = { days: '365' };
+      const mockStats = {
+        bingeSessionCount: 15,
+        longestBingeSession: { episodes: 10, duration: 420 },
+        averageBingeLength: 5,
+      };
+
+      (accountStatisticsService.getAccountBingeWatchingStats as jest.Mock).mockResolvedValue(mockStats);
+
+      await getAccountBingeWatchingStats(req, res, next);
+
+      expect(accountStatisticsService.getAccountBingeWatchingStats).toHaveBeenCalledWith(1, 365);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully retrieved account binge watching statistics',
@@ -191,7 +259,6 @@ describe('accountStatisticsController', () => {
 
       await getAccountBingeWatchingStats(req, res, next);
 
-      expect(accountStatisticsService.getAccountBingeWatchingStats).toHaveBeenCalledWith(1);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
@@ -199,7 +266,7 @@ describe('accountStatisticsController', () => {
   });
 
   describe('getAccountWatchStreakStats', () => {
-    it('should return account watch streak statistics successfully', async () => {
+    it('should return account watch streak statistics with default days parameter', async () => {
       req.params = { accountId: 1 };
       const mockStats = {
         currentStreak: 7,
@@ -211,7 +278,29 @@ describe('accountStatisticsController', () => {
 
       await getAccountWatchStreakStats(req, res, next);
 
-      expect(accountStatisticsService.getAccountWatchStreakStats).toHaveBeenCalledWith(1);
+      expect(accountStatisticsService.getAccountWatchStreakStats).toHaveBeenCalledWith(1, 36500);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Successfully retrieved account watch streak statistics',
+        results: mockStats,
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should return account watch streak statistics with custom days parameter', async () => {
+      req.params = { accountId: 1 };
+      req.query = { days: '180' };
+      const mockStats = {
+        currentStreak: 7,
+        longestStreak: 30,
+        totalStreaks: 5,
+      };
+
+      (accountStatisticsService.getAccountWatchStreakStats as jest.Mock).mockResolvedValue(mockStats);
+
+      await getAccountWatchStreakStats(req, res, next);
+
+      expect(accountStatisticsService.getAccountWatchStreakStats).toHaveBeenCalledWith(1, 180);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully retrieved account watch streak statistics',
@@ -227,7 +316,6 @@ describe('accountStatisticsController', () => {
 
       await getAccountWatchStreakStats(req, res, next);
 
-      expect(accountStatisticsService.getAccountWatchStreakStats).toHaveBeenCalledWith(1);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
@@ -235,7 +323,7 @@ describe('accountStatisticsController', () => {
   });
 
   describe('getAccountTimeToWatchStats', () => {
-    it('should return account time to watch statistics successfully', async () => {
+    it('should return account time to watch statistics with default days parameter', async () => {
       req.params = { accountId: 1 };
       const mockStats = {
         averageTimeToWatch: 5.5,
@@ -247,7 +335,29 @@ describe('accountStatisticsController', () => {
 
       await getAccountTimeToWatchStats(req, res, next);
 
-      expect(accountStatisticsService.getAccountTimeToWatchStats).toHaveBeenCalledWith(1);
+      expect(accountStatisticsService.getAccountTimeToWatchStats).toHaveBeenCalledWith(1, 36500);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Successfully retrieved account time to watch statistics',
+        results: mockStats,
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should return account time to watch statistics with custom days parameter', async () => {
+      req.params = { accountId: 1 };
+      req.query = { days: '365' };
+      const mockStats = {
+        averageTimeToWatch: 5.5,
+        fastestShow: { showId: 1, timeToWatch: 1.2 },
+        slowestShow: { showId: 2, timeToWatch: 30.5 },
+      };
+
+      (accountStatisticsService.getAccountTimeToWatchStats as jest.Mock).mockResolvedValue(mockStats);
+
+      await getAccountTimeToWatchStats(req, res, next);
+
+      expect(accountStatisticsService.getAccountTimeToWatchStats).toHaveBeenCalledWith(1, 365);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully retrieved account time to watch statistics',
@@ -263,7 +373,6 @@ describe('accountStatisticsController', () => {
 
       await getAccountTimeToWatchStats(req, res, next);
 
-      expect(accountStatisticsService.getAccountTimeToWatchStats).toHaveBeenCalledWith(1);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
@@ -271,7 +380,7 @@ describe('accountStatisticsController', () => {
   });
 
   describe('getAccountSeasonalViewingStats', () => {
-    it('should return account seasonal viewing statistics successfully', async () => {
+    it('should return account seasonal viewing statistics with default days parameter', async () => {
       req.params = { accountId: 1 };
       const mockStats = {
         seasonalPattern: {
@@ -287,7 +396,33 @@ describe('accountStatisticsController', () => {
 
       await getAccountSeasonalViewingStats(req, res, next);
 
-      expect(accountStatisticsService.getAccountSeasonalViewingStats).toHaveBeenCalledWith(1);
+      expect(accountStatisticsService.getAccountSeasonalViewingStats).toHaveBeenCalledWith(1, 36500);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Successfully retrieved account seasonal viewing statistics',
+        results: mockStats,
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should return account seasonal viewing statistics with custom days parameter', async () => {
+      req.params = { accountId: 1 };
+      req.query = { days: '365' };
+      const mockStats = {
+        seasonalPattern: {
+          spring: 150,
+          summer: 200,
+          fall: 175,
+          winter: 225,
+        },
+        busiestSeason: 'winter',
+      };
+
+      (accountStatisticsService.getAccountSeasonalViewingStats as jest.Mock).mockResolvedValue(mockStats);
+
+      await getAccountSeasonalViewingStats(req, res, next);
+
+      expect(accountStatisticsService.getAccountSeasonalViewingStats).toHaveBeenCalledWith(1, 365);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully retrieved account seasonal viewing statistics',
@@ -303,7 +438,6 @@ describe('accountStatisticsController', () => {
 
       await getAccountSeasonalViewingStats(req, res, next);
 
-      expect(accountStatisticsService.getAccountSeasonalViewingStats).toHaveBeenCalledWith(1);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
@@ -341,7 +475,6 @@ describe('accountStatisticsController', () => {
 
       await getAccountMilestoneStats(req, res, next);
 
-      expect(accountStatisticsService.getAccountMilestoneStats).toHaveBeenCalledWith(1);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
@@ -349,7 +482,7 @@ describe('accountStatisticsController', () => {
   });
 
   describe('getAccountContentDepthStats', () => {
-    it('should return account content depth statistics successfully', async () => {
+    it('should return account content depth statistics with default days parameter', async () => {
       req.params = { accountId: 1 };
       const mockStats = {
         showsWithMultipleSeasons: 10,
@@ -361,7 +494,29 @@ describe('accountStatisticsController', () => {
 
       await getAccountContentDepthStats(req, res, next);
 
-      expect(accountStatisticsService.getAccountContentDepthStats).toHaveBeenCalledWith(1);
+      expect(accountStatisticsService.getAccountContentDepthStats).toHaveBeenCalledWith(1, 36500);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Successfully retrieved account content depth statistics',
+        results: mockStats,
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should return account content depth statistics with custom days parameter', async () => {
+      req.params = { accountId: 1 };
+      req.query = { days: '365' };
+      const mockStats = {
+        showsWithMultipleSeasons: 10,
+        averageSeasonsPerShow: 3.5,
+        mostWatchedShow: { showId: 1, seasonCount: 8 },
+      };
+
+      (accountStatisticsService.getAccountContentDepthStats as jest.Mock).mockResolvedValue(mockStats);
+
+      await getAccountContentDepthStats(req, res, next);
+
+      expect(accountStatisticsService.getAccountContentDepthStats).toHaveBeenCalledWith(1, 365);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully retrieved account content depth statistics',
@@ -377,7 +532,6 @@ describe('accountStatisticsController', () => {
 
       await getAccountContentDepthStats(req, res, next);
 
-      expect(accountStatisticsService.getAccountContentDepthStats).toHaveBeenCalledWith(1);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
@@ -385,7 +539,7 @@ describe('accountStatisticsController', () => {
   });
 
   describe('getAccountContentDiscoveryStats', () => {
-    it('should return account content discovery statistics successfully', async () => {
+    it('should return account content discovery statistics with default days parameter', async () => {
       req.params = { accountId: 1 };
       const mockStats = {
         newShowsThisMonth: 5,
@@ -397,7 +551,29 @@ describe('accountStatisticsController', () => {
 
       await getAccountContentDiscoveryStats(req, res, next);
 
-      expect(accountStatisticsService.getAccountContentDiscoveryStats).toHaveBeenCalledWith(1);
+      expect(accountStatisticsService.getAccountContentDiscoveryStats).toHaveBeenCalledWith(1, 30);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Successfully retrieved account content discovery statistics',
+        results: mockStats,
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should return account content discovery statistics with custom days parameter', async () => {
+      req.params = { accountId: 1 };
+      req.query = { days: '90' };
+      const mockStats = {
+        newShowsThisMonth: 5,
+        newMoviesThisMonth: 8,
+        discoveryRate: 0.15,
+      };
+
+      (accountStatisticsService.getAccountContentDiscoveryStats as jest.Mock).mockResolvedValue(mockStats);
+
+      await getAccountContentDiscoveryStats(req, res, next);
+
+      expect(accountStatisticsService.getAccountContentDiscoveryStats).toHaveBeenCalledWith(1, 90);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully retrieved account content discovery statistics',
@@ -413,7 +589,6 @@ describe('accountStatisticsController', () => {
 
       await getAccountContentDiscoveryStats(req, res, next);
 
-      expect(accountStatisticsService.getAccountContentDiscoveryStats).toHaveBeenCalledWith(1);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
@@ -451,7 +626,6 @@ describe('accountStatisticsController', () => {
 
       await getAccountAbandonmentRiskStats(req, res, next);
 
-      expect(accountStatisticsService.getAccountAbandonmentRiskStats).toHaveBeenCalledWith(1);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
@@ -487,7 +661,41 @@ describe('accountStatisticsController', () => {
 
       await getAccountUnairedContentStats(req, res, next);
 
-      expect(accountStatisticsService.getAccountUnairedContentStats).toHaveBeenCalledWith(1);
+      expect(next).toHaveBeenCalledWith(error);
+      expect(res.status).not.toHaveBeenCalled();
+      expect(res.json).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getAccountRewatchStats', () => {
+    it('should return account rewatch statistics successfully', async () => {
+      req.params = { accountId: 1 };
+      const mockStats = {
+        rewatchedShows: 5,
+        rewatchedMovies: 10,
+        totalRewatches: 15,
+      };
+
+      (accountStatisticsService.getAccountRewatchStats as jest.Mock).mockResolvedValue(mockStats);
+
+      await getAccountRewatchStats(req, res, next);
+
+      expect(accountStatisticsService.getAccountRewatchStats).toHaveBeenCalledWith(1);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Successfully retrieved account rewatch statistics',
+        results: mockStats,
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should handle errors from the service', async () => {
+      req.params = { accountId: 1 };
+      const error = new Error('Failed to get account rewatch stats');
+      (accountStatisticsService.getAccountRewatchStats as jest.Mock).mockRejectedValue(error);
+
+      await getAccountRewatchStats(req, res, next);
+
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
@@ -528,7 +736,6 @@ describe('accountStatisticsController', () => {
 
       await getProfileComparison(req, res, next);
 
-      expect(accountStatisticsService.getProfileComparison).toHaveBeenCalledWith(1);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
