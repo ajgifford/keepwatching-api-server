@@ -2,12 +2,12 @@
 # yarn lockfile v1
 
 
-"@ajgifford/keepwatching-common-server@^0.19.0":
-  version "0.19.0"
-  resolved "https://npm.pkg.github.com/download/@ajgifford/keepwatching-common-server/0.19.0/ec415f6a4c5547ab14d9f8c684332b9e3c7a9408#ec415f6a4c5547ab14d9f8c684332b9e3c7a9408"
-  integrity sha512-CikYqeX+7y3NQTyenuIvzQqEVhS/pZwiLVeQeexc2HVkF3RbXwcZzJKpUQcHJM+UEcIcd3qFP8Y66gERPvceHg==
+"@ajgifford/keepwatching-common-server@^0.20.0":
+  version "0.20.0"
+  resolved "https://npm.pkg.github.com/download/@ajgifford/keepwatching-common-server/0.20.0/07fd23a09a1303f6d5218ed7fe8dca86bf96f94e#07fd23a09a1303f6d5218ed7fe8dca86bf96f94e"
+  integrity sha512-d5yqfgwwNQ27e8nLermp79QvSmx/3AiJx4+VuzWQZ4mSrCH8a/2VaZodix7zxr35UwHUChvxYciX/1wc0S0Blw==
   dependencies:
-    "@ajgifford/keepwatching-types" "^0.11.7"
+    "@ajgifford/keepwatching-types" "^0.12.0"
     axios "1.18.0"
     axios-retry "^4.5.0"
     cron-parser "5.5.0"
@@ -19,7 +19,7 @@
     mysql2 "3.22.5"
     node-cache "^5.1.2"
     node-cron "4.2.1"
-    nodemailer "9.0.0"
+    nodemailer "9.0.1"
     socket.io "^4.8.3"
     streaming-availability "^4.5.0"
     uuid "^14.0.0"
@@ -27,10 +27,10 @@
     winston-daily-rotate-file "^5.0.0"
     zod "^4.4.3"
 
-"@ajgifford/keepwatching-types@^0.11.7":
-  version "0.11.7"
-  resolved "https://npm.pkg.github.com/download/@ajgifford/keepwatching-types/0.11.7/3cc210c8ab9a2ee54e28769fb36797a9ac48e9c0#3cc210c8ab9a2ee54e28769fb36797a9ac48e9c0"
-  integrity sha512-ywYvD8uNYmAEV4m9LvLy7BOoxprZK69XJBE3eoa0iS9Ydgvv4jY3Nur6knijW9SkWB4Ie0p1KAkeIMveFky2tA==
+"@ajgifford/keepwatching-types@^0.12.0":
+  version "0.12.0"
+  resolved "https://npm.pkg.github.com/download/@ajgifford/keepwatching-types/0.12.0/846f686d19065fc9da2c7e7f5bf2df73987433b2#846f686d19065fc9da2c7e7f5bf2df73987433b2"
+  integrity sha512-NBEP9WyA5fLeAFlzIgstPI6xbhjHQrO1gf4Ir7FiJ6W+SalzHBA8sGOdsv4Z+nDrUaeQfyTt2YoKlHCNtHWzQQ==
 
 "@babel/code-frame@^7.0.0", "@babel/code-frame@^7.27.1":
   version "7.27.1"
@@ -4939,11 +4939,6 @@ node-releases@^2.0.21:
   version "2.0.25"
   resolved "https://registry.yarnpkg.com/node-releases/-/node-releases-2.0.25.tgz#95479437bd409231e03981c1f6abee67f5e962df"
   integrity sha512-4auku8B/vw5psvTiiN9j1dAOsXvMoGqJuKJcR+dTdqiXEK20mMTk1UEo3HS16LeGQsVG6+qKTPM9u/qQ2LqATA==
-
-nodemailer@9.0.0:
-  version "9.0.0"
-  resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-9.0.0.tgz#b01f5fe72c1b3576fdd2d7b272eee8c1c6ad45bd"
-  integrity sha512-tbPTid7d/p9jAA8CRZ3iomvrMaST0o6NYuY7v6JQZHpPRZ61mLFSPKYd7342NtOFuej9/+L48SOIxwfu2uDvtw==
 
 nodemailer@9.0.1:
   version "9.0.1"

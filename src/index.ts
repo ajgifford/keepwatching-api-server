@@ -18,6 +18,7 @@ import seasonsRouter from './routes/seasonsRouter';
 import showsRouter from './routes/showsRouter';
 import statisticsRouter from './routes/statisticsRouter';
 import watchHistoryRouter from './routes/watchHistoryRouter';
+import watchlistRouter from './routes/watchlistRouter';
 import { errorHandler } from '@ajgifford/keepwatching-common-server';
 import {
   getAppVersion,
@@ -190,6 +191,7 @@ app.use(authenticateUser, fileRouter);
 app.use(authenticateUser, notificationsRouter);
 app.use(authenticateUser, statisticsRouter);
 app.use(authenticateUser, watchHistoryRouter);
+app.use(authenticateUser, watchlistRouter);
 app.use(authenticateUser, calendarRouter);
 
 const server = https.createServer(credentials, app);
