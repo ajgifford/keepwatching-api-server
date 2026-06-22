@@ -1,7 +1,6 @@
 import { getServiceName } from '@ajgifford/keepwatching-common-server/config';
-import { getFirebaseAdmin } from '@ajgifford/keepwatching-common-server/utils';
+import { verifyFirebaseToken } from '@ajgifford/keepwatching-common-server/utils';
 import { NextFunction, Request, Response } from 'express';
-import { getAuth } from 'firebase-admin/auth';
 
 export const authenticateUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -13,12 +12,7 @@ export const authenticateUser = async (req: Request, res: Response, next: NextFu
     }
 
     const idToken = authHeader.split(' ')[1];
-    const firebaseApp = getFirebaseAdmin(getServiceName());
-    if (!firebaseApp) {
-      res.status(500).json({ error: 'Authentication service unavailable' });
-      return;
-    }
-    const decodedToken = await getAuth(firebaseApp).verifyIdToken(idToken);
+    const decodedToken = await verifyFirebaseToken(getServiceName(), idToken);
     req.user = decodedToken;
     next();
   } catch (error) {

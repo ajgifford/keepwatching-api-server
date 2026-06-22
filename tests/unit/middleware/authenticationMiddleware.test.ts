@@ -1,30 +1,24 @@
-import { getFirebaseAdmin } from '@ajgifford/keepwatching-common-server/utils';
+import { verifyFirebaseToken } from '@ajgifford/keepwatching-common-server/utils';
 import { authenticateUser } from '@middleware/authenticationMiddleware';
 import { NextFunction, Request, Response } from 'express';
-import { getAuth } from 'firebase-admin/auth';
 
 jest.mock('@ajgifford/keepwatching-common-server/utils', () => ({
-  getFirebaseAdmin: jest.fn(),
+  verifyFirebaseToken: jest.fn(),
 }));
 
 jest.mock('@ajgifford/keepwatching-common-server/config', () => ({
   getServiceName: jest.fn().mockReturnValue('test-service'),
 }));
 
-jest.mock('firebase-admin/auth', () => ({
-  getAuth: jest.fn(),
-}));
-
 describe('authenticationMiddleware', () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
   let mockNext: NextFunction;
-  let mockVerifyIdToken: jest.Mock;
+  let mockVerifyFirebaseToken: jest.Mock;
 
   beforeEach(() => {
-    mockVerifyIdToken = jest.fn();
-    (getFirebaseAdmin as jest.Mock).mockReturnValue({});
-    (getAuth as jest.Mock).mockReturnValue({ verifyIdToken: mockVerifyIdToken });
+    mockVerifyFirebaseToken = verifyFirebaseToken as jest.Mock;
+    mockVerifyFirebaseToken.mockReset();
 
     mockRequest = {
       headers: {},
@@ -52,11 +46,11 @@ describe('authenticationMiddleware', () => {
         authorization: 'Bearer valid-token',
       };
 
-      mockVerifyIdToken.mockResolvedValue(mockDecodedToken);
+      mockVerifyFirebaseToken.mockResolvedValue(mockDecodedToken);
 
       await authenticateUser(mockRequest as Request, mockResponse as Response, mockNext);
 
-      expect(mockVerifyIdToken).toHaveBeenCalledWith('valid-token');
+      expect(mockVerifyFirebaseToken).toHaveBeenCalledWith('test-service', 'valid-token');
       expect(mockRequest.user).toEqual(mockDecodedToken);
       expect(mockNext).toHaveBeenCalled();
       expect(mockResponse.status).not.toHaveBeenCalled();
@@ -68,7 +62,7 @@ describe('authenticationMiddleware', () => {
 
       await authenticateUser(mockRequest as Request, mockResponse as Response, mockNext);
 
-      expect(mockVerifyIdToken).not.toHaveBeenCalled();
+      expect(mockVerifyFirebaseToken).not.toHaveBeenCalled();
       expect(mockResponse.status).toHaveBeenCalledWith(401);
       expect(mockResponse.json).toHaveBeenCalledWith({
         error: 'Authorization header missing or malformed',
@@ -83,7 +77,7 @@ describe('authenticationMiddleware', () => {
 
       await authenticateUser(mockRequest as Request, mockResponse as Response, mockNext);
 
-      expect(mockVerifyIdToken).not.toHaveBeenCalled();
+      expect(mockVerifyFirebaseToken).not.toHaveBeenCalled();
       expect(mockResponse.status).toHaveBeenCalledWith(401);
       expect(mockResponse.json).toHaveBeenCalledWith({
         error: 'Authorization header missing or malformed',
@@ -98,6 +92,7 @@ describe('authenticationMiddleware', () => {
 
       await authenticateUser(mockRequest as Request, mockResponse as Response, mockNext);
 
+      expect(mockVerifyFirebaseToken).not.toHaveBeenCalled();
       expect(mockResponse.status).toHaveBeenCalledWith(401);
       expect(mockResponse.json).toHaveBeenCalledWith({
         error: 'Authorization header missing or malformed',
@@ -110,11 +105,11 @@ describe('authenticationMiddleware', () => {
         authorization: 'Bearer invalid-token',
       };
 
-      mockVerifyIdToken.mockRejectedValue(new Error('Token verification failed'));
+      mockVerifyFirebaseToken.mockRejectedValue(new Error('Token verification failed'));
 
       await authenticateUser(mockRequest as Request, mockResponse as Response, mockNext);
 
-      expect(mockVerifyIdToken).toHaveBeenCalledWith('invalid-token');
+      expect(mockVerifyFirebaseToken).toHaveBeenCalledWith('test-service', 'invalid-token');
       expect(mockResponse.status).toHaveBeenCalledWith(401);
       expect(mockResponse.json).toHaveBeenCalledWith({
         error: 'Unauthorized',
@@ -129,11 +124,11 @@ describe('authenticationMiddleware', () => {
       };
 
       const expiredError = new Error('Token expired');
-      mockVerifyIdToken.mockRejectedValue(expiredError);
+      mockVerifyFirebaseToken.mockRejectedValue(expiredError);
 
       await authenticateUser(mockRequest as Request, mockResponse as Response, mockNext);
 
-      expect(mockVerifyIdToken).toHaveBeenCalledWith('expired-token');
+      expect(mockVerifyFirebaseToken).toHaveBeenCalledWith('test-service', 'expired-token');
       expect(mockResponse.status).toHaveBeenCalledWith(401);
       expect(mockResponse.json).toHaveBeenCalledWith({
         error: 'Unauthorized',
@@ -146,8 +141,7 @@ describe('authenticationMiddleware', () => {
         authorization: 'Bearer ',
       };
 
-      // Firebase rejects verification of an empty token
-      mockVerifyIdToken.mockRejectedValue(new Error('No token provided'));
+      mockVerifyFirebaseToken.mockRejectedValue(new Error('No token provided'));
 
       await authenticateUser(mockRequest as Request, mockResponse as Response, mockNext);
 
@@ -170,7 +164,7 @@ describe('authenticationMiddleware', () => {
         authorization: 'Bearer token-with-extra-claims',
       };
 
-      mockVerifyIdToken.mockResolvedValue(mockDecodedToken);
+      mockVerifyFirebaseToken.mockResolvedValue(mockDecodedToken);
 
       await authenticateUser(mockRequest as Request, mockResponse as Response, mockNext);
 
@@ -194,11 +188,11 @@ describe('authenticationMiddleware', () => {
         };
 
         const mockDecodedToken = { uid: testCase.uid };
-        mockVerifyIdToken.mockResolvedValue(mockDecodedToken);
+        mockVerifyFirebaseToken.mockResolvedValue(mockDecodedToken);
 
         await authenticateUser(mockRequest as Request, mockResponse as Response, mockNext);
 
-        expect(mockVerifyIdToken).toHaveBeenCalledWith(testCase.token);
+        expect(mockVerifyFirebaseToken).toHaveBeenCalledWith('test-service', testCase.token);
         expect(mockRequest.user).toEqual(mockDecodedToken);
         expect(mockNext).toHaveBeenCalled();
       }
