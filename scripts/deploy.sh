@@ -178,8 +178,8 @@ main() {
     local deploy_name=$(create_deployment_name)
     local deploy_dir="$DEPLOY_BASE_DIR/$deploy_name"
 
-    log_info "Deployment name would be: $deploy_name"
-    log_info "Deployment directory would be: $deploy_dir"
+    log_info "Deployment name: $deploy_name"
+    log_info "Deployment directory: $deploy_dir"
     echo ""
 
     if [ "$DRY_RUN" = true ]; then
@@ -247,19 +247,23 @@ main() {
     fi
 
     # Restart PM2 app
+    # Use delete + start from the new deployment directory so PM2 resolves its cwd
+    # to the real path of the new deployment, not a stale previous one. "pm2 restart"
+    # reuses the cwd from when the process was first started and would ignore the
+    # updated symlink.
     if [ "$DRY_RUN" = true ]; then
-        log_dry_run "Check if PM2 app '$PM2_APP_NAME' is running"
-        log_dry_run "pm2 restart $PM2_APP_NAME --update-env (or start if not running)"
+        log_dry_run "pm2 delete $PM2_APP_NAME (if running)"
+        log_dry_run "cd $CURRENT_LINK && pm2 start ecosystem.config.cjs --only $PM2_APP_NAME --env production"
+        log_dry_run "pm2 save"
         log_dry_run "sleep 5"
     else
-        log_info "Restarting PM2 application..."
+        log_info "Restarting PM2 application from new deployment..."
         if is_pm2_running; then
-            pm2 restart "$PM2_APP_NAME" --update-env
-        else
-            log_warning "PM2 app not running, starting it..."
-            cd "$CURRENT_LINK"
-            pm2 start ecosystem.config.cjs --only "$PM2_APP_NAME" --env production
+            pm2 delete "$PM2_APP_NAME"
         fi
+        cd "$CURRENT_LINK"
+        pm2 start ecosystem.config.cjs --only "$PM2_APP_NAME" --env production
+        pm2 save
         # Wait for app to start
         sleep 5
     fi

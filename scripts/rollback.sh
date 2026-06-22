@@ -196,12 +196,22 @@ rollback_to() {
     fi
 
     # Restart PM2 app
+    # Use delete + start from the rollback target so PM2 resolves its cwd to the
+    # real path of that deployment. "pm2 restart" reuses the previously stored cwd
+    # and would ignore the updated symlink.
     if [ "$DRY_RUN" = true ]; then
-        log_dry_run "pm2 restart $PM2_APP_NAME --update-env"
+        log_dry_run "pm2 delete $PM2_APP_NAME (if running)"
+        log_dry_run "cd $deploy_dir && pm2 start ecosystem.config.cjs --only $PM2_APP_NAME --env production"
+        log_dry_run "pm2 save"
         log_dry_run "sleep 5"
     else
-        log_info "Restarting PM2 application..."
-        pm2 restart "$PM2_APP_NAME" --update-env
+        log_info "Restarting PM2 application from rollback target..."
+        if pm2 describe "$PM2_APP_NAME" > /dev/null 2>&1; then
+            pm2 delete "$PM2_APP_NAME"
+        fi
+        cd "$deploy_dir"
+        pm2 start ecosystem.config.cjs --only "$PM2_APP_NAME" --env production
+        pm2 save
         # Wait for app to start
         sleep 5
     fi
