@@ -145,8 +145,8 @@ Enter the number of the deployment to rollback to (or 'q' to quit):
 
 ### 3. deployment-status.sh
 
-View current deployment status, history, and available deployments. Also provides
-`info` for per-deployment detail and `clean` for manual disk-space reclamation.
+View current deployment status, history, and available deployments. Also provides `info` for per-deployment detail and
+`clean` for manual disk-space reclamation.
 
 **Show All Information:**
 
@@ -213,9 +213,8 @@ drwxr-xr-x  dist/
 ./scripts/deployment-status.sh clean 60
 ```
 
-The `clean` command applies the same logic as the automatic post-deploy cleanup:
-it never removes the three most recent deployments regardless of age, and it
-never removes the active (`current`) deployment.
+The `clean` command applies the same logic as the automatic post-deploy cleanup: it never removes the three most recent
+deployments regardless of age, and it never removes the active (`current`) deployment.
 
 **Example Output (show all):**
 
@@ -567,8 +566,8 @@ Each deployment typically takes 200-300MB of disk space. With 5 deployments, thi
 ./scripts/deployment-status.sh clean 60
 ```
 
-The `clean` command never removes the active deployment or the three most recent
-deployments, so it is safe to run at any time.
+The `clean` command never removes the active deployment or the three most recent deployments, so it is safe to run at
+any time.
 
 ## Troubleshooting
 
