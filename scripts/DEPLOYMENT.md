@@ -145,7 +145,8 @@ Enter the number of the deployment to rollback to (or 'q' to quit):
 
 ### 3. deployment-status.sh
 
-View current deployment status, history, and available deployments.
+View current deployment status, history, and available deployments. Also provides
+`info` for per-deployment detail and `clean` for manual disk-space reclamation.
 
 **Show All Information:**
 
@@ -171,7 +172,52 @@ View current deployment status, history, and available deployments.
 ./scripts/deployment-status.sh --available
 ```
 
-**Example Output:**
+**Show Detailed Info for a Specific Deployment:**
+
+```bash
+# First list deployments to get the number
+./scripts/deployment-status.sh --available
+
+# Then inspect by number (1 = newest)
+./scripts/deployment-status.sh info 2
+```
+
+Example output:
+
+```
+=== Deployment Info: 20241117_150045_e4f5g6h ===
+
+Path:   /home/user/keepwatching-api-server/deployments/20241117_150045_e4f5g6h
+Size:   243M
+Status: not active
+
+Commit:      e4f5g6h
+Deploy dir:  20241117 150045
+Branch:      main
+Recorded at: 2024-11-17 15:00:45
+
+Directory contents:
+drwxr-xr-x  node_modules/
+drwxr-xr-x  dist/
+-rw-r--r--  package.json
+...
+```
+
+**Clean Old Deployments Manually:**
+
+```bash
+# Remove deployments older than 30 days (default), keeping at least 3
+./scripts/deployment-status.sh clean
+
+# Remove deployments older than 60 days
+./scripts/deployment-status.sh clean 60
+```
+
+The `clean` command applies the same logic as the automatic post-deploy cleanup:
+it never removes the three most recent deployments regardless of age, and it
+never removes the active (`current`) deployment.
+
+**Example Output (show all):**
 
 ```
 === Current Deployment Status ===
@@ -514,12 +560,15 @@ Each deployment typically takes 200-300MB of disk space. With 5 deployments, thi
 **Manually clean old deployments**:
 
 ```bash
-cd deployments
-ls -lt  # View all deployments
-rm -rf <old-deployment-directory>
+# Remove deployments older than 30 days (keeps at least 3)
+./scripts/deployment-status.sh clean
+
+# Or specify a custom age threshold
+./scripts/deployment-status.sh clean 60
 ```
 
-**Warning**: Never delete the deployment that `current` symlink points to!
+The `clean` command never removes the active deployment or the three most recent
+deployments, so it is safe to run at any time.
 
 ## Troubleshooting
 

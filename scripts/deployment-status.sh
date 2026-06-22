@@ -16,6 +16,7 @@ PM2_APP_NAME="keepwatching-api-server"
 DEPLOY_BASE_DIR="$(pwd)/deployments"
 CURRENT_LINK="$DEPLOY_BASE_DIR/current"
 HISTORY_FILE="$DEPLOY_BASE_DIR/.deployment-history"
+MIN_KEEP_DEPLOYMENTS=3  # clean command always preserves at least this many
 
 # Helper functions
 log_info() {
@@ -215,17 +216,128 @@ show_available_deployments() {
     echo ""
 }
 
+# Show detailed info about a specific deployment by number (from the --available list)
+show_deployment_info() {
+    local index=$1
+
+    if [ -z "$index" ]; then
+        log_error "Please specify a deployment number (use --available to see the list)."
+        exit 1
+    fi
+
+    if ! [[ "$index" =~ ^[0-9]+$ ]]; then
+        log_error "Deployment number must be a positive integer."
+        exit 1
+    fi
+
+    if [ ! -d "$DEPLOY_BASE_DIR" ]; then
+        log_error "No deployments directory found."
+        exit 1
+    fi
+
+    cd "$DEPLOY_BASE_DIR"
+    local deployments=($(ls -dt */ 2>/dev/null | sed 's:/*$::' | grep -v '^current$' || true))
+
+    if [ ${#deployments[@]} -eq 0 ]; then
+        log_warning "No deployments found."
+        exit 1
+    fi
+
+    if [ "$index" -lt 1 ] || [ "$index" -gt ${#deployments[@]} ]; then
+        log_error "Invalid deployment number $index. Valid range: 1–${#deployments[@]}."
+        exit 1
+    fi
+
+    local deploy="${deployments[$((index - 1))]}"
+    local deploy_path="$DEPLOY_BASE_DIR/$deploy"
+    local current_deploy=$(get_current_deployment)
+
+    echo -e "${CYAN}=== Deployment Info: $deploy ===${NC}"
+    echo ""
+    echo -e "${CYAN}Path:${NC}   $deploy_path"
+    echo -e "${CYAN}Size:${NC}   $(du -sh "$deploy_path" 2>/dev/null | cut -f1)"
+
+    if [ "$deploy" = "$current_deploy" ]; then
+        echo -e "${CYAN}Status:${NC} ${GREEN}ACTIVE (current)${NC}"
+    else
+        echo -e "${CYAN}Status:${NC} not active"
+    fi
+    echo ""
+
+    # Commit hash and timestamp are encoded in the directory name: YYYYMMDD_HHMMSS_commithash
+    local commit=$(echo "$deploy" | cut -d'_' -f3)
+    local dir_timestamp=$(echo "$deploy" | cut -d'_' -f1-2 | sed 's/_/ /')
+    echo -e "${CYAN}Commit:${NC}      $commit"
+    echo -e "${CYAN}Deploy dir:${NC}  $dir_timestamp"
+
+    # Enrich with history file data
+    if [ -f "$HISTORY_FILE" ]; then
+        local hist_line=$(grep "$deploy" "$HISTORY_FILE" | tail -1)
+        if [ -n "$hist_line" ]; then
+            local hist_timestamp=$(echo "$hist_line" | cut -d'|' -f1)
+            local hist_branch=$(echo "$hist_line" | cut -d'|' -f4)
+            [ -n "$hist_branch" ]    && echo -e "${CYAN}Branch:${NC}      $hist_branch"
+            [ -n "$hist_timestamp" ] && echo -e "${CYAN}Recorded at:${NC} $hist_timestamp"
+        fi
+    fi
+
+    echo ""
+    echo -e "${CYAN}Directory contents:${NC}"
+    ls -lh "$deploy_path" | tail -n +2
+    echo ""
+}
+
+# Remove deployments older than N days, always keeping at least MIN_KEEP_DEPLOYMENTS
+clean_old_deployments() {
+    local days=${1:-30}
+
+    echo -e "${CYAN}=== Cleaning Old Deployments ===${NC}"
+    echo ""
+
+    if [ ! -d "$DEPLOY_BASE_DIR" ]; then
+        log_warning "No deployments directory found."
+        echo ""
+        return
+    fi
+
+    cd "$DEPLOY_BASE_DIR"
+    local deployments=($(ls -dt */ 2>/dev/null | sed 's:/*$::' | grep -v '^current$' || true))
+    local count=${#deployments[@]}
+    local removed=0
+
+    log_info "Removing deployments older than $days days (keeping at least $MIN_KEEP_DEPLOYMENTS)..."
+    echo ""
+
+    for ((i=MIN_KEEP_DEPLOYMENTS; i<count; i++)); do
+        local deploy="${deployments[$i]}"
+        # find returns output only when the directory is older than $days
+        if find "$deploy" -maxdepth 0 -mtime "+${days}" 2>/dev/null | grep -q .; then
+            log_info "Removing: $deploy"
+            rm -rf "$deploy"
+            removed=$((removed + 1))
+        fi
+    done
+
+    if [ $removed -eq 0 ]; then
+        log_info "No old deployments to remove"
+    else
+        log_success "Removed $removed old deployment(s)"
+    fi
+    echo ""
+}
+
 # Show usage
 show_usage() {
-    echo "Usage: $0 [options]"
+    echo "Usage: $0 [command] [args]"
     echo ""
-    echo "Options:"
-    echo "  --current     Show only current deployment status"
-    echo "  --history     Show only deployment history"
-    echo "  --available   Show only available deployments"
-    echo "  -h, --help    Show this help message"
-    echo ""
-    echo "If no options are provided, all information will be displayed."
+    echo "Commands (no command shows everything):"
+    echo "  --current         Show current deployment and PM2 status"
+    echo "  --history         Show deployment history (last 10)"
+    echo "  --available       Show all on-disk deployments with sizes"
+    echo "  info <n>          Show detailed info for deployment #n (from --available list)"
+    echo "  clean [days]      Remove deployments older than N days (default: 30),"
+    echo "                    always keeping at least $MIN_KEEP_DEPLOYMENTS"
+    echo "  -h, --help        Show this help message"
 }
 
 # Main function
@@ -244,6 +356,12 @@ main() {
             ;;
         --available)
             show_available_deployments
+            ;;
+        info)
+            show_deployment_info "$2"
+            ;;
+        clean)
+            clean_old_deployments "$2"
             ;;
         *)
             show_current_status
