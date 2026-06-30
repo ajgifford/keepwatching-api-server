@@ -348,7 +348,21 @@ main() {
         log_dry_run "curl -f -s -k $HEALTH_CHECK_URL (timeout: ${HEALTH_CHECK_TIMEOUT}s)"
     else
         if ! health_check; then
-            log_error "Health check failed — rolling back to previous deployment..."
+            log_error "Health check failed — capturing diagnostics before rollback..."
+            echo ""
+            echo "--- PM2 stdout (last 50 lines) ---"
+            pm2 logs "$PM2_APP_NAME" --lines 50 --nostream 2>/dev/null || true
+            echo "--- end PM2 logs ---"
+            echo ""
+            echo "--- Diagnostic curl (verbose) ---"
+            curl -v -k "$HEALTH_CHECK_URL" 2>&1 | tail -40 || true
+            echo "--- end diagnostic curl ---"
+            echo ""
+            echo "--- Listening sockets on port 3033 ---"
+            (ss -ltnp 2>/dev/null || netstat -ltnp 2>/dev/null) | grep 3033 || echo "(nothing listening on 3033)"
+            echo "--- end socket check ---"
+            echo ""
+            log_error "Rolling back to previous deployment..."
             # Return to project root before calling emergency_rollback (which does cd)
             cd "$(dirname "$DEPLOY_BASE_DIR")"
             emergency_rollback "$previous_deploy" "$deploy_dir"
