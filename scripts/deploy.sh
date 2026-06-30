@@ -21,7 +21,7 @@ CURRENT_LINK="$DEPLOY_BASE_DIR/current"
 HISTORY_FILE="$DEPLOY_BASE_DIR/.deployment-history"
 MAX_DEPLOYMENT_AGE_DAYS=30  # Remove deployments older than this many days
 MIN_KEEP_DEPLOYMENTS=3      # Always keep at least this many regardless of age
-HEALTH_CHECK_URL="http://localhost:3033/api/v1/health"
+HEALTH_CHECK_URL="https://localhost:3033/health"
 HEALTH_CHECK_TIMEOUT=30  # seconds
 
 # Parse command line arguments
@@ -123,7 +123,7 @@ health_check() {
 
     local elapsed=0
     while [ $elapsed -lt $HEALTH_CHECK_TIMEOUT ]; do
-        if curl -f -s "$HEALTH_CHECK_URL" > /dev/null 2>&1; then
+        if curl -f -s -k "$HEALTH_CHECK_URL" > /dev/null 2>&1; then
             log_success "Health check passed"
             return 0
         fi
@@ -345,7 +345,7 @@ main() {
 
     # Health check — roll back automatically if the server doesn't come up
     if [ "$DRY_RUN" = true ]; then
-        log_dry_run "curl -f -s $HEALTH_CHECK_URL (timeout: ${HEALTH_CHECK_TIMEOUT}s)"
+        log_dry_run "curl -f -s -k $HEALTH_CHECK_URL (timeout: ${HEALTH_CHECK_TIMEOUT}s)"
     else
         if ! health_check; then
             log_error "Health check failed — rolling back to previous deployment..."
