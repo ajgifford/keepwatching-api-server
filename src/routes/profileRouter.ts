@@ -1,4 +1,11 @@
-import { addProfile, deleteProfile, editProfile, getProfile, getProfiles } from '../controllers/profileController';
+import {
+  addProfile,
+  deleteProfile,
+  editProfile,
+  getProfile,
+  getProfiles,
+  updateProfileAccentColor,
+} from '../controllers/profileController';
 import { trackAccountActivity } from '../middleware/accountActivityMiddleware';
 import { authorizeAccountAccess } from '../middleware/authorizationMiddleware';
 import { validateRequest, validateSchema } from '@ajgifford/keepwatching-common-server';
@@ -6,6 +13,7 @@ import { logRequestContext } from '@ajgifford/keepwatching-common-server/middlew
 import {
   accountAndProfileIdsParamSchema,
   accountIdParamSchema,
+  profileAccentColorBodySchema,
   profileNameBodySchema,
 } from '@ajgifford/keepwatching-common-server/schema';
 import express from 'express';
@@ -45,6 +53,15 @@ router.put(
   validateRequest(profileNameBodySchema),
   trackAccountActivity,
   editProfile,
+);
+router.patch(
+  '/api/v1/accounts/:accountId/profiles/:profileId/accent',
+  logRequestContext,
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
+  validateRequest(profileAccentColorBodySchema),
+  trackAccountActivity,
+  updateProfileAccentColor,
 );
 router.delete(
   '/api/v1/accounts/:accountId/profiles/:profileId',

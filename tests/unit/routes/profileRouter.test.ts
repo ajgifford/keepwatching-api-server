@@ -7,6 +7,7 @@ jest.mock('@controllers/profileController', () => ({
   getProfile: jest.fn((_req, res) => res.status(200).send('profile')),
   addProfile: jest.fn((_req, res) => res.status(201).send('profile added')),
   editProfile: jest.fn((_req, res) => res.status(200).send('profile edited')),
+  updateProfileAccentColor: jest.fn((_req, res) => res.status(200).send('accent updated')),
   deleteProfile: jest.fn((_req, res) => res.status(200).send('profile deleted')),
 }));
 
@@ -50,6 +51,12 @@ describe('Profile Router', () => {
     const res = await request(app).put('/api/v1/accounts/123/profiles/456').send({});
     expect(res.status).toBe(200);
     expect(res.text).toBe('profile edited');
+  });
+
+  it('PATCH /api/v1/accounts/:accountId/profiles/:profileId/accent', async () => {
+    const res = await request(app).patch('/api/v1/accounts/123/profiles/456/accent').send({ accentColor: '#7b1fa2' });
+    expect(res.status).toBe(200);
+    expect(res.text).toBe('accent updated');
   });
 
   it('DELETE /api/v1/accounts/:accountId/profiles/:profileId', async () => {

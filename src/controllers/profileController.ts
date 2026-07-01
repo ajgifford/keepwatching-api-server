@@ -1,6 +1,7 @@
 import {
   AccountAndProfileIdsParams,
   AccountIdParam,
+  ProfileAccentColorBody,
   ProfileNameBody,
 } from '@ajgifford/keepwatching-common-server/schema';
 import { profileService } from '@ajgifford/keepwatching-common-server/services';
@@ -88,6 +89,29 @@ export const editProfile = asyncHandler(async (req: Request, res: Response, next
     next(error);
   }
 });
+
+/**
+ * Updates the color accent for a profile.
+ *
+ * @route PATCH /api/v1/accounts/:accountId/profiles/:profileId/accent
+ */
+export const updateProfileAccentColor = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
+      const { accentColor }: ProfileAccentColorBody = req.body;
+
+      const profile = await profileService.updateProfileAccentColor(profileId, accentColor);
+
+      res.status(200).json({
+        message: 'Profile accent color updated successfully',
+        profile,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
 
 /**
  * Deletes a profile from an account.

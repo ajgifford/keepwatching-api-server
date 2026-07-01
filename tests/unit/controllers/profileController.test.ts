@@ -1,5 +1,12 @@
 import { profileService } from '@ajgifford/keepwatching-common-server/services';
-import { addProfile, deleteProfile, editProfile, getProfile, getProfiles } from '@controllers/profileController';
+import {
+  addProfile,
+  deleteProfile,
+  editProfile,
+  getProfile,
+  getProfiles,
+  updateProfileAccentColor,
+} from '@controllers/profileController';
 
 jest.mock('@ajgifford/keepwatching-common-server/services', () => ({
   profileService: {
@@ -7,6 +14,7 @@ jest.mock('@ajgifford/keepwatching-common-server/services', () => ({
     getProfileWithContent: jest.fn(),
     createProfile: jest.fn(),
     updateProfileName: jest.fn(),
+    updateProfileAccentColor: jest.fn(),
     deleteProfile: jest.fn(),
   },
 }));
@@ -170,6 +178,60 @@ describe('profileController', () => {
       await editProfile(req, res, next);
 
       expect(profileService.updateProfileName).toHaveBeenCalledWith(123, 'Updated Profile Name');
+      expect(next).toHaveBeenCalledWith(error);
+      expect(res.status).not.toHaveBeenCalled();
+      expect(res.json).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('updateProfileAccentColor', () => {
+    it('should update a profile accent color successfully', async () => {
+      req.body = { accentColor: '#7b1fa2' };
+      const mockUpdatedProfile = {
+        id: 123,
+        name: 'Test Profile',
+        image: 'profile.jpg',
+        accentColor: '#7b1fa2',
+      };
+
+      (profileService.updateProfileAccentColor as jest.Mock).mockResolvedValue(mockUpdatedProfile);
+
+      await updateProfileAccentColor(req, res, next);
+
+      expect(profileService.updateProfileAccentColor).toHaveBeenCalledWith(123, '#7b1fa2');
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Profile accent color updated successfully',
+        profile: mockUpdatedProfile,
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should clear accent color when null is provided', async () => {
+      req.body = { accentColor: null };
+      const mockUpdatedProfile = {
+        id: 123,
+        name: 'Test Profile',
+        image: 'profile.jpg',
+      };
+
+      (profileService.updateProfileAccentColor as jest.Mock).mockResolvedValue(mockUpdatedProfile);
+
+      await updateProfileAccentColor(req, res, next);
+
+      expect(profileService.updateProfileAccentColor).toHaveBeenCalledWith(123, null);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should handle errors', async () => {
+      req.body = { accentColor: '#7b1fa2' };
+      const error = new Error('Profile not found');
+      (profileService.updateProfileAccentColor as jest.Mock).mockRejectedValue(error);
+
+      await updateProfileAccentColor(req, res, next);
+
+      expect(profileService.updateProfileAccentColor).toHaveBeenCalledWith(123, '#7b1fa2');
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
