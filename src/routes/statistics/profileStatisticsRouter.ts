@@ -1,12 +1,14 @@
 import {
   getAbandonmentRiskStats,
   getActivityTimeline,
+  getAvailableRecapPeriods,
   getBingeWatchingStats,
   getContentDepthStats,
   getContentDiscoveryStats,
   getDailyActivity,
   getMilestoneStats,
   getMonthlyActivity,
+  getProfileRecap,
   getProfileStatistics,
   getRewatchStats,
   getSeasonalViewingStats,
@@ -20,7 +22,7 @@ import { trackAccountActivity } from '../../middleware/accountActivityMiddleware
 import { authorizeAccountAccess } from '../../middleware/authorizationMiddleware';
 import { validateSchema } from '@ajgifford/keepwatching-common-server';
 import { logRequestContext } from '@ajgifford/keepwatching-common-server/middleware';
-import { accountAndProfileIdsParamSchema } from '@ajgifford/keepwatching-common-server/schema';
+import { accountAndProfileIdsParamSchema, recapQuerySchema } from '@ajgifford/keepwatching-common-server/schema';
 import express from 'express';
 
 const router = express.Router();
@@ -167,6 +169,25 @@ router.get(
   authorizeAccountAccess,
   trackAccountActivity,
   getRewatchStats,
+);
+
+router.get(
+  '/api/v1/accounts/:accountId/profiles/:profileId/statistics/recap',
+  logRequestContext,
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  validateSchema(recapQuerySchema, 'query'),
+  authorizeAccountAccess,
+  trackAccountActivity,
+  getProfileRecap,
+);
+
+router.get(
+  '/api/v1/accounts/:accountId/profiles/:profileId/statistics/recap/available',
+  logRequestContext,
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
+  trackAccountActivity,
+  getAvailableRecapPeriods,
 );
 
 export default router;

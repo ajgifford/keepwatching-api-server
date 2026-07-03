@@ -19,6 +19,8 @@ jest.mock('@controllers/profileStatisticsController', () => ({
   getAbandonmentRiskStats: jest.fn(),
   getUnairedContentStats: jest.fn(),
   getRewatchStats: jest.fn(),
+  getProfileRecap: jest.fn(),
+  getAvailableRecapPeriods: jest.fn(),
 }));
 
 jest.mock('@controllers/accountStatisticsController', () => ({

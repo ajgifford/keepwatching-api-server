@@ -36,6 +36,8 @@ jest.mock('@controllers/profileStatisticsController', () => ({
   getAbandonmentRiskStats: jest.fn((_req, res) => res.status(200).send('abandonment risk statistics')),
   getUnairedContentStats: jest.fn((_req, res) => res.status(200).send('unaired content statistics')),
   getRewatchStats: jest.fn((_req, res) => res.status(200).send('rewatch statistics')),
+  getProfileRecap: jest.fn((_req, res) => res.status(200).send('profile recap')),
+  getAvailableRecapPeriods: jest.fn((_req, res) => res.status(200).send('available recap periods')),
 }));
 
 jest.mock('@middleware/accountActivityMiddleware', () => ({
@@ -153,5 +155,17 @@ describe('Profile Statistics Router', () => {
     const res = await request(app).get('/api/v1/accounts/123/profiles/456/statistics/rewatches');
     expect(res.status).toBe(200);
     expect(res.text).toBe('rewatch statistics');
+  });
+
+  it('GET /api/v1/accounts/:accountId/profiles/:profileId/statistics/recap', async () => {
+    const res = await request(app).get('/api/v1/accounts/123/profiles/456/statistics/recap?period=year&year=2026');
+    expect(res.status).toBe(200);
+    expect(res.text).toBe('profile recap');
+  });
+
+  it('GET /api/v1/accounts/:accountId/profiles/:profileId/statistics/recap/available', async () => {
+    const res = await request(app).get('/api/v1/accounts/123/profiles/456/statistics/recap/available');
+    expect(res.status).toBe(200);
+    expect(res.text).toBe('available recap periods');
   });
 });

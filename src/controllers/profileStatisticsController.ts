@@ -1,4 +1,4 @@
-import { AccountAndProfileIdsParams } from '@ajgifford/keepwatching-common-server/schema';
+import { AccountAndProfileIdsParams, RecapQuery } from '@ajgifford/keepwatching-common-server/schema';
 import { profileStatisticsService } from '@ajgifford/keepwatching-common-server/services';
 import { NextFunction, Request, Response } from 'express';
 
@@ -310,6 +310,45 @@ export async function getRewatchStats(req: Request, res: Response, next: NextFun
 
     res.status(200).json({
       message: 'Successfully retrieved rewatch statistics',
+      results,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Get a period-scoped recap ("year/month in review") for a profile
+ *
+ * @route GET /api/v1/accounts/:accountId/profiles/:profileId/statistics/recap
+ */
+export async function getProfileRecap(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
+    const { period, year, month } = req.query as unknown as RecapQuery;
+    const results = await profileStatisticsService.getProfileRecap(profileId, period, year, month);
+
+    res.status(200).json({
+      message: 'Successfully retrieved profile recap',
+      results,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Get the distinct calendar years and months that have watch activity for a profile
+ *
+ * @route GET /api/v1/accounts/:accountId/profiles/:profileId/statistics/recap/available
+ */
+export async function getAvailableRecapPeriods(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
+    const results = await profileStatisticsService.getAvailableRecapPeriods(profileId);
+
+    res.status(200).json({
+      message: 'Successfully retrieved available recap periods',
       results,
     });
   } catch (error) {

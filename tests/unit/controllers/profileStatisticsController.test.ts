@@ -2,12 +2,14 @@ import { profileStatisticsService } from '@ajgifford/keepwatching-common-server/
 import {
   getAbandonmentRiskStats,
   getActivityTimeline,
+  getAvailableRecapPeriods,
   getBingeWatchingStats,
   getContentDepthStats,
   getContentDiscoveryStats,
   getDailyActivity,
   getMilestoneStats,
   getMonthlyActivity,
+  getProfileRecap,
   getProfileStatistics,
   getRewatchStats,
   getSeasonalViewingStats,
@@ -22,12 +24,14 @@ jest.mock('@ajgifford/keepwatching-common-server/services', () => ({
   profileStatisticsService: {
     getAbandonmentRiskStats: jest.fn(),
     getActivityTimeline: jest.fn(),
+    getAvailableRecapPeriods: jest.fn(),
     getBingeWatchingStats: jest.fn(),
     getContentDepthStats: jest.fn(),
     getContentDiscoveryStats: jest.fn(),
     getDailyActivity: jest.fn(),
     getMilestoneStats: jest.fn(),
     getMonthlyActivity: jest.fn(),
+    getProfileRecap: jest.fn(),
     getProfileStatistics: jest.fn(),
     getRewatchStats: jest.fn(),
     getSeasonalViewingStats: jest.fn(),
@@ -758,6 +762,83 @@ describe('profileStatisticsController', () => {
       (profileStatisticsService.getRewatchStats as jest.Mock).mockRejectedValue(error);
 
       await getRewatchStats(req, res, next);
+
+      expect(next).toHaveBeenCalledWith(error);
+      expect(res.status).not.toHaveBeenCalled();
+      expect(res.json).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getProfileRecap', () => {
+    it('should return a profile recap successfully', async () => {
+      req.params = { accountId: 1, profileId: 123 };
+      req.query = { period: 'year', year: 2026 };
+      const mockRecap = { profileId: 123, period: 'year', year: 2026, episodesWatched: 100 };
+
+      (profileStatisticsService.getProfileRecap as jest.Mock).mockResolvedValue(mockRecap);
+
+      await getProfileRecap(req, res, next);
+
+      expect(profileStatisticsService.getProfileRecap).toHaveBeenCalledWith(123, 'year', 2026, undefined);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Successfully retrieved profile recap',
+        results: mockRecap,
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should pass the month query param through for month period recaps', async () => {
+      req.params = { accountId: 1, profileId: 123 };
+      req.query = { period: 'month', year: 2026, month: 7 };
+      const mockRecap = { profileId: 123, period: 'month', year: 2026, month: 7, episodesWatched: 10 };
+
+      (profileStatisticsService.getProfileRecap as jest.Mock).mockResolvedValue(mockRecap);
+
+      await getProfileRecap(req, res, next);
+
+      expect(profileStatisticsService.getProfileRecap).toHaveBeenCalledWith(123, 'month', 2026, 7);
+      expect(res.status).toHaveBeenCalledWith(200);
+    });
+
+    it('should handle errors from the service', async () => {
+      req.params = { accountId: 1, profileId: 123 };
+      req.query = { period: 'year', year: 2026 };
+      const error = new Error('Failed to get profile recap');
+      (profileStatisticsService.getProfileRecap as jest.Mock).mockRejectedValue(error);
+
+      await getProfileRecap(req, res, next);
+
+      expect(next).toHaveBeenCalledWith(error);
+      expect(res.status).not.toHaveBeenCalled();
+      expect(res.json).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getAvailableRecapPeriods', () => {
+    it('should return available recap periods successfully', async () => {
+      req.params = { accountId: 1, profileId: 123 };
+      const mockPeriods = { years: [2025, 2026], months: [{ year: 2026, month: 7 }] };
+
+      (profileStatisticsService.getAvailableRecapPeriods as jest.Mock).mockResolvedValue(mockPeriods);
+
+      await getAvailableRecapPeriods(req, res, next);
+
+      expect(profileStatisticsService.getAvailableRecapPeriods).toHaveBeenCalledWith(123);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Successfully retrieved available recap periods',
+        results: mockPeriods,
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should handle errors from the service', async () => {
+      req.params = { accountId: 1, profileId: 123 };
+      const error = new Error('Failed to get available recap periods');
+      (profileStatisticsService.getAvailableRecapPeriods as jest.Mock).mockRejectedValue(error);
+
+      await getAvailableRecapPeriods(req, res, next);
 
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
