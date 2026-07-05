@@ -4,6 +4,7 @@ import {
   MovieParams,
   MovieWatchStatusBody,
   RemoveMovieFavoriteParams,
+  RemoveMovieFavoriteQuery,
 } from '@ajgifford/keepwatching-common-server/schema';
 import { moviesService } from '@ajgifford/keepwatching-common-server/services';
 import { NextFunction, Request, Response } from 'express';
@@ -36,14 +37,15 @@ export async function getMovies(req: Request, res: Response, next: NextFunction)
 export async function addFavorite(req: Request, res: Response, next: NextFunction) {
   try {
     const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
-    const { movieTMDBId }: AddMovieFavoriteBody = req.body;
+    const { movieTMDBId, restoreFromHistory }: AddMovieFavoriteBody = req.body;
 
-    const result = await moviesService.addMovieToFavorites(profileId, movieTMDBId);
+    const result = await moviesService.addMovieToFavorites(profileId, movieTMDBId, restoreFromHistory);
 
     res.status(200).json({
       message: `Successfully saved movie as a favorite`,
       favoritedMovie: result.favoritedMovie,
       recentUpcomingMovies: result.recentUpcomingMovies,
+      hasSurvivingHistory: result.hasSurvivingHistory,
     });
   } catch (error) {
     next(error);
@@ -58,8 +60,9 @@ export async function addFavorite(req: Request, res: Response, next: NextFunctio
 export async function removeFavorite(req: Request, res: Response, next: NextFunction) {
   try {
     const { profileId, movieId } = req.params as unknown as RemoveMovieFavoriteParams;
+    const { removeHistory } = req.query as unknown as RemoveMovieFavoriteQuery;
 
-    const result = await moviesService.removeMovieFromFavorites(profileId, movieId);
+    const result = await moviesService.removeMovieFromFavorites(profileId, movieId, removeHistory);
 
     res.status(200).json({
       message: 'Successfully removed the movie from favorites',

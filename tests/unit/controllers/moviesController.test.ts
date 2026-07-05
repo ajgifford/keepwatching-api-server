@@ -32,6 +32,7 @@ describe('moviesController', () => {
     req = {
       params: { accountId: 1, profileId: 123 },
       body: {},
+      query: {},
     };
     res = {
       status: jest.fn().mockReturnThis(),
@@ -75,32 +76,49 @@ describe('moviesController', () => {
 
   describe('addFavorite', () => {
     it('should add a movie to favorites', async () => {
-      req.body = { movieTMDBId: 12345 };
+      req.body = { movieTMDBId: 12345, restoreFromHistory: false };
       const mockResult = {
         favoritedMovie: { movieId: 12345, title: 'New Movie' },
         recentUpcomingMovies: { recentMovies: [{ movieId: 1 }], upcomingMovies: [{ movieId: 2 }] },
+        hasSurvivingHistory: false,
       };
       (moviesService.addMovieToFavorites as jest.Mock).mockResolvedValue(mockResult);
 
       await addFavorite(req, res, next);
 
-      expect(moviesService.addMovieToFavorites).toHaveBeenCalledWith(123, 12345);
+      expect(moviesService.addMovieToFavorites).toHaveBeenCalledWith(123, 12345, false);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully saved movie as a favorite',
         favoritedMovie: mockResult.favoritedMovie,
         recentUpcomingMovies: mockResult.recentUpcomingMovies,
+        hasSurvivingHistory: false,
       });
     });
 
+    it('should pass restoreFromHistory through to the service and surface hasSurvivingHistory', async () => {
+      req.body = { movieTMDBId: 12345, restoreFromHistory: true };
+      const mockResult = {
+        favoritedMovie: { movieId: 12345, title: 'New Movie' },
+        recentUpcomingMovies: { recentMovies: [], upcomingMovies: [] },
+        hasSurvivingHistory: true,
+      };
+      (moviesService.addMovieToFavorites as jest.Mock).mockResolvedValue(mockResult);
+
+      await addFavorite(req, res, next);
+
+      expect(moviesService.addMovieToFavorites).toHaveBeenCalledWith(123, 12345, true);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ hasSurvivingHistory: true }));
+    });
+
     it('should handle errors', async () => {
-      req.body = { movieTMDBId: 12345 };
+      req.body = { movieTMDBId: 12345, restoreFromHistory: false };
       const error = new Error('Failed to add movie');
       (moviesService.addMovieToFavorites as jest.Mock).mockRejectedValue(error);
 
       await addFavorite(req, res, next);
 
-      expect(moviesService.addMovieToFavorites).toHaveBeenCalledWith(123, 12345);
+      expect(moviesService.addMovieToFavorites).toHaveBeenCalledWith(123, 12345, false);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
@@ -110,6 +128,7 @@ describe('moviesController', () => {
   describe('removeFavorite', () => {
     it('should remove a movie from favorites', async () => {
       req.params.movieId = 12345;
+      req.query = { removeHistory: false };
       const mockResult = {
         removedMovie: { id: 12345, title: 'Movie to Remove' },
         recentUpcomingMovies: { recentMovies: [{ movie_id: 1 }], upcomingMovies: [{ movie_id: 2 }] },
@@ -118,7 +137,7 @@ describe('moviesController', () => {
 
       await removeFavorite(req, res, next);
 
-      expect(moviesService.removeMovieFromFavorites).toHaveBeenCalledWith(123, 12345);
+      expect(moviesService.removeMovieFromFavorites).toHaveBeenCalledWith(123, 12345, false);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully removed the movie from favorites',
@@ -127,14 +146,29 @@ describe('moviesController', () => {
       });
     });
 
+    it('should pass removeHistory=true through to the service', async () => {
+      req.params.movieId = 12345;
+      req.query = { removeHistory: true };
+      const mockResult = {
+        removedMovie: { id: 12345, title: 'Movie to Remove' },
+        recentUpcomingMovies: { recentMovies: [], upcomingMovies: [] },
+      };
+      (moviesService.removeMovieFromFavorites as jest.Mock).mockResolvedValue(mockResult);
+
+      await removeFavorite(req, res, next);
+
+      expect(moviesService.removeMovieFromFavorites).toHaveBeenCalledWith(123, 12345, true);
+    });
+
     it('should handle errors', async () => {
       req.params.movieId = 12345;
+      req.query = { removeHistory: false };
       const error = new Error('Failed to remove movie');
       (moviesService.removeMovieFromFavorites as jest.Mock).mockRejectedValue(error);
 
       await removeFavorite(req, res, next);
 
-      expect(moviesService.removeMovieFromFavorites).toHaveBeenCalledWith(123, 12345);
+      expect(moviesService.removeMovieFromFavorites).toHaveBeenCalledWith(123, 12345, false);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();

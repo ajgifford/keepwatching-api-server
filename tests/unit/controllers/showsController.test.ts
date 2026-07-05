@@ -37,6 +37,7 @@ describe('showsController', () => {
     req = {
       params: { accountId: 1, profileId: 123, showId: 456 },
       body: {},
+      query: {},
     };
     res = {
       status: jest.fn().mockReturnThis(),
@@ -150,33 +151,50 @@ describe('showsController', () => {
 
   describe('addFavorite', () => {
     it('should add a show to favorites', async () => {
-      req.body = { showTMDBId: 789 };
+      req.body = { showTMDBId: 789, restoreFromHistory: false };
       const mockResult = {
         favoritedShow: { showId: 789, title: 'New Show' },
         episodes: { recentEpisodes: [{ episodeId: 101 }], upcomingEpisodes: [{ episodeId: 102 }] },
+        hasSurvivingHistory: false,
       };
       (showService.addShowToFavorites as jest.Mock).mockResolvedValue(mockResult);
 
       await addFavorite(req, res, next);
 
-      expect(showService.addShowToFavorites).toHaveBeenCalledWith(1, 123, 789);
+      expect(showService.addShowToFavorites).toHaveBeenCalledWith(1, 123, 789, false);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully saved show as a favorite',
         addedShow: mockResult.favoritedShow,
         episodes: mockResult.episodes,
+        hasSurvivingHistory: false,
       });
       expect(next).not.toHaveBeenCalled();
     });
 
+    it('should pass restoreFromHistory through to the service and surface hasSurvivingHistory', async () => {
+      req.body = { showTMDBId: 789, restoreFromHistory: true };
+      const mockResult = {
+        favoritedShow: { showId: 789, title: 'New Show' },
+        episodes: { recentEpisodes: [], upcomingEpisodes: [] },
+        hasSurvivingHistory: true,
+      };
+      (showService.addShowToFavorites as jest.Mock).mockResolvedValue(mockResult);
+
+      await addFavorite(req, res, next);
+
+      expect(showService.addShowToFavorites).toHaveBeenCalledWith(1, 123, 789, true);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ hasSurvivingHistory: true }));
+    });
+
     it('should handle errors', async () => {
-      req.body = { showTMDBId: 789 };
+      req.body = { showTMDBId: 789, restoreFromHistory: false };
       const error = new Error('Failed to add show');
       (showService.addShowToFavorites as jest.Mock).mockRejectedValue(error);
 
       await addFavorite(req, res, next);
 
-      expect(showService.addShowToFavorites).toHaveBeenCalledWith(1, 123, 789);
+      expect(showService.addShowToFavorites).toHaveBeenCalledWith(1, 123, 789, false);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
@@ -185,6 +203,7 @@ describe('showsController', () => {
 
   describe('removeFavorite', () => {
     it('should remove a show from favorites', async () => {
+      req.query = { removeHistory: false };
       const mockResult = {
         removedShow: { id: 456, title: 'Show to Remove' },
         episodes: { recentEpisodes: [{ episodeId: 101 }], upcomingEpisodes: [{ episodeId: 102 }] },
@@ -193,7 +212,7 @@ describe('showsController', () => {
 
       await removeFavorite(req, res, next);
 
-      expect(showService.removeShowFromFavorites).toHaveBeenCalledWith(1, 123, 456);
+      expect(showService.removeShowFromFavorites).toHaveBeenCalledWith(1, 123, 456, false);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Successfully removed the show from favorites',
@@ -203,13 +222,27 @@ describe('showsController', () => {
       expect(next).not.toHaveBeenCalled();
     });
 
+    it('should pass removeHistory=true through to the service', async () => {
+      req.query = { removeHistory: true };
+      const mockResult = {
+        removedShow: { id: 456, title: 'Show to Remove' },
+        episodes: { recentEpisodes: [], upcomingEpisodes: [] },
+      };
+      (showService.removeShowFromFavorites as jest.Mock).mockResolvedValue(mockResult);
+
+      await removeFavorite(req, res, next);
+
+      expect(showService.removeShowFromFavorites).toHaveBeenCalledWith(1, 123, 456, true);
+    });
+
     it('should handle errors', async () => {
+      req.query = { removeHistory: false };
       const error = new Error('Failed to remove show');
       (showService.removeShowFromFavorites as jest.Mock).mockRejectedValue(error);
 
       await removeFavorite(req, res, next);
 
-      expect(showService.removeShowFromFavorites).toHaveBeenCalledWith(1, 123, 456);
+      expect(showService.removeShowFromFavorites).toHaveBeenCalledWith(1, 123, 456, false);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();

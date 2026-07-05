@@ -16,6 +16,7 @@ import {
   movieParamsSchema,
   movieWatchStatusBodySchema,
   removeMovieFavoriteParamSchema,
+  removeMovieFavoriteQuerySchema,
 } from '@ajgifford/keepwatching-common-server/schema';
 import express from 'express';
 
@@ -44,6 +45,7 @@ router.delete(
   '/api/v1/accounts/:accountId/profiles/:profileId/movies/favorites/:movieId',
   logRequestContext,
   validateSchema(removeMovieFavoriteParamSchema, 'params'),
+  validateSchema(removeMovieFavoriteQuerySchema, 'query'),
   authorizeAccountAccess,
   trackAccountActivity,
   removeFavorite,

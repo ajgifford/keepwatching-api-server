@@ -1,6 +1,7 @@
 import {
   AccountAndProfileIdsParams,
   AddShowFavoriteBody,
+  RemoveShowFavoriteQuery,
   ShowParams,
   ShowPriorWatchBody,
   ShowWatchStatusBody,
@@ -65,12 +66,13 @@ export async function getProfileEpisodes(req: Request, res: Response, next: Next
 export async function addFavorite(req: Request, res: Response, next: NextFunction) {
   try {
     const { accountId, profileId } = req.params as unknown as AccountAndProfileIdsParams;
-    const { showTMDBId }: AddShowFavoriteBody = req.body;
-    const result = await showService.addShowToFavorites(accountId, profileId, showTMDBId);
+    const { showTMDBId, restoreFromHistory }: AddShowFavoriteBody = req.body;
+    const result = await showService.addShowToFavorites(accountId, profileId, showTMDBId, restoreFromHistory);
     res.status(200).json({
       message: `Successfully saved show as a favorite`,
       addedShow: result.favoritedShow,
       episodes: result.episodes,
+      hasSurvivingHistory: result.hasSurvivingHistory,
     });
   } catch (error) {
     next(error);
@@ -85,7 +87,8 @@ export async function addFavorite(req: Request, res: Response, next: NextFunctio
 export async function removeFavorite(req: Request, res: Response, next: NextFunction) {
   try {
     const { accountId, profileId, showId } = req.params as unknown as ShowParams;
-    const result = await showService.removeShowFromFavorites(accountId, profileId, showId);
+    const { removeHistory } = req.query as unknown as RemoveShowFavoriteQuery;
+    const result = await showService.removeShowFromFavorites(accountId, profileId, showId, removeHistory);
     res.status(200).json({
       message: 'Successfully removed the show from favorites',
       removedShowReference: result.removedShow,

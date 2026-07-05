@@ -16,6 +16,7 @@ import { logRequestContext } from '@ajgifford/keepwatching-common-server/middlew
 import {
   accountAndProfileIdsParamSchema,
   addShowFavoriteBodySchema,
+  removeShowFavoriteQuerySchema,
   showParamsSchema,
   showPriorWatchBodySchema,
   showWatchStatusBodySchema,
@@ -46,6 +47,7 @@ router.post(
 router.delete(
   '/api/v1/accounts/:accountId/profiles/:profileId/shows/favorites/:showId',
   validateSchema(showParamsSchema, 'params'),
+  validateSchema(removeShowFavoriteQuerySchema, 'query'),
   authorizeAccountAccess,
   logRequestContext,
   trackAccountActivity,
