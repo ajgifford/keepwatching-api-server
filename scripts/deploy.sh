@@ -16,7 +16,8 @@ NC='\033[0m' # No Color
 # Configuration
 APP_NAME="keepwatching-api-server"
 PM2_APP_NAME="keepwatching-api-server"
-DEPLOY_BASE_DIR="$(pwd)/deployments"
+REPO_DIR="$(pwd)"
+DEPLOY_BASE_DIR="$REPO_DIR/deployments"
 CURRENT_LINK="$DEPLOY_BASE_DIR/current"
 HISTORY_FILE="$DEPLOY_BASE_DIR/.deployment-history"
 MAX_DEPLOYMENT_AGE_DAYS=30  # Remove deployments older than this many days
@@ -235,6 +236,25 @@ main() {
     fi
     echo ""
 
+    # Determine version/tag for this deploy and guard against re-tagging a
+    # different commit under an already-used version number
+    local version tag commit_full tag_exists tag_commit
+    if [ "$DRY_RUN" = false ]; then
+        version=$(node -p "require('./package.json').version")
+        tag="v$version"
+        commit_full=$(git rev-parse HEAD)
+        tag_exists=false
+        if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+            tag_commit=$(git rev-list -n1 "$tag")
+            if [ "$tag_commit" != "$commit_full" ]; then
+                log_error "Version $version is already tagged at a different commit (${tag_commit:0:8})."
+                log_error "Bump the version first: yarn bump-version patch|minor|major (then commit and push)"
+                exit 1
+            fi
+            tag_exists=true
+        fi
+    fi
+
     # Remember the current deployment so we can roll back if this one fails
     local previous_deploy=""
     if [ -L "$CURRENT_LINK" ]; then
@@ -379,6 +399,35 @@ main() {
         record_deployment "$deploy_name" "$current_commit" "$current_branch"
     fi
 
+    # Tag this deployment and record it in the shared deployment log
+    if [ "$DRY_RUN" = true ]; then
+        log_dry_run "tag commit as vX.Y.Z (from package.json) and push to origin"
+        log_dry_run "record deployment in ~/git/keepwatching-admin-doc/deployment/deployment-log.md"
+    else
+        cd "$REPO_DIR"
+        if [ "$tag_exists" = false ]; then
+            log_info "Tagging $commit_full as $tag..."
+            git tag -a "$tag" -m "Deploy $tag"
+            git push origin "$tag"
+        else
+            log_info "Tag $tag already points at this commit — skipping tag creation (redeploy)."
+        fi
+
+        local types_version common_server_version commit_date deploy_datetime log_script row
+        types_version=$(grep -A1 "^\"@ajgifford/keepwatching-types@" yarn.lock 2>/dev/null | grep version | head -1 | sed -E 's/.*version "([^"]+)".*/\1/')
+        common_server_version=$(grep -A1 "^\"@ajgifford/keepwatching-common-server@" yarn.lock 2>/dev/null | grep version | head -1 | sed -E 's/.*version "([^"]+)".*/\1/')
+        commit_date=$(git log -1 --format=%cd --date=short "$commit_full")
+        deploy_datetime=$(date '+%Y-%m-%d %I:%M %p')
+        log_script=~/git/keepwatching-admin-doc/deployment/scripts/record-deployment.sh
+
+        if [ -x "$log_script" ]; then
+            row="| $deploy_datetime | v$version | $tag | $commit_full | $commit_date | $current_branch | $(whoami) | deploy | ${types_version:-—} | ${common_server_version:-—} |  |"
+            "$log_script" api-server "$row" || log_warning "Failed to record deployment in shared log."
+        else
+            log_warning "Deployment log script not found at $log_script — skipping log entry."
+        fi
+    fi
+
     # Clean up old deployments
     if [ "$DRY_RUN" = true ]; then
         log_dry_run "Clean up deployments older than ${MAX_DEPLOYMENT_AGE_DAYS} days (keeping at least ${MIN_KEEP_DEPLOYMENTS})"
@@ -406,6 +455,7 @@ main() {
         log_success "Deployment: $deploy_name"
         log_success "Commit: $current_commit"
         log_success "Branch: $current_branch"
+        log_success "Version: $tag"
         echo ""
         log_info "To rollback this deployment, run: ./scripts/rollback.sh"
     fi

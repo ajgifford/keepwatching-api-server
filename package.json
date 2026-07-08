@@ -71,6 +71,7 @@
     "build": "tsdown",
     "clean": "rimraf dist",
     "rebuild": "yarn clean && yarn build",
+    "bump-version": "npm version --no-git-tag-version",
     "start": "node dist/index.mjs",
     "dev": "tsx watch src",
     "test": "jest",

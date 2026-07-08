@@ -15,7 +15,8 @@ NC='\033[0m' # No Color
 
 # Configuration
 PM2_APP_NAME="keepwatching-api-server"
-DEPLOY_BASE_DIR="$(pwd)/deployments"
+REPO_DIR="$(pwd)"
+DEPLOY_BASE_DIR="$REPO_DIR/deployments"
 CURRENT_LINK="$DEPLOY_BASE_DIR/current"
 HISTORY_FILE="$DEPLOY_BASE_DIR/.deployment-history"
 HEALTH_CHECK_URL="http://localhost:3033/api/v1/health"
@@ -235,6 +236,39 @@ rollback_to() {
         log_success "Rolled back from: $current_deploy"
         log_success "Rolled back to: $target_deploy"
         echo ""
+
+        # Record this rollback in the shared deployment log. The rollback
+        # target directory holds a full copy of the source at that commit
+        # (rsync excludes only .git/node_modules/dist/etc), so package.json
+        # and yarn.lock can be read straight from it.
+        local short_commit=$(echo "$target_deploy" | cut -d'_' -f3)
+        local commit_full=$(git -C "$REPO_DIR" rev-parse "$short_commit" 2>/dev/null || echo "$short_commit")
+        local version="—"
+        if [ -f "$deploy_dir/package.json" ]; then
+            local found_version=$(grep '"version"' "$deploy_dir/package.json" | head -1 | sed -E 's/.*"version": *"([^"]+)".*/\1/')
+            [ -n "$found_version" ] && version="v$found_version"
+        fi
+        local tag=$(git -C "$REPO_DIR" tag --points-at "$commit_full" 2>/dev/null | grep '^v' | head -1)
+        [ -z "$tag" ] && tag="—"
+        local types_version="—"
+        local common_server_version="—"
+        if [ -f "$deploy_dir/yarn.lock" ]; then
+            local found_types=$(grep -A1 "^\"@ajgifford/keepwatching-types@" "$deploy_dir/yarn.lock" | grep version | head -1 | sed -E 's/.*version "([^"]+)".*/\1/')
+            [ -n "$found_types" ] && types_version="$found_types"
+            local found_cs=$(grep -A1 "^\"@ajgifford/keepwatching-common-server@" "$deploy_dir/yarn.lock" | grep version | head -1 | sed -E 's/.*version "([^"]+)".*/\1/')
+            [ -n "$found_cs" ] && common_server_version="$found_cs"
+        fi
+        local commit_date=$(git -C "$REPO_DIR" log -1 --format=%cd --date=short "$commit_full" 2>/dev/null || echo "—")
+        local branch=$(git -C "$REPO_DIR" branch --show-current 2>/dev/null || echo "main")
+        local deploy_datetime=$(date '+%Y-%m-%d %I:%M %p')
+        local log_script=~/git/keepwatching-admin-doc/deployment/scripts/record-deployment.sh
+
+        if [ -x "$log_script" ]; then
+            local row="| $deploy_datetime | $version | $tag | $commit_full | $commit_date | $branch | $(whoami) | rollback | $types_version | $common_server_version | Rolled back to $target_deploy |"
+            "$log_script" api-server "$row" || log_warning "Failed to record rollback in shared log."
+        else
+            log_warning "Deployment log script not found at $log_script — skipping log entry."
+        fi
     fi
 }
 
