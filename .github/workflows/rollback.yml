@@ -1,0 +1,70 @@
+name: Rollback on Raspberry Pi
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'list = show available rollback targets, rollback = actually roll back'
+        required: true
+        type: choice
+        options:
+          - list
+          - rollback
+        default: list
+      tag:
+        description: 'Version tag to roll back to, e.g. v1.4.2 (required when action=rollback)'
+        required: false
+        type: string
+      confirm:
+        description: 'Confirm rollback? Must be true to actually execute (ignored for action=list)'
+        required: true
+        type: boolean
+        default: false
+
+# Required secrets (same ones deploy.yml already uses):
+#   PI_HOST      - IP or hostname of your Raspberry Pi
+#   PI_USER      - SSH username
+#   PI_SSH_KEY   - Private key whose public counterpart is in ~/.ssh/authorized_keys on the Pi
+#   PI_APP_PATH  - Absolute path to the app on the Pi (e.g. /home/andy/git/keepwatching-server)
+jobs:
+  rollback:
+    name: Rollback via SSH
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate inputs
+        if: inputs.action == 'rollback'
+        run: |
+          if [ -z "${{ inputs.tag }}" ]; then
+            echo "::error::tag is required when action=rollback"
+            exit 1
+          fi
+
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+
+      - name: List available rollback targets
+        if: inputs.action == 'list'
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.PI_HOST }}
+          username: ${{ secrets.PI_USER }}
+          key: ${{ secrets.PI_SSH_KEY }}
+          script: |
+            cd ${{ secrets.PI_APP_PATH }}
+            bash scripts/deployment-status.sh
+
+      - name: Roll back to tag
+        if: inputs.action == 'rollback' && inputs.confirm == true
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.PI_HOST }}
+          username: ${{ secrets.PI_USER }}
+          key: ${{ secrets.PI_SSH_KEY }}
+          script: |
+            cd ${{ secrets.PI_APP_PATH }}
+            bash scripts/rollback.sh --tag ${{ inputs.tag }}

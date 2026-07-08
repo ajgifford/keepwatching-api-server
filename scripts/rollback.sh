@@ -25,11 +25,22 @@ HEALTH_CHECK_TIMEOUT=30
 # Parse command line arguments
 DRY_RUN=false
 TARGET_DEPLOY=""
+TARGET_TAG=""
 
+NEXT_IS_TAG=false
 for arg in "$@"; do
+    if [ "$NEXT_IS_TAG" = true ]; then
+        TARGET_TAG="$arg"
+        NEXT_IS_TAG=false
+        continue
+    fi
     case $arg in
         --dry-run)
             DRY_RUN=true
+            shift
+            ;;
+        --tag)
+            NEXT_IS_TAG=true
             shift
             ;;
         -h|--help)
@@ -37,10 +48,11 @@ for arg in "$@"; do
             echo ""
             echo "Options:"
             echo "  --dry-run              Simulate rollback without executing commands"
+            echo "  --tag vX.Y.Z           Rollback to the deployment matching this version tag"
             echo "  -h, --help             Show this help message"
             echo "  deployment-name        Specific deployment to rollback to (optional)"
             echo ""
-            echo "If no deployment name is provided, an interactive menu will be shown."
+            echo "If neither a deployment name nor --tag is provided, an interactive menu will be shown."
             exit 0
             ;;
         *)
@@ -137,6 +149,35 @@ list_deployments() {
 
         count=$((count + 1))
     done
+}
+
+# Resolve a version tag (e.g. v1.4.2) to an on-disk deployment folder name.
+# Echoes the deployment name on success; errors and exits on failure.
+resolve_tag_to_deployment() {
+    local TAG=$1
+
+    local TARGET_COMMIT
+    TARGET_COMMIT=$(git -C "$REPO_DIR" rev-list -n1 "$TAG" 2>/dev/null || true)
+    if [ -z "$TARGET_COMMIT" ]; then
+        log_error "Tag '$TAG' not found in $REPO_DIR"
+        exit 1
+    fi
+
+    cd "$DEPLOY_BASE_DIR"
+    local candidates=($(ls -dt */ 2>/dev/null | sed 's:/*$::' | grep -v '^current$' || true))
+
+    for candidate in "${candidates[@]}"; do
+        local candidate_commit
+        candidate_commit=$(echo "$candidate" | cut -d'_' -f3)
+        if [ -n "$candidate_commit" ] && [[ "$TARGET_COMMIT" == "$candidate_commit"* ]]; then
+            echo "$candidate"
+            return 0
+        fi
+    done
+
+    log_error "No on-disk deployment found for $TAG (commit ${TARGET_COMMIT:0:8})."
+    log_error "It may have been pruned by the deployment age/count cleanup."
+    exit 1
 }
 
 # Perform health check
@@ -325,6 +366,14 @@ main() {
 
     log_info "=== KeepWatching API Server Rollback ==="
     echo ""
+
+    if [ -n "$TARGET_TAG" ]; then
+        if [ -n "$TARGET_DEPLOY" ]; then
+            log_warning "Both a deployment name and --tag were given; using --tag ($TARGET_TAG)"
+        fi
+        TARGET_DEPLOY=$(resolve_tag_to_deployment "$TARGET_TAG")
+        log_info "Resolved tag $TARGET_TAG to deployment: $TARGET_DEPLOY"
+    fi
 
     # Check if TARGET_DEPLOY was provided
     if [ -z "$TARGET_DEPLOY" ]; then
