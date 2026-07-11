@@ -8,11 +8,13 @@ import {
   getAccountMilestoneStats,
   getAccountRewatchStats,
   getAccountSeasonalViewingStats,
+  getAccountSkipRateStats,
   getAccountStatistics,
   getAccountTimeToWatchStats,
   getAccountUnairedContentStats,
   getAccountWatchStreakStats,
   getAccountWatchingVelocity,
+  getAccountWatchlistUsageStats,
   getProfileComparison,
 } from '@controllers/accountStatisticsController';
 
@@ -31,6 +33,8 @@ jest.mock('@ajgifford/keepwatching-common-server/services', () => ({
     getAccountAbandonmentRiskStats: jest.fn(),
     getAccountUnairedContentStats: jest.fn(),
     getAccountRewatchStats: jest.fn(),
+    getAccountSkipRateStats: jest.fn(),
+    getAccountWatchlistUsageStats: jest.fn(),
     getProfileComparison: jest.fn(),
   },
 }));
@@ -695,6 +699,68 @@ describe('accountStatisticsController', () => {
       (accountStatisticsService.getAccountRewatchStats as jest.Mock).mockRejectedValue(error);
 
       await getAccountRewatchStats(req, res, next);
+
+      expect(next).toHaveBeenCalledWith(error);
+      expect(res.status).not.toHaveBeenCalled();
+      expect(res.json).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getAccountSkipRateStats', () => {
+    it('should return account skip-rate statistics successfully', async () => {
+      req.params = { accountId: 1 };
+      const mockStats = { totalSeasonsTracked: 120, totalSeasonsSkipped: 14, skipRate: 11.7, mostSkippedShows: [] };
+
+      (accountStatisticsService.getAccountSkipRateStats as jest.Mock).mockResolvedValue(mockStats);
+
+      await getAccountSkipRateStats(req, res, next);
+
+      expect(accountStatisticsService.getAccountSkipRateStats).toHaveBeenCalledWith(1);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Successfully retrieved account skip-rate statistics',
+        results: mockStats,
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should handle errors from the service', async () => {
+      req.params = { accountId: 1 };
+      const error = new Error('Failed to get account skip-rate stats');
+      (accountStatisticsService.getAccountSkipRateStats as jest.Mock).mockRejectedValue(error);
+
+      await getAccountSkipRateStats(req, res, next);
+
+      expect(next).toHaveBeenCalledWith(error);
+      expect(res.status).not.toHaveBeenCalled();
+      expect(res.json).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getAccountWatchlistUsageStats', () => {
+    it('should return account watchlist usage statistics successfully', async () => {
+      req.params = { accountId: 1 };
+      const mockStats = { currentlyQueuedCount: 15, totalAdded: 60, totalRemoved: 45, completionRate: 66.7 };
+
+      (accountStatisticsService.getAccountWatchlistUsageStats as jest.Mock).mockResolvedValue(mockStats);
+
+      await getAccountWatchlistUsageStats(req, res, next);
+
+      expect(accountStatisticsService.getAccountWatchlistUsageStats).toHaveBeenCalledWith(1);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Successfully retrieved account watchlist usage statistics',
+        results: mockStats,
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should handle errors from the service', async () => {
+      req.params = { accountId: 1 };
+      const error = new Error('Failed to get account watchlist usage stats');
+      (accountStatisticsService.getAccountWatchlistUsageStats as jest.Mock).mockRejectedValue(error);
+
+      await getAccountWatchlistUsageStats(req, res, next);
 
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();

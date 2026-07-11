@@ -7,11 +7,13 @@ import {
   getAccountMilestoneStats,
   getAccountRewatchStats,
   getAccountSeasonalViewingStats,
+  getAccountSkipRateStats,
   getAccountStatistics,
   getAccountTimeToWatchStats,
   getAccountUnairedContentStats,
   getAccountWatchStreakStats,
   getAccountWatchingVelocity,
+  getAccountWatchlistUsageStats,
   getProfileComparison,
 } from '../../controllers/accountStatisticsController';
 import { trackAccountActivity } from '../../middleware/accountActivityMiddleware';
@@ -147,6 +149,24 @@ router.get(
   authorizeAccountAccess,
   trackAccountActivity,
   getAccountRewatchStats,
+);
+
+router.get(
+  '/api/v1/accounts/:accountId/statistics/skip-rate',
+  logRequestContext,
+  validateSchema(accountIdParamSchema, 'params'),
+  authorizeAccountAccess,
+  trackAccountActivity,
+  getAccountSkipRateStats,
+);
+
+router.get(
+  '/api/v1/accounts/:accountId/statistics/watchlist-usage',
+  logRequestContext,
+  validateSchema(accountIdParamSchema, 'params'),
+  authorizeAccountAccess,
+  trackAccountActivity,
+  getAccountWatchlistUsageStats,
 );
 
 export default router;

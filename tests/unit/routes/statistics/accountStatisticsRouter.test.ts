@@ -19,6 +19,8 @@ jest.mock('@controllers/profileStatisticsController', () => ({
   getAbandonmentRiskStats: jest.fn(),
   getUnairedContentStats: jest.fn(),
   getRewatchStats: jest.fn(),
+  getSkipRateStats: jest.fn(),
+  getWatchlistUsageStats: jest.fn(),
   getProfileRecap: jest.fn(),
   getAvailableRecapPeriods: jest.fn(),
 }));
@@ -38,6 +40,8 @@ jest.mock('@controllers/accountStatisticsController', () => ({
   getAccountUnairedContentStats: jest.fn((_req, res) => res.status(200).send('unaired content statistics')),
   getProfileComparison: jest.fn((_req, res) => res.status(200).send('profile comparison statistics')),
   getAccountRewatchStats: jest.fn((_req, res) => res.status(200).send('account rewatch statistics')),
+  getAccountSkipRateStats: jest.fn((_req, res) => res.status(200).send('account skip rate statistics')),
+  getAccountWatchlistUsageStats: jest.fn((_req, res) => res.status(200).send('account watchlist usage statistics')),
 }));
 
 jest.mock('@middleware/accountActivityMiddleware', () => ({
@@ -143,5 +147,17 @@ describe('Account Statistics Router', () => {
     const res = await request(app).get('/api/v1/accounts/123/statistics/rewatches');
     expect(res.status).toBe(200);
     expect(res.text).toBe('account rewatch statistics');
+  });
+
+  it('GET /api/v1/accounts/:accountId/statistics/skip-rate', async () => {
+    const res = await request(app).get('/api/v1/accounts/123/statistics/skip-rate');
+    expect(res.status).toBe(200);
+    expect(res.text).toBe('account skip rate statistics');
+  });
+
+  it('GET /api/v1/accounts/:accountId/statistics/watchlist-usage', async () => {
+    const res = await request(app).get('/api/v1/accounts/123/statistics/watchlist-usage');
+    expect(res.status).toBe(200);
+    expect(res.text).toBe('account watchlist usage statistics');
   });
 });

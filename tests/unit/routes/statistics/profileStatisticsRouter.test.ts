@@ -17,6 +17,8 @@ jest.mock('@controllers/accountStatisticsController', () => ({
   getAccountUnairedContentStats: jest.fn(),
   getProfileComparison: jest.fn(),
   getAccountRewatchStats: jest.fn(),
+  getAccountSkipRateStats: jest.fn(),
+  getAccountWatchlistUsageStats: jest.fn(),
 }));
 
 jest.mock('@controllers/profileStatisticsController', () => ({
@@ -36,6 +38,8 @@ jest.mock('@controllers/profileStatisticsController', () => ({
   getAbandonmentRiskStats: jest.fn((_req, res) => res.status(200).send('abandonment risk statistics')),
   getUnairedContentStats: jest.fn((_req, res) => res.status(200).send('unaired content statistics')),
   getRewatchStats: jest.fn((_req, res) => res.status(200).send('rewatch statistics')),
+  getSkipRateStats: jest.fn((_req, res) => res.status(200).send('skip rate statistics')),
+  getWatchlistUsageStats: jest.fn((_req, res) => res.status(200).send('watchlist usage statistics')),
   getProfileRecap: jest.fn((_req, res) => res.status(200).send('profile recap')),
   getAvailableRecapPeriods: jest.fn((_req, res) => res.status(200).send('available recap periods')),
 }));
@@ -155,6 +159,18 @@ describe('Profile Statistics Router', () => {
     const res = await request(app).get('/api/v1/accounts/123/profiles/456/statistics/rewatches');
     expect(res.status).toBe(200);
     expect(res.text).toBe('rewatch statistics');
+  });
+
+  it('GET /api/v1/accounts/:accountId/profiles/:profileId/statistics/skip-rate', async () => {
+    const res = await request(app).get('/api/v1/accounts/123/profiles/456/statistics/skip-rate');
+    expect(res.status).toBe(200);
+    expect(res.text).toBe('skip rate statistics');
+  });
+
+  it('GET /api/v1/accounts/:accountId/profiles/:profileId/statistics/watchlist-usage', async () => {
+    const res = await request(app).get('/api/v1/accounts/123/profiles/456/statistics/watchlist-usage');
+    expect(res.status).toBe(200);
+    expect(res.text).toBe('watchlist usage statistics');
   });
 
   it('GET /api/v1/accounts/:accountId/profiles/:profileId/statistics/recap', async () => {

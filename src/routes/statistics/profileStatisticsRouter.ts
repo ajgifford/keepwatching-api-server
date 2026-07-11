@@ -12,10 +12,12 @@ import {
   getProfileStatistics,
   getRewatchStats,
   getSeasonalViewingStats,
+  getSkipRateStats,
   getTimeToWatchStats,
   getUnairedContentStats,
   getWatchStreakStats,
   getWatchingVelocity,
+  getWatchlistUsageStats,
   getWeeklyActivity,
 } from '../../controllers/profileStatisticsController';
 import { trackAccountActivity } from '../../middleware/accountActivityMiddleware';
@@ -169,6 +171,24 @@ router.get(
   authorizeAccountAccess,
   trackAccountActivity,
   getRewatchStats,
+);
+
+router.get(
+  '/api/v1/accounts/:accountId/profiles/:profileId/statistics/skip-rate',
+  logRequestContext,
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
+  trackAccountActivity,
+  getSkipRateStats,
+);
+
+router.get(
+  '/api/v1/accounts/:accountId/profiles/:profileId/statistics/watchlist-usage',
+  logRequestContext,
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
+  trackAccountActivity,
+  getWatchlistUsageStats,
 );
 
 router.get(

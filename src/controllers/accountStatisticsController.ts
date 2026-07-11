@@ -267,3 +267,33 @@ export async function getAccountRewatchStats(req: Request, res: Response, next: 
     next(error);
   }
 }
+
+/**
+ * Get skip-rate statistics across all profiles in an account
+ *
+ * @route GET /api/v1/accounts/:accountId/statistics/skip-rate
+ */
+export async function getAccountSkipRateStats(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { accountId } = req.params as unknown as AccountIdParam;
+    const results = await accountStatisticsService.getAccountSkipRateStats(accountId);
+    res.status(200).json({ message: 'Successfully retrieved account skip-rate statistics', results });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Get watchlist usage statistics across all profiles in an account
+ *
+ * @route GET /api/v1/accounts/:accountId/statistics/watchlist-usage
+ */
+export async function getAccountWatchlistUsageStats(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { accountId } = req.params as unknown as AccountIdParam;
+    const results = await accountStatisticsService.getAccountWatchlistUsageStats(accountId);
+    res.status(200).json({ message: 'Successfully retrieved account watchlist usage statistics', results });
+  } catch (error) {
+    next(error);
+  }
+}

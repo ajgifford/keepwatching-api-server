@@ -318,6 +318,44 @@ export async function getRewatchStats(req: Request, res: Response, next: NextFun
 }
 
 /**
+ * Get skip-rate statistics for a profile
+ *
+ * @route GET /api/v1/accounts/:accountId/profiles/:profileId/statistics/skip-rate
+ */
+export async function getSkipRateStats(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
+    const results = await profileStatisticsService.getSkipRateStats(profileId);
+
+    res.status(200).json({
+      message: 'Successfully retrieved skip-rate statistics',
+      results,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Get watchlist usage statistics for a profile
+ *
+ * @route GET /api/v1/accounts/:accountId/profiles/:profileId/statistics/watchlist-usage
+ */
+export async function getWatchlistUsageStats(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
+    const results = await profileStatisticsService.getWatchlistUsageStats(profileId);
+
+    res.status(200).json({
+      message: 'Successfully retrieved watchlist usage statistics',
+      results,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
  * Get a period-scoped recap ("year/month in review") for a profile
  *
  * @route GET /api/v1/accounts/:accountId/profiles/:profileId/statistics/recap
