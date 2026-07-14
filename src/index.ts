@@ -12,6 +12,7 @@ import notificationsRouter from './routes/notificationsRouter';
 import personRouter from './routes/personRouter';
 import preferencesRouter from './routes/preferencesRouter';
 import profileRouter from './routes/profileRouter';
+import profileTransferRouter from './routes/profileTransferRouter';
 import ratingsRouter from './routes/ratingsRouter';
 import searchRouter from './routes/searchRouter';
 import seasonsRouter from './routes/seasonsRouter';
@@ -176,6 +177,7 @@ app.get('/health', (req: Request, res: Response) => {
 });
 
 app.use(accountRouter);
+app.use(profileTransferRouter);
 app.use(authenticateUser, communityRecommendationsRouter);
 app.use(authenticateUser, ratingsRouter);
 app.use(authenticateUser, profileRouter);
