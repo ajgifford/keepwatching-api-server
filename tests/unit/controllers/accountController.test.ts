@@ -291,14 +291,17 @@ describe('accountController', () => {
         defaultProfileId: 12,
       };
 
-      (accountService.editAccount as jest.Mock).mockResolvedValue(mockUpdatedAccount);
+      (accountService.editAccount as jest.Mock).mockResolvedValue({
+        account: mockUpdatedAccount,
+        message: 'Account name updated successfully',
+      });
 
       await editAccount(req, res, next);
 
       expect(accountService.editAccount).toHaveBeenCalledWith(1, 'Updated Account Name', 12);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
-        message: 'Updated account 1',
+        message: 'Account name updated successfully',
         result: mockUpdatedAccount,
       });
       expect(next).not.toHaveBeenCalled();

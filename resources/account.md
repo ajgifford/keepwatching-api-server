@@ -280,7 +280,7 @@ Authorization: Bearer <your_access_token>
 
 ```json
 {
-  "message": "Updated account 1",
+  "message": "Account name updated successfully",
   "result": {
     "id": 1,
     "name": "John Updated",

@@ -140,10 +140,10 @@ export const editAccount = asyncHandler(async (req: Request, res: Response, next
     const { accountId } = req.params as unknown as AccountIdParam;
     const { name, defaultProfileId }: UpdateAccountBody = req.body;
 
-    const updatedAccount = await accountService.editAccount(accountId, name, defaultProfileId);
+    const { account: updatedAccount, message } = await accountService.editAccount(accountId, name, defaultProfileId);
 
     res.status(200).json({
-      message: `Updated account ${accountId}`,
+      message,
       result: updatedAccount,
     });
   } catch (error) {
