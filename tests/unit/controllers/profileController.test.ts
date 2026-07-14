@@ -5,6 +5,7 @@ import {
   editProfile,
   getProfile,
   getProfiles,
+  markProfileAchievementsViewed,
   updateProfileAccentColor,
 } from '@controllers/profileController';
 
@@ -15,6 +16,7 @@ jest.mock('@ajgifford/keepwatching-common-server/services', () => ({
     createProfile: jest.fn(),
     updateProfileName: jest.fn(),
     updateProfileAccentColor: jest.fn(),
+    markAchievementsViewed: jest.fn(),
     deleteProfile: jest.fn(),
   },
 }));
@@ -232,6 +234,41 @@ describe('profileController', () => {
       await updateProfileAccentColor(req, res, next);
 
       expect(profileService.updateProfileAccentColor).toHaveBeenCalledWith(123, '#7b1fa2');
+      expect(next).toHaveBeenCalledWith(error);
+      expect(res.status).not.toHaveBeenCalled();
+      expect(res.json).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('markProfileAchievementsViewed', () => {
+    it('should mark a profile achievements as viewed successfully', async () => {
+      const mockUpdatedProfile = {
+        id: 123,
+        name: 'Test Profile',
+        image: 'profile.jpg',
+        lastViewedAchievementsAt: '2026-07-14T12:00:00.000Z',
+      };
+
+      (profileService.markAchievementsViewed as jest.Mock).mockResolvedValue(mockUpdatedProfile);
+
+      await markProfileAchievementsViewed(req, res, next);
+
+      expect(profileService.markAchievementsViewed).toHaveBeenCalledWith(123);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Profile achievements marked as viewed successfully',
+        profile: mockUpdatedProfile,
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should handle errors', async () => {
+      const error = new Error('Profile not found');
+      (profileService.markAchievementsViewed as jest.Mock).mockRejectedValue(error);
+
+      await markProfileAchievementsViewed(req, res, next);
+
+      expect(profileService.markAchievementsViewed).toHaveBeenCalledWith(123);
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();

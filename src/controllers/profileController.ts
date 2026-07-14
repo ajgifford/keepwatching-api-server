@@ -114,6 +114,28 @@ export const updateProfileAccentColor = asyncHandler(
 );
 
 /**
+ * Marks a profile's achievements as viewed as of now.
+ *
+ * @route PATCH /api/v1/accounts/:accountId/profiles/:profileId/achievements/viewed
+ */
+export const markProfileAchievementsViewed = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { profileId } = req.params as unknown as AccountAndProfileIdsParams;
+
+      const profile = await profileService.markAchievementsViewed(profileId);
+
+      res.status(200).json({
+        message: 'Profile achievements marked as viewed successfully',
+        profile,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+/**
  * Deletes a profile from an account.
  *
  * This action will cascade delete all watch status data for the profile.

@@ -4,6 +4,7 @@ import {
   editProfile,
   getProfile,
   getProfiles,
+  markProfileAchievementsViewed,
   updateProfileAccentColor,
 } from '../controllers/profileController';
 import { trackAccountActivity } from '../middleware/accountActivityMiddleware';
@@ -62,6 +63,14 @@ router.patch(
   validateRequest(profileAccentColorBodySchema),
   trackAccountActivity,
   updateProfileAccentColor,
+);
+router.patch(
+  '/api/v1/accounts/:accountId/profiles/:profileId/achievements/viewed',
+  logRequestContext,
+  validateSchema(accountAndProfileIdsParamSchema, 'params'),
+  authorizeAccountAccess,
+  trackAccountActivity,
+  markProfileAchievementsViewed,
 );
 router.delete(
   '/api/v1/accounts/:accountId/profiles/:profileId',
