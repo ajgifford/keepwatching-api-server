@@ -344,9 +344,9 @@ curl -X PUT \
 }
 ```
 
-Note: `updateMultiplePreferences` only updates the preference types included in the request body — the response
-reflects the categories that were actually updated (via `preferencesService.updateMultiplePreferences`), not the full
-account preference set.
+Note: `updateMultiplePreferences` only updates the preference types included in the request body — the response reflects
+the categories that were actually updated (via `preferencesService.updateMultiplePreferences`), not the full account
+preference set.
 
 ## Error Handling
 
@@ -370,8 +370,8 @@ The controller follows standard error handling patterns consistent with other co
 ```
 
 Note: `preferenceType` is restricted to `email`, `notification`, `display`, or `privacy` by `preferenceTypeSchema` — any
-other value fails route parameter validation with a 400 response before `getAccountPreferencesByType`/`updatePreferences`
-ever runs.
+other value fails route parameter validation with a 400 response before
+`getAccountPreferencesByType`/`updatePreferences` ever runs.
 
 ## Service Integration
 

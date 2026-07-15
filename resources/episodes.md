@@ -299,8 +299,8 @@ Retrieves upcoming episodes across all shows in a profile's favorites, ordered b
 - `accountId` (path, required): Unique identifier of the account
 - `profileId` (path, required): Unique identifier of the profile
 
-This endpoint does not currently accept any query parameters — the lookback/lookahead window and result count are
-fixed server-side (there is no `limit` or `days` parameter, despite what earlier versions of this document said).
+This endpoint does not currently accept any query parameters — the lookback/lookahead window and result count are fixed
+server-side (there is no `limit` or `days` parameter, despite what earlier versions of this document said).
 
 #### Response Format
 

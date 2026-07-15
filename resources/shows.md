@@ -847,8 +847,9 @@ Retrieves shows that are similar to a specific show based on genre, themes, and 
 
 ### Status Values
 
-The full `WatchStatus` enum used across shows, seasons, and episodes is `UNAIRED | NOT_WATCHED | WATCHING | WATCHED |
-UP_TO_DATE | SKIPPED`. Not every value is settable by a user or applicable to every entity type:
+The full `WatchStatus` enum used across shows, seasons, and episodes is
+`UNAIRED | NOT_WATCHED | WATCHING | WATCHED | UP_TO_DATE | SKIPPED`. Not every value is settable by a user or applicable
+to every entity type:
 
 - **User-settable show status** (`PUT .../shows/watchstatus`): `NOT_WATCHED` or `WATCHED` only.
 - **Computed/response show status**: any of `UNAIRED`, `NOT_WATCHED`, `WATCHING`, `WATCHED`, `UP_TO_DATE`.
@@ -859,8 +860,7 @@ UP_TO_DATE | SKIPPED`. Not every value is settable by a user or applicable to ev
     episodes are expected).
   - `WATCHED`: All episodes have been watched and the show is no longer in production (fully complete).
   - `SKIPPED` is a season-only status (see [Seasons API](./seasons.md)) and is never returned as a show's own
-    `watchStatus`, though a skipped season counts toward the show being "complete" for `UP_TO_DATE`/`WATCHED`
-    purposes.
+    `watchStatus`, though a skipped season counts toward the show being "complete" for `UP_TO_DATE`/`WATCHED` purposes.
 
 ### No `recursive` Flag — Updates Always Cascade
 
@@ -877,8 +877,8 @@ parents. Specifically:
 - **Setting an episode's status**: Recalculates the parent season's status from its episodes, then recalculates the
   show's status from its seasons.
 
-Show and season status are otherwise never stored as a fixed value that drifts from their children — they're
-recomputed bottom-up any time a child's status changes, using the aired/unaired episode counts described above.
+Show and season status are otherwise never stored as a fixed value that drifts from their children — they're recomputed
+bottom-up any time a child's status changes, using the aired/unaired episode counts described above.
 
 ## Error Responses
 
@@ -1069,8 +1069,8 @@ curl -H "Authorization: Bearer your_token_here" \
 
 ### Batch Operations
 
-- Show and season watch status updates cascade to all children automatically — prefer them over many individual
-  episode update calls for bulk status changes
+- Show and season watch status updates cascade to all children automatically — prefer them over many individual episode
+  update calls for bulk status changes
 - Use the "Mark Prior Seasons as Watched" endpoint for backfilling watch history without touching current timestamps
 - Leverage the episode management endpoints for detailed tracking
 

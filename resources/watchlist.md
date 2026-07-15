@@ -3,8 +3,8 @@
 # Watchlist API Documentation
 
 This document describes the endpoints for a profile's personal, prioritized watchlist — the queue behind the "What
-Should I Watch Next?" feature. Unlike favorites (which track everything a profile follows), the watchlist is a
-short, manually-ordered list of shows and movies the profile intends to watch soon.
+Should I Watch Next?" feature. Unlike favorites (which track everything a profile follows), the watchlist is a short,
+manually-ordered list of shows and movies the profile intends to watch soon.
 
 ## Base URL
 
@@ -42,8 +42,8 @@ A watchlist entry enriched with the display fields needed to render a watchlist 
 ```
 
 `currentWatchStatus` reflects the profile's live watch status for the underlying show or movie, independent of the
-watchlist entry itself — it's included so the UI can flag entries the profile has already started or finished
-without a separate lookup.
+watchlist entry itself — it's included so the UI can flag entries the profile has already started or finished without a
+separate lookup.
 
 ### Add Watchlist Item Request Body
 
@@ -59,9 +59,9 @@ without a separate lookup.
 ```typescript
 {
   priorities: Array<{
-    id: number,       // watchlist entry ID (not the show/movie ID)
-    priority: number  // new position; >= 0
-  }>
+    id: number; // watchlist entry ID (not the show/movie ID)
+    priority: number; // new position; >= 0
+  }>;
 }
 ```
 
@@ -198,8 +198,8 @@ priority (current maximum + 1), so it's appended to the bottom of the queue.
 
 ### Remove Item from Watchlist
 
-Removes a single entry from a profile's watchlist. This does not affect favorites, watch status, or watch history —
-it only removes the queue entry itself.
+Removes a single entry from a profile's watchlist. This does not affect favorites, watch status, or watch history — it
+only removes the queue entry itself.
 
 **Endpoint:** `DELETE /api/v1/accounts/{accountId}/profiles/{profileId}/watchlist/{itemId}`
 
@@ -236,9 +236,9 @@ it only removes the queue entry itself.
 
 ### Update Watchlist Priorities
 
-Bulk-updates the display order of watchlist entries. Send the full desired ordering for the entries being
-reprioritized — the server applies each `{ id, priority }` pair independently, so it's safe to send only the entries
-that actually moved.
+Bulk-updates the display order of watchlist entries. Send the full desired ordering for the entries being reprioritized
+— the server applies each `{ id, priority }` pair independently, so it's safe to send only the entries that actually
+moved.
 
 **Endpoint:** `PUT /api/v1/accounts/{accountId}/profiles/{profileId}/watchlist/priorities`
 
@@ -449,8 +449,7 @@ curl -X PUT \
   [Discover API](./discover.md) results.
 - The watchlist is independent of favorites: adding something to the watchlist does not add it to favorites, and
   removing it from the watchlist does not remove it from favorites or affect watch history.
-- `currentWatchStatus` is computed live from the profile's watch status tables each time the watchlist is fetched,
-  so it always reflects the latest state even if it was set outside the watchlist (e.g. from the Shows or Movies
-  API).
-- Watchlist activity (items added and removed, along with the watch status at removal) is recorded separately for
-  the "What Should I Watch Next?" usage statistics surfaced on the [Statistics API](./statistics.md) dashboards.
+- `currentWatchStatus` is computed live from the profile's watch status tables each time the watchlist is fetched, so it
+  always reflects the latest state even if it was set outside the watchlist (e.g. from the Shows or Movies API).
+- Watchlist activity (items added and removed, along with the watch status at removal) is recorded separately for the
+  "What Should I Watch Next?" usage statistics surfaced on the [Statistics API](./statistics.md) dashboards.

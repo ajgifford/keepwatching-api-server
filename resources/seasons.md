@@ -198,8 +198,8 @@ Retrieves all seasons for a specific show with their episodes and watch status i
 
 ### Update Season Watch Status
 
-Updates the watch status of a season. There is no `recursive` flag — the update always cascades to the season's
-episodes (except `SKIPPED`, see below) and always recalculates the parent show's status.
+Updates the watch status of a season. There is no `recursive` flag — the update always cascades to the season's episodes
+(except `SKIPPED`, see below) and always recalculates the parent show's status.
 
 **Endpoint:** `PUT /api/v1/accounts/{accountId}/profiles/{profileId}/seasons/watchstatus`
 
@@ -220,8 +220,8 @@ episodes (except `SKIPPED`, see below) and always recalculates the parent show's
 #### Request Body Fields
 
 - `seasonId` (required): ID of the season to update
-- `status` (required): New watch status — user-settable values are `NOT_WATCHED`, `WATCHED`, or `SKIPPED` (there is
-  no `WATCHING`/`COMPLETED`/`NOT_WATCHING`)
+- `status` (required): New watch status — user-settable values are `NOT_WATCHED`, `WATCHED`, or `SKIPPED` (there is no
+  `WATCHING`/`COMPLETED`/`NOT_WATCHING`)
 
 #### Response Format
 
@@ -376,8 +376,8 @@ The full `WatchStatus` enum is `UNAIRED | NOT_WATCHED | WATCHING | WATCHED | UP_
   - `UP_TO_DATE`: All currently-aired episodes have been watched, but more episodes of the season are still to air.
   - `WATCHED`: All episodes in the season have been watched and none remain to air.
   - `SKIPPED`: The user explicitly marked the season as skipped. It is never derived automatically — once set, it's
-    trusted as-is and treated as "complete" (like `WATCHED`/`UP_TO_DATE`) when rolling up to the parent show's
-    status, without altering the underlying episode watch statuses.
+    trusted as-is and treated as "complete" (like `WATCHED`/`UP_TO_DATE`) when rolling up to the parent show's status,
+    without altering the underlying episode watch statuses.
 
 ### No `recursive` Flag — Updates Always Cascade
 
@@ -416,12 +416,10 @@ watchProgress = (watchedEpisodes / totalEpisodes) * 100
 
 Season status changes always recalculate the parent show's status:
 
-- **Show becomes `WATCHED`**: When all seasons are watched/up-to-date/skipped and the show is no longer in
-  production
-- **Show becomes `UP_TO_DATE`**: When all currently-aired seasons are watched/up-to-date/skipped but the show is
-  still in production or has unaired seasons
-- **Show becomes `WATCHING`**: When there's a mix of watched and not-watched seasons, or any season is itself
-  `WATCHING`
+- **Show becomes `WATCHED`**: When all seasons are watched/up-to-date/skipped and the show is no longer in production
+- **Show becomes `UP_TO_DATE`**: When all currently-aired seasons are watched/up-to-date/skipped but the show is still
+  in production or has unaired seasons
+- **Show becomes `WATCHING`**: When there's a mix of watched and not-watched seasons, or any season is itself `WATCHING`
 - **Show becomes `NOT_WATCHED`**: When no aired seasons have any watched episodes
 
 ### Cache Management
@@ -607,8 +605,8 @@ curl -X PUT \
 
 ### Batch Operations
 
-- Season and show watch status updates cascade to all children automatically — prefer them over many individual
-  episode API calls
+- Season and show watch status updates cascade to all children automatically — prefer them over many individual episode
+  API calls
 - Minimize individual episode API calls when possible
 - Consider rate limiting for bulk operations
 

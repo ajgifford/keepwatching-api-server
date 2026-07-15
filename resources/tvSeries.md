@@ -118,9 +118,9 @@ Requests without valid authentication will receive a 401 Unauthorized response.
 
 ## Watch Status Types
 
-The full `WatchStatus` enum shared by shows, seasons, and episodes is `UNAIRED | NOT_WATCHED | WATCHING | WATCHED |
-UP_TO_DATE | SKIPPED`. Which values are user-settable vs. computed differs by entity type, and not every entity
-supports every value:
+The full `WatchStatus` enum shared by shows, seasons, and episodes is
+`UNAIRED | NOT_WATCHED | WATCHING | WATCHED | UP_TO_DATE | SKIPPED`. Which values are user-settable vs. computed differs
+by entity type, and not every entity supports every value:
 
 ### Show Watch Status
 
@@ -130,8 +130,7 @@ supports every value:
   - `UP_TO_DATE`: All currently-aired episodes are watched, but the show is still airing/in production
   - `WATCHED`: All episodes are watched and the show is no longer in production
 - There is no `recursive` flag on the update endpoint — updating a show's status always cascades to every season and
-  episode, and vice versa (see [Shows API](./shows.md) and [Seasons API](./seasons.md) for the exact propagation
-  rules)
+  episode, and vice versa (see [Shows API](./shows.md) and [Seasons API](./seasons.md) for the exact propagation rules)
 
 ### Season Watch Status
 
@@ -290,7 +289,7 @@ const nextEpisodes = await getProfileEpisodes(accountId, profileId, token);
 - TMDB integration provides rich metadata
 - Watch status changes trigger cache invalidation
 - Episode air dates are used for upcoming/recent episode calculations
-- Show and season watch status updates always cascade to their children (and recalculate their parents) — there is
-  no `recursive` flag to opt in or out
+- Show and season watch status updates always cascade to their children (and recalculate their parents) — there is no
+  `recursive` flag to opt in or out
 - Profile-specific tracking allows family sharing
 - Statistics are calculated in real-time based on watch status
