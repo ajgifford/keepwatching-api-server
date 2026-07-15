@@ -402,10 +402,13 @@ main() {
     # Tag this deployment and record it in the shared deployment log
     if [ "$DRY_RUN" = true ]; then
         log_dry_run "tag commit as vX.Y.Z (from package.json) and push to origin"
-        log_dry_run "record deployment in ~/git/keepwatching-admin-doc/deployment/deployment-log.md"
+        log_dry_run "record deployment in ~/git/keepwatching-releases/deployment/deployment-log.md"
+        log_dry_run "record release notes in ~/git/keepwatching-releases/releases/api-server.md (if a new version)"
     else
         cd "$REPO_DIR"
+        local prev_tag=""
         if [ "$tag_exists" = false ]; then
+            prev_tag=$(git describe --tags --abbrev=0 2>/dev/null || true)
             log_info "Tagging $commit_full as $tag..."
             git tag -a "$tag" -m "Deploy $tag"
             git push origin "$tag"
@@ -413,16 +416,27 @@ main() {
             log_info "Tag $tag already points at this commit — skipping tag creation (redeploy)."
         fi
 
-        local types_version common_server_version commit_date deploy_datetime log_script row
+        local types_version common_server_version commit_date deploy_datetime log_script row notes notes_body
         types_version=$(grep -A1 "^\"@ajgifford/keepwatching-types@" yarn.lock 2>/dev/null | grep version | head -1 | sed -E 's/.*version "([^"]+)".*/\1/')
         common_server_version=$(grep -A1 "^\"@ajgifford/keepwatching-common-server@" yarn.lock 2>/dev/null | grep version | head -1 | sed -E 's/.*version "([^"]+)".*/\1/')
         commit_date=$(git log -1 --format=%cd --date=short "$commit_full")
         deploy_datetime=$(date '+%Y-%m-%d %I:%M %p')
-        log_script=~/git/keepwatching-admin-doc/deployment/scripts/record-deployment.sh
+        log_script=~/git/keepwatching-releases/deployment/scripts/record-deployment.sh
+
+        notes=""
+        if [ "$tag_exists" = false ]; then
+            if [ -n "$prev_tag" ]; then
+                notes_body=$(git log --no-merges --pretty="- %s (%h)" "$prev_tag..$commit_full")
+            else
+                notes_body="- Initial tagged release"
+            fi
+            notes="## $tag — $(date '+%Y-%m-%d')
+$notes_body"
+        fi
 
         if [ -x "$log_script" ]; then
-            row="| $deploy_datetime | v$version | $tag | $commit_full | $commit_date | $current_branch | $(whoami) | deploy | ${types_version:-—} | ${common_server_version:-—} |  |"
-            "$log_script" api-server "$row" || log_warning "Failed to record deployment in shared log."
+            row="| $deploy_datetime | v$version | $tag | $commit_full | $commit_date | $current_branch | ajgifford | deploy | ${types_version:-—} | ${common_server_version:-—} |  |"
+            "$log_script" api-server "$row" "$notes" || log_warning "Failed to record deployment in shared log."
         else
             log_warning "Deployment log script not found at $log_script — skipping log entry."
         fi

@@ -302,10 +302,10 @@ rollback_to() {
         local commit_date=$(git -C "$REPO_DIR" log -1 --format=%cd --date=short "$commit_full" 2>/dev/null || echo "—")
         local branch=$(git -C "$REPO_DIR" branch --show-current 2>/dev/null || echo "main")
         local deploy_datetime=$(date '+%Y-%m-%d %I:%M %p')
-        local log_script=~/git/keepwatching-admin-doc/deployment/scripts/record-deployment.sh
+        local log_script=~/git/keepwatching-releases/deployment/scripts/record-deployment.sh
 
         if [ -x "$log_script" ]; then
-            local row="| $deploy_datetime | $version | $tag | $commit_full | $commit_date | $branch | $(whoami) | rollback | $types_version | $common_server_version | Rolled back to $target_deploy |"
+            local row="| $deploy_datetime | $version | $tag | $commit_full | $commit_date | $branch | ajgifford | rollback | $types_version | $common_server_version | Rolled back to $target_deploy |"
             "$log_script" api-server "$row" || log_warning "Failed to record rollback in shared log."
         else
             log_warning "Deployment log script not found at $log_script — skipping log entry."
