@@ -345,6 +345,113 @@ Updates an existing profile's details.
 
 ---
 
+### Update Profile Accent Color
+
+Updates a profile's accent color, used to theme that profile's UI.
+
+**Endpoint:** `PATCH /api/v1/accounts/{accountId}/profiles/{profileId}/accent`
+
+#### Parameters
+
+- `accountId` (path parameter, required): Unique identifier of the account
+- `profileId` (path parameter, required): Unique identifier of the profile
+
+#### Request Body
+
+```json
+{
+  "accentColor": "#1976d2"
+}
+```
+
+#### Request Body Fields
+
+- `accentColor` (required): A hex color string matching `^#[0-9A-Fa-f]{6}$`, or `null` to clear the profile's accent
+  color
+
+#### Response Format
+
+```typescript
+{
+  message: string,
+  profile: {
+    id: number,
+    name: string,
+    image: string,
+    accentColor: string | null
+  }
+}
+```
+
+#### Example Response
+
+```json
+{
+  "message": "Profile accent color updated successfully",
+  "profile": {
+    "id": 456,
+    "name": "John's Profile",
+    "image": "profile-456.jpg",
+    "accentColor": "#1976d2"
+  }
+}
+```
+
+**Status Codes:**
+
+- 200: Accent color updated successfully
+- 400: Invalid request body (accent color is not a valid hex color)
+- 401: Authentication required
+- 403: Access forbidden (user doesn't own this account/profile)
+- 404: Profile not found
+- 500: Server error
+
+---
+
+### Mark Profile Achievements Viewed
+
+Marks all of a profile's earned achievements as viewed as of the current time, clearing any "new achievement" indicators
+in the UI.
+
+**Endpoint:** `PATCH /api/v1/accounts/{accountId}/profiles/{profileId}/achievements/viewed`
+
+#### Parameters
+
+- `accountId` (path parameter, required): Unique identifier of the account
+- `profileId` (path parameter, required): Unique identifier of the profile
+
+#### Response Format
+
+```typescript
+{
+  message: string,
+  profile: Profile
+}
+```
+
+#### Example Response
+
+```json
+{
+  "message": "Profile achievements marked as viewed successfully",
+  "profile": {
+    "id": 456,
+    "name": "John's Profile",
+    "image": "profile-456.jpg"
+  }
+}
+```
+
+**Status Codes:**
+
+- 200: Achievements marked as viewed successfully
+- 401: Authentication required
+- 403: Access forbidden (user doesn't own this account/profile)
+- 404: Profile not found
+- 500: Server error
+
+---
+
 ### Delete Profile
 
 Deletes a profile from an account. This action will cascade delete all watch status data for the profile.
@@ -386,14 +493,20 @@ All profile endpoints require that:
 
 - **Required:** Yes
 - **Type:** String
-- **Length:** 1-100 characters
+- **Length:** 3-50 characters
 - **Special Characters:** Allowed
+
+### Profile Accent Color
+
+- **Required:** Yes (for accent color update endpoint)
+- **Type:** String or `null`
+- **Format:** 6-digit hex color matching `^#[0-9A-Fa-f]{6}$` (e.g. `#1976d2`), or `null` to clear
 
 ### Profile Image
 
 - Managed through the separate File Upload API
 - Default image assigned automatically for new profiles
-- See [File Upload API Documentation](files.md) for image management
+- See [File Upload API Documentation](file.md) for image management
 
 ## Error Responses
 
@@ -500,6 +613,35 @@ async function updateProfile(accountId: number, profileId: number, name: string,
   return await response.json();
 }
 
+// Update profile accent color
+async function updateProfileAccentColor(
+  accountId: number,
+  profileId: number,
+  accentColor: string | null,
+  token: string,
+) {
+  const response = await fetch(`/api/v1/accounts/${accountId}/profiles/${profileId}/accent`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ accentColor }),
+  });
+  return await response.json();
+}
+
+// Mark profile achievements as viewed
+async function markProfileAchievementsViewed(accountId: number, profileId: number, token: string) {
+  const response = await fetch(`/api/v1/accounts/${accountId}/profiles/${profileId}/achievements/viewed`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return await response.json();
+}
+
 // Delete profile
 async function deleteProfile(accountId: number, profileId: number, token: string) {
   const response = await fetch(`/api/v1/accounts/${accountId}/profiles/${profileId}`, {
@@ -536,6 +678,18 @@ curl -X PUT \
   -H "Authorization: Bearer your_token_here" \
   -d '{"name": "Updated Name"}' \
   https://api.example.com/api/v1/accounts/123/profiles/456
+
+# Update profile accent color
+curl -X PATCH \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your_token_here" \
+  -d '{"accentColor": "#1976d2"}' \
+  https://api.example.com/api/v1/accounts/123/profiles/456/accent
+
+# Mark profile achievements as viewed
+curl -X PATCH \
+  -H "Authorization: Bearer your_token_here" \
+  https://api.example.com/api/v1/accounts/123/profiles/456/achievements/viewed
 
 # Delete profile
 curl -X DELETE \

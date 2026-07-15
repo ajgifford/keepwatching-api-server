@@ -175,6 +175,7 @@ The server provides a comprehensive REST API with the following main endpoints:
 - `POST /api/v1/accounts/:accountId/profiles/:profileId/shows/favorites` - Add show to favorites
 - `DELETE /api/v1/accounts/:accountId/profiles/:profileId/shows/favorites/:showId` - Remove from favorites
 - `PUT /api/v1/accounts/:accountId/profiles/:profileId/shows/watchstatus` - Update show watch status
+- `PUT /api/v1/accounts/:accountId/profiles/:profileId/shows/priorWatchStatus` - Mark prior seasons as previously watched
 - `GET /api/v1/accounts/:accountId/profiles/:profileId/episodes` - Get episode data for profile
 - `PUT /api/v1/accounts/:accountId/profiles/:profileId/episodes/watchStatus` - Update episode watch status
 - `GET /api/v1/accounts/:accountId/profiles/:profileId/episodes/upcoming` - Get upcoming episodes
@@ -182,6 +183,7 @@ The server provides a comprehensive REST API with the following main endpoints:
 - `GET /api/v1/accounts/:accountId/profiles/:profileId/seasons/:seasonId/episodes` - Get episodes for season
 - `GET /api/v1/accounts/:accountId/profiles/:profileId/shows/:showId/seasons` - Get seasons for show
 - `PUT /api/v1/accounts/:accountId/profiles/:profileId/seasons/watchstatus` - Update season watch status
+- `PUT /api/v1/accounts/:accountId/profiles/:profileId/seasons/priorWatchStatus` - Mark seasons as previously watched
 
 ### [Movies](./resources/movies.md)
 - `GET /api/v1/accounts/:accountId/profiles/:profileId/movies` - Get user's movies
@@ -195,6 +197,44 @@ The server provides a comprehensive REST API with the following main endpoints:
 - `GET /api/v1/search/shows` - Search TV shows
 - `GET /api/v1/search/movies` - Search movies
 - `GET /api/v1/search/people` - Search people (actors, directors, crew)
+
+### [Ratings](./resources/ratings.md)
+- `GET /api/v1/accounts/:accountId/profiles/:profileId/ratings` - Get ratings for a profile
+- `POST /api/v1/accounts/:accountId/profiles/:profileId/ratings` - Save (upsert) a rating
+- `DELETE /api/v1/accounts/:accountId/profiles/:profileId/ratings/:ratingId` - Delete a rating
+
+### [Community Recommendations](./resources/communityRecommendations.md)
+- `GET /api/v1/community/recommendations` - Get the public community recommendations feed
+- `GET /api/v1/community/recommendations/:contentType/:contentId` - Get recommendation details for a piece of content
+- `GET /api/v1/accounts/:accountId/profiles/:profileId/recommendations` - Get a profile's own recommendations
+- `POST /api/v1/accounts/:accountId/profiles/:profileId/recommendations` - Send a recommendation
+- `DELETE /api/v1/accounts/:accountId/profiles/:profileId/recommendations` - Remove a recommendation
+
+### [Calendar](./resources/calendar.md)
+- `GET /api/v1/accounts/:accountId/profiles/:profileId/calendar` - Get a profile's content calendar (episodes and movies)
+
+### [Watchlist](./resources/watchlist.md)
+- `GET /api/v1/accounts/:accountId/profiles/:profileId/watchlist` - Get a profile's watchlist
+- `POST /api/v1/accounts/:accountId/profiles/:profileId/watchlist` - Add an item to the watchlist
+- `DELETE /api/v1/accounts/:accountId/profiles/:profileId/watchlist/:itemId` - Remove an item from the watchlist
+- `PUT /api/v1/accounts/:accountId/profiles/:profileId/watchlist/priorities` - Reorder watchlist item priorities
+
+### [Watch History & Rewatching](./resources/watchHistory.md)
+- `GET /api/v1/accounts/:accountId/profiles/:profileId/watchHistory` - Get paginated watch history
+- `GET /api/v1/accounts/:accountId/profiles/:profileId/watchHistory/bulkMarked` - Get shows bulk-marked as watched
+- `POST /api/v1/accounts/:accountId/profiles/:profileId/watchHistory/markAsPrior` - Mark episodes as previously watched
+- `POST /api/v1/accounts/:accountId/profiles/:profileId/watchHistory/dismiss` - Dismiss a show from history review
+- `POST /api/v1/accounts/:accountId/profiles/:profileId/shows/:showId/rewatch` - Start a show rewatch
+- `POST /api/v1/accounts/:accountId/profiles/:profileId/seasons/:seasonId/rewatch` - Start a season rewatch
+- `POST /api/v1/accounts/:accountId/profiles/:profileId/movies/:movieId/rewatch` - Start a movie rewatch
+- `POST /api/v1/accounts/:accountId/profiles/:profileId/episodes/:episodeId/rewatch` - Record an episode rewatch
+
+### [Profile Transfer](./resources/profileTransfer.md)
+- `POST /api/v1/accounts/:accountId/profiles/:profileId/transferInvitations` - Send a profile transfer invitation
+- `GET /api/v1/accounts/:accountId/transferInvitations` - Get transfer invitations sent by an account
+- `DELETE /api/v1/accounts/:accountId/transferInvitations/:invitationId` - Cancel a transfer invitation
+- `GET /api/v1/profileTransferInvitations/:token` - Preview a transfer invitation (public)
+- `POST /api/v1/profileTransferInvitations/:token/claim` - Claim a transfer invitation
 
 ### [People & Cast](./resources/person.md)
 - `GET /api/v1/accounts/:accountId/profiles/:profileId/person/:personId` - Get person details (internal)
@@ -213,8 +253,14 @@ The server provides a comprehensive REST API with the following main endpoints:
 - `DELETE /api/v1/upload/accounts/:accountId/profiles/:profileId/image` - Delete profile image
 
 ### [Statistics](./resources/statistics.md)
-- `GET /api/v1/accounts/:accountId/statistics` - Get account statistics
-- `GET /api/v1/accounts/:accountId/profiles/:profileId/statistics` - Get profile statistics
+- `GET /api/v1/accounts/:accountId/statistics` - Get account statistics (16 endpoints total: base, velocity, activity
+  timeline, binge, streaks, time-to-watch, seasonal, milestones, content depth, content discovery, abandonment risk,
+  unaired content, profile comparison, rewatches, skip rate, watchlist usage)
+- `GET /api/v1/accounts/:accountId/profiles/:profileId/statistics` - Get profile statistics (20 endpoints total: base,
+  velocity, daily/weekly/monthly/timeline activity, binge, streaks, time-to-watch, seasonal, milestones, content
+  depth, content discovery, abandonment risk, unaired content, rewatches, skip rate, watchlist usage, and
+  year-in-review recap + recap availability)
+- See [resources/statistics.md](./resources/statistics.md) for the full endpoint reference
 
 ### [Notifications](./resources/notifications.md)
 - `GET /api/v1/accounts/:accountId/notifications` - Get notifications

@@ -36,6 +36,7 @@ Requests without valid authentication will receive a 401 Unauthorized response.
 - `POST /shows/favorites` - Add show to favorites
 - `DELETE /shows/favorites/:showId` - Remove show from favorites
 - `PUT /shows/watchstatus` - Update show watch status
+- `PUT /shows/priorWatchStatus` - Mark prior seasons of a show as previously watched
 - `GET /shows/:showId/details` - Get detailed show information
 - `GET /shows/:showId/recommendations` - Get show recommendations
 - `GET /shows/:showId/similar` - Get similar shows
@@ -44,6 +45,7 @@ Requests without valid authentication will receive a 401 Unauthorized response.
 
 - `GET /shows/:showId/seasons` - Get seasons for a show
 - `PUT /seasons/watchstatus` - Update season watch status
+- `PUT /seasons/priorWatchStatus` - Mark specific seasons as previously watched
 
 ### Episodes
 
@@ -69,7 +71,7 @@ Requests without valid authentication will receive a 401 Unauthorized response.
   status: string,
   genres: Array<string>,
   tmdb_id: number,
-  watchStatus: 'WATCHING' | 'COMPLETED' | 'NOT_WATCHING',
+  watchStatus: 'UNAIRED' | 'NOT_WATCHED' | 'WATCHING' | 'WATCHED' | 'UP_TO_DATE',
   totalSeasons: number,
   totalEpisodes: number,
   watchedEpisodes: number,
@@ -89,7 +91,7 @@ Requests without valid authentication will receive a 401 Unauthorized response.
   air_date: string,
   episode_count: number,
   show_id: number,
-  watchStatus: 'WATCHING' | 'COMPLETED' | 'NOT_WATCHING',
+  watchStatus: 'UNAIRED' | 'NOT_WATCHED' | 'WATCHING' | 'WATCHED' | 'UP_TO_DATE' | 'SKIPPED',
   episodes: Array<Episode>
 }
 ```
@@ -116,16 +118,33 @@ Requests without valid authentication will receive a 401 Unauthorized response.
 
 ## Watch Status Types
 
+The full `WatchStatus` enum shared by shows, seasons, and episodes is `UNAIRED | NOT_WATCHED | WATCHING | WATCHED |
+UP_TO_DATE | SKIPPED`. Which values are user-settable vs. computed differs by entity type, and not every entity
+supports every value:
+
 ### Show Watch Status
 
-- `WATCHING`: Currently watching the show
-- `COMPLETED`: Finished watching all available episodes
-- `NOT_WATCHING`: Not currently watching (may be paused or dropped)
+- **User-settable** (`PUT .../shows/watchstatus`): `NOT_WATCHED` or `WATCHED` only
+- **Computed/response**: `UNAIRED`, `NOT_WATCHED`, `WATCHING`, `WATCHED`, or `UP_TO_DATE`
+  - `UNAIRED`: The show hasn't aired yet
+  - `UP_TO_DATE`: All currently-aired episodes are watched, but the show is still airing/in production
+  - `WATCHED`: All episodes are watched and the show is no longer in production
+- There is no `recursive` flag on the update endpoint — updating a show's status always cascades to every season and
+  episode, and vice versa (see [Shows API](./shows.md) and [Seasons API](./seasons.md) for the exact propagation
+  rules)
+
+### Season Watch Status
+
+- **User-settable** (`PUT .../seasons/watchstatus`): `NOT_WATCHED`, `WATCHED`, or `SKIPPED`
+- **Computed/response**: `UNAIRED`, `NOT_WATCHED`, `WATCHING`, `WATCHED`, `UP_TO_DATE`, or a user-set `SKIPPED`
+  - `SKIPPED` seasons are never derived automatically; once set by the user they're trusted as-is and treated as
+    "complete" when the parent show's status is recalculated
 
 ### Episode Watch Status
 
 - `WATCHED`: Episode has been watched
 - `NOT_WATCHED`: Episode has not been watched
+- `UNAIRED`: Episode has not yet aired (response-only; not user-settable)
 
 ## Content Discovery
 
@@ -251,15 +270,15 @@ const showDetails = await getShowDetails(accountId, profileId, showId, token);
 // 3. Mark episodes as watched
 await updateEpisodeWatchStatus(accountId, profileId, episodeId, 'WATCHED', token);
 
-// 4. Update show status when complete
-await updateShowWatchStatus(accountId, profileId, showId, 'COMPLETED', token);
+// 4. Update show status when complete (cascades to all seasons/episodes automatically)
+await updateShowWatchStatus(accountId, profileId, showId, 'WATCHED', token);
 ```
 
 ### Batch Episode Updates
 
 ```typescript
-// Mark entire season as watched
-await updateSeasonWatchStatus(accountId, profileId, seasonId, 'COMPLETED', true, token);
+// Mark entire season as watched (cascades to all its episodes automatically)
+await updateSeasonWatchStatus(accountId, profileId, seasonId, 'WATCHED', token);
 
 // Get next unwatched episodes
 const nextEpisodes = await getProfileEpisodes(accountId, profileId, token);
@@ -271,6 +290,7 @@ const nextEpisodes = await getProfileEpisodes(accountId, profileId, token);
 - TMDB integration provides rich metadata
 - Watch status changes trigger cache invalidation
 - Episode air dates are used for upcoming/recent episode calculations
-- Recursive operations are available for bulk status updates
+- Show and season watch status updates always cascade to their children (and recalculate their parents) — there is
+  no `recursive` flag to opt in or out
 - Profile-specific tracking allows family sharing
 - Statistics are calculated in real-time based on watch status

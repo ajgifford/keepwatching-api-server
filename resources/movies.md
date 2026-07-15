@@ -385,9 +385,17 @@ and create it before adding to favorites.
 
 ```json
 {
-  "movieTMDBId": 27205
+  "movieTMDBId": 27205,
+  "restoreFromHistory": false
 }
 ```
+
+#### Request Body Fields
+
+- `movieTMDBId` (required): TMDB ID of the movie to favorite
+- `restoreFromHistory` (optional, default: `false`): If the movie was previously removed from favorites (and has
+  surviving watch history for this profile), set to `true` to restore that prior watch status/history instead of
+  re-adding the movie as fresh/unwatched
 
 #### Response Format
 
@@ -398,7 +406,8 @@ and create it before adding to favorites.
   recentUpcomingMovies: {
     recentMovies: Movie[],
     upcomingMovies: Movie[]
-  }
+  },
+  hasSurvivingHistory: boolean
 }
 ```
 
@@ -446,7 +455,8 @@ and create it before adding to favorites.
         "vote_average": 7.8
       }
     ]
-  }
+  },
+  "hasSurvivingHistory": false
 }
 ```
 
@@ -474,6 +484,11 @@ Removes a movie from a profile's favorites list.
 - `accountId` (path parameter, required): Unique identifier of the account
 - `profileId` (path parameter, required): Unique identifier of the profile
 - `movieId` (path parameter, required): Unique identifier of the movie to remove
+
+#### Query Parameters
+
+- `removeHistory` (optional, default: `false`): When `true`, also deletes the profile's watch history for this movie
+  instead of preserving it for a future `restoreFromHistory` re-add
 
 #### Response Format
 
@@ -551,9 +566,20 @@ Updates the watch status of a movie in a profile's favorites list.
 ```json
 {
   "movieId": 12345,
-  "status": "WATCHED"
+  "status": "WATCHED",
+  "isPriorWatch": false,
+  "watchedAt": "2025-05-20"
 }
 ```
+
+#### Request Body Fields
+
+- `movieId` (required): ID of the movie to update
+- `status` (required): New watch status (`WATCHED`, `NOT_WATCHED`)
+- `isPriorWatch` (optional): When `true`, marks this as a watch that happened before the movie was added to KeepWatching
+  (does not count toward rewatch statistics)
+- `watchedAt` (optional): ISO date string (`YYYY-MM-DD`) recording when the movie was watched; defaults to the current
+  date when omitted
 
 #### Valid Status Values
 
@@ -1164,16 +1190,23 @@ curl -X POST \
   -d '{"movieTMDBId": 27205}' \
   https://api.example.com/api/v1/accounts/123/profiles/456/movies/favorites
 
-# Remove movie from favorites
+# Remove movie from favorites (also deleting its watch history)
 curl -X DELETE \
   -H "Authorization: Bearer your_token_here" \
-  https://api.example.com/api/v1/accounts/123/profiles/456/movies/favorites/12345
+  "https://api.example.com/api/v1/accounts/123/profiles/456/movies/favorites/12345?removeHistory=true"
 
 # Update movie watch status
 curl -X PUT \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your_token_here" \
   -d '{"movieId": 12345, "status": "WATCHED"}' \
+  https://api.example.com/api/v1/accounts/123/profiles/456/movies/watchstatus
+
+# Mark a movie as watched prior to using KeepWatching (doesn't count as a rewatch)
+curl -X PUT \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your_token_here" \
+  -d '{"movieId": 12345, "status": "WATCHED", "isPriorWatch": true, "watchedAt": "2020-03-15"}' \
   https://api.example.com/api/v1/accounts/123/profiles/456/movies/watchstatus
 
 # Get recent and upcoming movies

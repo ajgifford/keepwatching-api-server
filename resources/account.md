@@ -300,6 +300,34 @@ Authorization: Bearer <your_access_token>
 - 404: Account not found
 - 500: Server error
 
+### Delete Account
+
+Deletes an account and all of its associated data (profiles, watch status, notifications, preferences, etc.).
+
+**Endpoint:** `DELETE /api/v1/accounts/{accountId}`
+
+**Authentication:** Requires a valid Firebase ID token (see note below), but this route does **not** run
+`authorizeAccountAccess` the way `PUT /api/v1/accounts/{accountId}` does — it only validates that `accountId` is a
+positive integer before deleting. Treat this endpoint as a client-facing "delete my own account" action, not a
+general-purpose admin endpoint.
+
+#### Parameters
+
+- `accountId` (path parameter, required): Unique identifier of the account
+
+#### Response Format
+
+```json
+{
+  "message": "Account deleted successfully"
+}
+```
+
+**Status Codes:**
+
+- 200: Account deleted successfully
+- 500: Server error
+
 ## Authentication & Authorization
 
 ### Public Endpoints
@@ -316,6 +344,8 @@ The following endpoints do not require authentication:
 The following endpoints require authentication and authorization:
 
 - `PUT /api/v1/accounts/{accountId}` - User must own the account being updated
+- `DELETE /api/v1/accounts/{accountId}` - Requires a valid Firebase ID token; does not additionally verify account
+  ownership at the route level
 
 ### Authentication Header
 
@@ -398,5 +428,5 @@ a 403 Forbidden response:
 - Default profile IDs must reference valid profiles belonging to the account
 - Firebase UID must be unique across all accounts
 - Email addresses must be unique across all accounts
-- Account names have a maximum length of 100 characters
+- Account names must be between 3 and 50 characters
 - Google login automatically downloads and stores profile photos when available

@@ -1,4 +1,4 @@
-[TV Series](./tv-series.md) > Episodes
+[TV Series](./tvSeries.md) > Episodes
 
 # Episodes API Documentation
 
@@ -80,7 +80,8 @@ Authorization: Bearer <your_access_token>
 
 ### Update Episode Watch Status
 
-Updates the watch status of a specific episode and returns updated next unwatched episodes for the profile.
+Updates the watch status of a specific episode. This always recalculates the parent season's and show's watch status
+(there is no separate recursive/propagation flag to configure).
 
 **Endpoint:** `PUT /api/v1/accounts/{accountId}/profiles/{profileId}/episodes/watchStatus`
 
@@ -108,7 +109,16 @@ Updates the watch status of a specific episode and returns updated next unwatche
 ```typescript
 {
   message: string,
-  nextUnwatchedEpisodes: Array<EpisodeGroup>
+  statusData: {
+    showWithSeasons: ShowDetailsObject, // the parent show with its full season/episode hierarchy, post-update
+    nextUnwatchedEpisodes: Array<{
+      showId: number,
+      showTitle: string,
+      posterImage: string,
+      lastWatched: string,
+      episodes: Array<Episode>
+    }>
+  }
 }
 ```
 
@@ -117,28 +127,48 @@ Updates the watch status of a specific episode and returns updated next unwatche
 ```json
 {
   "message": "Successfully updated the episode watch status",
-  "nextUnwatchedEpisodes": [
-    {
+  "statusData": {
+    "showWithSeasons": {
       "show_id": 1,
-      "show_title": "Breaking Bad",
-      "show_poster_url": "https://image.tmdb.org/t/p/w500/ggFHVNu6YYI5L9pCfOacjizRGt.jpg",
-      "episodes": [
+      "title": "Breaking Bad",
+      "watchStatus": "WATCHING",
+      "totalSeasons": 5,
+      "totalEpisodes": 62,
+      "watchedEpisodes": 2,
+      "watchProgress": 3.2,
+      "seasons": [
         {
-          "episode_id": 124,
-          "episode_number": 2,
-          "season_number": 1,
-          "title": "Cat's in the Bag...",
-          "description": "Walt and Jesse attempt to tie up loose ends.",
-          "air_date": "2008-01-27",
-          "runtime": 48,
-          "still_url": "https://image.tmdb.org/t/p/w500/A7ZpngsACMdbyxK6pzLq55O9lTWD.jpg",
           "season_id": 1,
-          "show_id": 1,
-          "watchStatus": "NOT_WATCHED"
+          "season_number": 1,
+          "watchStatus": "WATCHING",
+          "episodes": []
         }
       ]
-    }
-  ]
+    },
+    "nextUnwatchedEpisodes": [
+      {
+        "showId": 1,
+        "showTitle": "Breaking Bad",
+        "posterImage": "https://image.tmdb.org/t/p/w500/ggFHVNu6YYI5L9pCfOacjizRGt.jpg",
+        "lastWatched": "2025-07-01T20:30:00Z",
+        "episodes": [
+          {
+            "episode_id": 124,
+            "episode_number": 2,
+            "season_number": 1,
+            "title": "Cat's in the Bag...",
+            "description": "Walt and Jesse attempt to tie up loose ends.",
+            "air_date": "2008-01-27",
+            "runtime": 48,
+            "still_url": "https://image.tmdb.org/t/p/w500/A7ZpngsACMdbyxK6pzLq55O9lTWD.jpg",
+            "season_id": 1,
+            "show_id": 1,
+            "watchStatus": "NOT_WATCHED"
+          }
+        ]
+      }
+    ]
+  }
 }
 ```
 
@@ -269,10 +299,8 @@ Retrieves upcoming episodes across all shows in a profile's favorites, ordered b
 - `accountId` (path, required): Unique identifier of the account
 - `profileId` (path, required): Unique identifier of the profile
 
-#### Query Parameters
-
-- `limit` (optional, default: 20): Maximum number of episodes to return
-- `days` (optional, default: 30): Number of days ahead to look for episodes
+This endpoint does not currently accept any query parameters — the lookback/lookahead window and result count are
+fixed server-side (there is no `limit` or `days` parameter, despite what earlier versions of this document said).
 
 #### Response Format
 
@@ -344,10 +372,8 @@ Retrieves recently aired episodes across all shows in a profile's favorites, ord
 - `accountId` (path, required): Unique identifier of the account
 - `profileId` (path, required): Unique identifier of the profile
 
-#### Query Parameters
-
-- `limit` (optional, default: 20): Maximum number of episodes to return
-- `days` (optional, default: 14): Number of days back to look for episodes
+This endpoint does not currently accept any query parameters — the lookback window and result count are fixed
+server-side (there is no `limit` or `days` parameter, despite what earlier versions of this document said).
 
 #### Response Format
 
@@ -514,20 +540,9 @@ async function getEpisodesForSeason(accountId: number, profileId: number, season
   return await response.json();
 }
 
-// Get upcoming episodes
-async function getUpcomingEpisodes(
-  accountId: number,
-  profileId: number,
-  limit: number = 20,
-  days: number = 30,
-  token: string,
-) {
-  const params = new URLSearchParams({
-    limit: limit.toString(),
-    days: days.toString(),
-  });
-
-  const response = await fetch(`/api/v1/accounts/${accountId}/profiles/${profileId}/episodes/upcoming?${params}`, {
+// Get upcoming episodes (no query parameters are currently supported)
+async function getUpcomingEpisodes(accountId: number, profileId: number, token: string) {
+  const response = await fetch(`/api/v1/accounts/${accountId}/profiles/${profileId}/episodes/upcoming`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -535,20 +550,9 @@ async function getUpcomingEpisodes(
   return await response.json();
 }
 
-// Get recent episodes
-async function getRecentEpisodes(
-  accountId: number,
-  profileId: number,
-  limit: number = 20,
-  days: number = 14,
-  token: string,
-) {
-  const params = new URLSearchParams({
-    limit: limit.toString(),
-    days: days.toString(),
-  });
-
-  const response = await fetch(`/api/v1/accounts/${accountId}/profiles/${profileId}/episodes/recent?${params}`, {
+// Get recent episodes (no query parameters are currently supported)
+async function getRecentEpisodes(accountId: number, profileId: number, token: string) {
+  const response = await fetch(`/api/v1/accounts/${accountId}/profiles/${profileId}/episodes/recent`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -561,8 +565,8 @@ async function watchEpisodeAndGetNext(accountId: number, profileId: number, epis
   try {
     const result = await updateEpisodeWatchStatus(accountId, profileId, episodeId, 'WATCHED', token);
     console.log('Episode marked as watched');
-    console.log('Next episodes to watch:', result.nextUnwatchedEpisodes);
-    return result.nextUnwatchedEpisodes;
+    console.log('Next episodes to watch:', result.statusData.nextUnwatchedEpisodes);
+    return result.statusData.nextUnwatchedEpisodes;
   } catch (error) {
     console.error('Failed to update episode status:', error);
     throw error;
@@ -593,8 +597,8 @@ async function batchWatchEpisodes(accountId: number, profileId: number, episodeI
 async function getEpisodeOverview(accountId: number, profileId: number, token: string) {
   try {
     const [recentResponse, upcomingResponse] = await Promise.all([
-      getRecentEpisodes(accountId, profileId, 10, 7, token),
-      getUpcomingEpisodes(accountId, profileId, 10, 14, token),
+      getRecentEpisodes(accountId, profileId, token),
+      getUpcomingEpisodes(accountId, profileId, token),
     ]);
 
     return {
@@ -670,13 +674,13 @@ curl -X PUT \
 curl -H "Authorization: Bearer your_token_here" \
   https://api.example.com/api/v1/accounts/123/profiles/456/seasons/1/episodes
 
-# Get upcoming episodes (next 14 days, limit 10)
+# Get upcoming episodes (no query parameters are currently supported)
 curl -H "Authorization: Bearer your_token_here" \
-  "https://api.example.com/api/v1/accounts/123/profiles/456/episodes/upcoming?limit=10&days=14"
+  https://api.example.com/api/v1/accounts/123/profiles/456/episodes/upcoming
 
-# Get recent episodes (last 7 days, limit 15)
+# Get recent episodes (no query parameters are currently supported)
 curl -H "Authorization: Bearer your_token_here" \
-  "https://api.example.com/api/v1/accounts/123/profiles/456/episodes/recent?limit=15&days=7"
+  https://api.example.com/api/v1/accounts/123/profiles/456/episodes/recent
 
 # Mark episode as not watched
 curl -X PUT \

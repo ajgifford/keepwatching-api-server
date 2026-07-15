@@ -1,4 +1,4 @@
-[TV Series](./tv-series.md) > Seasons
+[TV Series](./tvSeries.md) > Seasons
 
 # Seasons API Documentation
 
@@ -31,7 +31,7 @@ Authorization: Bearer <your_access_token>
   air_date: string,
   episode_count: number,
   show_id: number,
-  watchStatus: 'WATCHING' | 'COMPLETED' | 'NOT_WATCHING',
+  watchStatus: 'UNAIRED' | 'NOT_WATCHED' | 'WATCHING' | 'WATCHED' | 'UP_TO_DATE' | 'SKIPPED',
   watchProgress: number, // percentage (0-100)
   watchedEpisodes: number,
   totalEpisodes: number,
@@ -106,7 +106,7 @@ Retrieves all seasons for a specific show with their episodes and watch status i
       "air_date": "2008-01-20",
       "episode_count": 7,
       "show_id": 1,
-      "watchStatus": "COMPLETED",
+      "watchStatus": "WATCHED",
       "watchProgress": 100,
       "watchedEpisodes": 7,
       "totalEpisodes": 7,
@@ -198,7 +198,8 @@ Retrieves all seasons for a specific show with their episodes and watch status i
 
 ### Update Season Watch Status
 
-Updates the watch status of a season, with optional recursive updates to all episodes within the season.
+Updates the watch status of a season. There is no `recursive` flag — the update always cascades to the season's
+episodes (except `SKIPPED`, see below) and always recalculates the parent show's status.
 
 **Endpoint:** `PUT /api/v1/accounts/{accountId}/profiles/{profileId}/seasons/watchstatus`
 
@@ -212,22 +213,31 @@ Updates the watch status of a season, with optional recursive updates to all epi
 ```json
 {
   "seasonId": 1,
-  "status": "COMPLETED",
-  "recursive": true
+  "status": "WATCHED"
 }
 ```
 
 #### Request Body Fields
 
 - `seasonId` (required): ID of the season to update
-- `status` (required): New watch status (`WATCHING`, `COMPLETED`, `NOT_WATCHING`)
-- `recursive` (optional, default: false): Whether to update all episodes in the season
+- `status` (required): New watch status — user-settable values are `NOT_WATCHED`, `WATCHED`, or `SKIPPED` (there is
+  no `WATCHING`/`COMPLETED`/`NOT_WATCHING`)
 
 #### Response Format
 
 ```typescript
 {
-  message: string;
+  message: string,
+  statusData: {
+    showWithSeasons: ShowDetailsObject, // the parent show with its full season/episode hierarchy, post-update
+    nextUnwatchedEpisodes: Array<{
+      showId: number,
+      showTitle: string,
+      posterImage: string,
+      lastWatched: string,
+      episodes: Array<Episode>
+    }>
+  }
 }
 ```
 
@@ -235,7 +245,27 @@ Updates the watch status of a season, with optional recursive updates to all epi
 
 ```json
 {
-  "message": "Successfully updated the season watch status"
+  "message": "Successfully updated the season watch status",
+  "statusData": {
+    "showWithSeasons": {
+      "show_id": 1,
+      "title": "Breaking Bad",
+      "watchStatus": "WATCHING",
+      "totalSeasons": 5,
+      "totalEpisodes": 62,
+      "watchedEpisodes": 7,
+      "watchProgress": 11.3,
+      "seasons": [
+        {
+          "season_id": 1,
+          "season_number": 1,
+          "watchStatus": "WATCHED",
+          "episodes": []
+        }
+      ]
+    },
+    "nextUnwatchedEpisodes": []
+  }
 }
 ```
 
@@ -248,43 +278,115 @@ Updates the watch status of a season, with optional recursive updates to all epi
 - 404: Season not found
 - 500: Server error
 
+---
+
+### Mark Seasons as Previously Watched
+
+Marks specific seasons of a show as previously watched, using each episode's air date as the watched date so that
+viewing statistics remain accurate.
+
+**Endpoint:** `PUT /api/v1/accounts/{accountId}/profiles/{profileId}/seasons/priorWatchStatus`
+
+#### Parameters
+
+- `accountId` (path, required): Unique identifier of the account
+- `profileId` (path, required): Unique identifier of the profile
+
+#### Request Body
+
+```json
+{
+  "seasonIds": [1, 2, 3],
+  "showId": 1
+}
+```
+
+#### Request Body Fields
+
+- `seasonIds` (required): Array of season IDs to mark as previously watched (at least one required)
+- `showId` (required): ID of the show the seasons belong to
+
+#### Response Format
+
+```typescript
+{
+  message: string,
+  statusData: {
+    showWithSeasons: ShowDetailsObject,
+    nextUnwatchedEpisodes: Array<{
+      showId: number,
+      showTitle: string,
+      posterImage: string,
+      lastWatched: string,
+      episodes: Array<Episode>
+    }>
+  }
+}
+```
+
+#### Example Response
+
+```json
+{
+  "message": "Successfully marked seasons as previously watched",
+  "statusData": {
+    "showWithSeasons": {
+      "show_id": 1,
+      "title": "Breaking Bad",
+      "watchStatus": "WATCHING",
+      "totalSeasons": 5,
+      "totalEpisodes": 62,
+      "watchedEpisodes": 20,
+      "watchProgress": 32.3,
+      "seasons": [
+        {
+          "season_id": 1,
+          "season_number": 1,
+          "watchStatus": "WATCHED",
+          "episodes": []
+        }
+      ]
+    },
+    "nextUnwatchedEpisodes": []
+  }
+}
+```
+
+**Status Codes:**
+
+- 200: Status updated successfully
+- 400: Invalid request body
+- 401: Authentication required
+- 403: Access forbidden
+- 404: Season not found
+- 500: Server error
+
 ## Season Watch Status Behavior
 
-### Status Types
+### Status Values
 
-- **WATCHING**: Currently watching this season
-- **COMPLETED**: Finished watching all episodes in the season
-- **NOT_WATCHING**: Not currently watching this season
+The full `WatchStatus` enum is `UNAIRED | NOT_WATCHED | WATCHING | WATCHED | UP_TO_DATE | SKIPPED`:
 
-### Recursive Updates
+- **User-settable season status**: `NOT_WATCHED`, `WATCHED`, or `SKIPPED` only.
+- **Computed/response season status**: any of `UNAIRED`, `NOT_WATCHED`, `WATCHING`, `WATCHED`, `UP_TO_DATE`, or a
+  user-set `SKIPPED`.
+  - `UNAIRED`: The season hasn't aired yet.
+  - `NOT_WATCHED`: The season has aired but no episodes have been watched.
+  - `WATCHING`: Some but not all currently-aired episodes have been watched.
+  - `UP_TO_DATE`: All currently-aired episodes have been watched, but more episodes of the season are still to air.
+  - `WATCHED`: All episodes in the season have been watched and none remain to air.
+  - `SKIPPED`: The user explicitly marked the season as skipped. It is never derived automatically — once set, it's
+    trusted as-is and treated as "complete" (like `WATCHED`/`UP_TO_DATE`) when rolling up to the parent show's
+    status, without altering the underlying episode watch statuses.
 
-When `recursive: true` is specified:
+### No `recursive` Flag — Updates Always Cascade
 
-#### COMPLETED Status
-
-- Marks all episodes in the season as `WATCHED`
-- Updates season watch progress to 100%
-- May trigger parent show status update if all seasons are completed
-
-#### NOT_WATCHING Status
-
-- Sets season status to `NOT_WATCHING`
-- Preserves individual episode watch status
-- Does not affect parent show status
-
-#### WATCHING Status
-
-- Sets season status to `WATCHING`
-- Does not modify individual episode status
-- Sets parent show status to `WATCHING` if not already set
-
-### Automatic Status Calculation
-
-The system automatically calculates season status based on episode progress:
-
-- **COMPLETED**: When all episodes are marked as watched
-- **WATCHING**: When at least one episode is watched but not all
-- **NOT_WATCHING**: When no episodes are watched or explicitly set
+- **Setting a season to `WATCHED` or `NOT_WATCHED`**: Marks every currently-aired episode in the season with that
+  status, then recalculates the parent show's status from all of its seasons.
+- **Setting a season to `SKIPPED`**: Stores `SKIPPED` on the season directly without changing any episode's watch
+  status, then recalculates the parent show's status (a skipped season counts as "complete" for that roll-up).
+- **Individual episode updates** within the season automatically recalculate the season's status (and in turn the
+  show's), so there's no need for a season-level "recursive" toggle to keep things in sync.
 
 ### Watch Progress Calculation
 
@@ -306,17 +408,21 @@ watchProgress = (watchedEpisodes / totalEpisodes) * 100
 
 - Individual episode updates automatically recalculate season progress
 - Use the [Episodes API](./episodes.md) for granular episode management
-- Season-level updates can cascade to episodes when recursive
+- Season-level updates always cascade to episodes (except `SKIPPED`, which only affects the season itself)
 
 ## Parent Show Integration
 
 ### Show Status Impact
 
-Season status changes can affect the parent show:
+Season status changes always recalculate the parent show's status:
 
-- **Show becomes COMPLETED**: When all seasons are completed
-- **Show becomes WATCHING**: When any season is watching
-- **Show remains NOT_WATCHING**: When all seasons are not watching
+- **Show becomes `WATCHED`**: When all seasons are watched/up-to-date/skipped and the show is no longer in
+  production
+- **Show becomes `UP_TO_DATE`**: When all currently-aired seasons are watched/up-to-date/skipped but the show is
+  still in production or has unaired seasons
+- **Show becomes `WATCHING`**: When there's a mix of watched and not-watched seasons, or any season is itself
+  `WATCHING`
+- **Show becomes `NOT_WATCHED`**: When no aired seasons have any watched episodes
 
 ### Cache Management
 
@@ -338,7 +444,7 @@ Season status changes can affect the parent show:
     },
     {
       "field": "status",
-      "message": "Status must be one of: WATCHING, COMPLETED, NOT_WATCHING"
+      "message": "Status must be one of: NOT_WATCHED, WATCHED, or SKIPPED"
     }
   ]
 }
@@ -380,8 +486,7 @@ async function updateSeasonWatchStatus(
   accountId: number,
   profileId: number,
   seasonId: number,
-  status: 'WATCHING' | 'COMPLETED' | 'NOT_WATCHING',
-  recursive: boolean,
+  status: 'NOT_WATCHED' | 'WATCHED' | 'SKIPPED',
   token: string,
 ) {
   const response = await fetch(`/api/v1/accounts/${accountId}/profiles/${profileId}/seasons/watchstatus`, {
@@ -390,16 +495,16 @@ async function updateSeasonWatchStatus(
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ seasonId, status, recursive }),
+    body: JSON.stringify({ seasonId, status }),
   });
   return await response.json();
 }
 
-// Mark entire season as completed
+// Mark entire season as watched (cascades to all its episodes automatically)
 async function completeEntireSeason(accountId: number, profileId: number, seasonId: number, token: string) {
   try {
-    const result = await updateSeasonWatchStatus(accountId, profileId, seasonId, 'COMPLETED', true, token);
-    console.log('Season marked as completed with all episodes');
+    const result = await updateSeasonWatchStatus(accountId, profileId, seasonId, 'WATCHED', token);
+    console.log('Season marked as watched with all episodes');
     return result;
   } catch (error) {
     console.error('Failed to complete season:', error);
@@ -428,7 +533,7 @@ async function getSeasonProgressSummary(accountId: number, profileId: number, sh
     seasons: summary,
     overallProgress: Math.round(overallProgress * 10) / 10,
     totalSeasons: seasons.length,
-    completedSeasons: seasons.filter((s) => s.watchStatus === 'COMPLETED').length,
+    watchedSeasons: seasons.filter((s) => s.watchStatus === 'WATCHED' || s.watchStatus === 'UP_TO_DATE').length,
   };
 }
 
@@ -444,7 +549,7 @@ async function batchUpdateSeasons() {
     const seasonsData = await getSeasonsForShow(accountId, profileId, showId, token);
     const seasons = seasonsData.results;
 
-    // Mark first three seasons as completed
+    // Mark first three seasons as watched
     for (let i = 0; i < Math.min(3, seasons.length); i++) {
       const season = seasons[i];
       console.log(`Completing season ${season.season_number}: ${season.name}`);
@@ -470,26 +575,26 @@ async function batchUpdateSeasons() {
 curl -H "Authorization: Bearer your_token_here" \
   https://api.example.com/api/v1/accounts/123/profiles/456/shows/1/seasons
 
-# Mark season as completed (with recursive episode updates)
+# Mark season as watched (automatically cascades to all its episodes)
 curl -X PUT \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your_token_here" \
-  -d '{"seasonId": 1, "status": "COMPLETED", "recursive": true}' \
+  -d '{"seasonId": 1, "status": "WATCHED"}' \
   https://api.example.com/api/v1/accounts/123/profiles/456/seasons/watchstatus
 
-# Mark season as currently watching (without affecting episodes)
+# Mark a season as skipped (does not touch its episodes' watch status)
 curl -X PUT \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your_token_here" \
-  -d '{"seasonId": 2, "status": "WATCHING", "recursive": false}' \
+  -d '{"seasonId": 2, "status": "SKIPPED"}' \
   https://api.example.com/api/v1/accounts/123/profiles/456/seasons/watchstatus
 
-# Stop watching a season
+# Mark seasons 1-3 as previously watched
 curl -X PUT \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your_token_here" \
-  -d '{"seasonId": 3, "status": "NOT_WATCHING", "recursive": false}' \
-  https://api.example.com/api/v1/accounts/123/profiles/456/seasons/watchstatus
+  -d '{"seasonIds": [1, 2, 3], "showId": 1}' \
+  https://api.example.com/api/v1/accounts/123/profiles/456/seasons/priorWatchStatus
 ```
 
 ## Performance Considerations
@@ -502,7 +607,8 @@ curl -X PUT \
 
 ### Batch Operations
 
-- Use recursive updates for bulk episode status changes
+- Season and show watch status updates cascade to all children automatically — prefer them over many individual
+  episode API calls
 - Minimize individual episode API calls when possible
 - Consider rate limiting for bulk operations
 

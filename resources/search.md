@@ -32,28 +32,20 @@ Requests without valid authentication will receive a 401 Unauthorized response:
 
 ```typescript
 {
+  message: string,
   results: Array<{
     id: string,
-    title?: string,          // For movies
-    name?: string,           // For TV shows
-    overview?: string,
-    release_date?: string,   // For movies
-    first_air_date?: string, // For TV shows
-    vote_average?: number,
-    vote_count?: number,
+    title: string,
+    genres: string[],
+    premiered: string,     // ISO date (YYYY-MM-DD)
+    summary: string,
+    image: string,
+    rating: number,
     popularity?: number,
-    poster_path?: string,
-    backdrop_path?: string,
-    genre_ids?: number[],
-    adult?: boolean,
-    original_language?: string,
-    original_title?: string, // For movies
-    original_name?: string,  // For TV shows
-    // ... other TMDB properties
   }>,
-  total_results: number,
-  total_pages: number,
-  current_page: number
+  totalResults: number,
+  totalPages: number,
+  currentPage: number
 }
 ```
 
@@ -93,10 +85,11 @@ GET /api/v1/search/shows?searchString=Breaking%20Bad&year=2008&page=1
 
 ```typescript
 {
+  message: string,
   results: Array<TVShowSearchResult>,
-  total_results: number,
-  total_pages: number,
-  current_page: number
+  totalResults: number,
+  totalPages: number,
+  currentPage: number
 }
 ```
 
@@ -104,43 +97,32 @@ GET /api/v1/search/shows?searchString=Breaking%20Bad&year=2008&page=1
 
 ```json
 {
+  "message": "Search results for 'Breaking Bad' of type: tv",
   "results": [
     {
       "id": "1396",
-      "name": "Breaking Bad",
-      "overview": "When Walter White, a New Mexico chemistry teacher, is diagnosed with Stage III cancer and given a prognosis of only two years left to live, he becomes filled with a sense of fearlessness and an unrelenting desire to secure his family's financial future at any cost as he enters the dangerous world of drugs and crime.",
-      "first_air_date": "2008-01-20",
-      "vote_average": 9.5,
-      "vote_count": 12847,
-      "popularity": 369.594,
-      "poster_path": "/3xnWaLQjelJDDF7LT1WBo6f4BRe.jpg",
-      "backdrop_path": "/tsRy63Mu5cu8etL1X7ZLyf7UP1M.jpg",
-      "genre_ids": [18, 80],
-      "adult": false,
-      "original_language": "en",
-      "original_name": "Breaking Bad",
-      "origin_country": ["US"]
+      "title": "Breaking Bad",
+      "genres": ["Drama", "Crime"],
+      "premiered": "2008-01-20",
+      "summary": "When Walter White, a New Mexico chemistry teacher, is diagnosed with Stage III cancer and given a prognosis of only two years left to live, he becomes filled with a sense of fearlessness and an unrelenting desire to secure his family's financial future at any cost as he enters the dangerous world of drugs and crime.",
+      "image": "/3xnWaLQjelJDDF7LT1WBo6f4BRe.jpg",
+      "rating": 9.5,
+      "popularity": 369.594
     },
     {
       "id": "62560",
-      "name": "Mr. Robot",
-      "overview": "A contemporary and culturally resonant drama about a young programmer, Elliot, who suffers from a debilitating anti-social disorder and decides that he can only connect to people by hacking them.",
-      "first_air_date": "2015-06-24",
-      "vote_average": 8.2,
-      "vote_count": 2156,
-      "popularity": 45.678,
-      "poster_path": "/oKIBhzZzDX07SiE2QDc4mOnWs6k.jpg",
-      "backdrop_path": "/eN9lbpVnbf6CLYxtKrDNfXNGwBG.jpg",
-      "genre_ids": [80, 18],
-      "adult": false,
-      "original_language": "en",
-      "original_name": "Mr. Robot",
-      "origin_country": ["US"]
+      "title": "Mr. Robot",
+      "genres": ["Crime", "Drama"],
+      "premiered": "2015-06-24",
+      "summary": "A contemporary and culturally resonant drama about a young programmer, Elliot, who suffers from a debilitating anti-social disorder and decides that he can only connect to people by hacking them.",
+      "image": "/oKIBhzZzDX07SiE2QDc4mOnWs6k.jpg",
+      "rating": 8.2,
+      "popularity": 45.678
     }
   ],
-  "total_results": 42,
-  "total_pages": 3,
-  "current_page": 1
+  "totalResults": 42,
+  "totalPages": 3,
+  "currentPage": 1
 }
 ```
 
@@ -177,10 +159,11 @@ GET /api/v1/search/movies?searchString=Inception&year=2010&page=1
 
 ```typescript
 {
+  message: string,
   results: Array<MovieSearchResult>,
-  total_results: number,
-  total_pages: number,
-  current_page: number
+  totalResults: number,
+  totalPages: number,
+  currentPage: number
 }
 ```
 
@@ -188,43 +171,32 @@ GET /api/v1/search/movies?searchString=Inception&year=2010&page=1
 
 ```json
 {
+  "message": "Search results for 'Inception' of type: movie",
   "results": [
     {
       "id": "27205",
       "title": "Inception",
-      "overview": "Cobb, a skilled thief who commits corporate espionage by infiltrating the subconscious of his targets is offered a chance to regain his old life as payment for a task considered to be impossible: \"inception\", the implantation of another person's idea into a target's subconscious.",
-      "release_date": "2010-07-16",
-      "vote_average": 8.4,
-      "vote_count": 34562,
-      "popularity": 147.435,
-      "poster_path": "/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg",
-      "backdrop_path": "/s3TBrRGB1iav7gFOCNx3H31MoES.jpg",
-      "genre_ids": [28, 878, 53],
-      "adult": false,
-      "original_language": "en",
-      "original_title": "Inception",
-      "video": false
+      "genres": ["Action", "Science Fiction", "Adventure"],
+      "premiered": "2010-07-16",
+      "summary": "Cobb, a skilled thief who commits corporate espionage by infiltrating the subconscious of his targets is offered a chance to regain his old life as payment for a task considered to be impossible: \"inception\", the implantation of another person's idea into a target's subconscious.",
+      "image": "/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg",
+      "rating": 8.4,
+      "popularity": 147.435
     },
     {
       "id": "155",
       "title": "The Dark Knight",
-      "overview": "Batman raises the stakes in his war on crime. With the help of Lt. Jim Gordon and District Attorney Harvey Dent, Batman sets out to dismantle the remaining criminal organizations that plague the streets.",
-      "release_date": "2008-07-18",
-      "vote_average": 9.0,
-      "vote_count": 32105,
-      "popularity": 123.456,
-      "poster_path": "/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
-      "backdrop_path": "/hqkIcbrOHL86UncnHIsHVcVmzue.jpg",
-      "genre_ids": [18, 28, 80, 53],
-      "adult": false,
-      "original_language": "en",
-      "original_title": "The Dark Knight",
-      "video": false
+      "genres": ["Drama", "Action", "Crime", "Thriller"],
+      "premiered": "2008-07-18",
+      "summary": "Batman raises the stakes in his war on crime. With the help of Lt. Jim Gordon and District Attorney Harvey Dent, Batman sets out to dismantle the remaining criminal organizations that plague the streets.",
+      "image": "/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
+      "rating": 9.0,
+      "popularity": 123.456
     }
   ],
-  "total_results": 156,
-  "total_pages": 8,
-  "current_page": 1
+  "totalResults": 156,
+  "totalPages": 8,
+  "currentPage": 1
 }
 ```
 
@@ -274,7 +246,7 @@ GET /api/v1/search/people?searchString=Bryan%20Cranston&page=1
       "id": 17419,
       "name": "Bryan Cranston",
       "profileImage": "/7Jahy5LZX2Fo8fGJltMreAI49hC.jpg",
-      "known_for": ["Breaking Bad", "Malcolm in the Middle"],
+      "knownFor": ["Breaking Bad", "Malcolm in the Middle"],
       "department": "Acting",
       "popularity": 45.678
     },
@@ -282,7 +254,7 @@ GET /api/v1/search/people?searchString=Bryan%20Cranston&page=1
       "id": 1532,
       "name": "Bryan Brown",
       "profileImage": "/abc123.jpg",
-      "known_for": ["Cocktail"],
+      "knownFor": ["Cocktail"],
       "department": "Acting",
       "popularity": 12.345
     }
@@ -373,11 +345,12 @@ curl -H "Authorization: Bearer your_token_here" \
 **Requirements:**
 
 - **Required:** No
-- **Type:** String (YYYY format)
-- **Range:** 1900 - Current Year + 5
-- **Format:** Four-digit year
+- **Type:** String
+- **Format:** Must match a four-digit year (regex `^\d{4}$`)
+- **Range:** Not enforced — the schema only checks the four-digit format, so values like `0000` or `9999` pass
+  validation and simply return no matching results
 
-**Example Error Response for Invalid Year:**
+**Example Error Response for Invalid Year (non-4-digit value):**
 
 ```json
 {
@@ -385,7 +358,7 @@ curl -H "Authorization: Bearer your_token_here" \
   "details": [
     {
       "field": "year",
-      "message": "Year must be a valid 4-digit year between 1900 and 2030"
+      "message": "Invalid"
     }
   ]
 }
@@ -397,9 +370,9 @@ curl -H "Authorization: Bearer your_token_here" \
 
 - **Required:** No
 - **Type:** Number
-- **Default:** 1
-- **Range:** 1 - 1000
-- **Format:** Positive integer
+- **Default:** 1 (applied by the controller when omitted; not a schema default)
+- **Range:** Any positive integer — no upper bound is enforced by the schema
+- **Format:** Positive integer (coerced from the query string)
 
 **Example Error Response for Invalid Page:**
 
@@ -409,7 +382,7 @@ curl -H "Authorization: Bearer your_token_here" \
   "details": [
     {
       "field": "page",
-      "message": "Page must be a positive integer between 1 and 1000"
+      "message": "Number must be greater than 0"
     }
   ]
 }
@@ -454,7 +427,8 @@ When a year filter is applied:
 
 - **Default page size:** 20 results per page
 - **Maximum page size:** 20 results per page (not configurable)
-- **Maximum pages:** 1000 pages
+- **Maximum pages:** Not capped by the API — the `page` schema has no upper bound; effectively limited by TMDB's own
+  result set
 - **Total results:** May be limited by TMDB API constraints
 
 ### Navigation Information
@@ -463,9 +437,9 @@ Each response includes pagination metadata:
 
 ```typescript
 {
-  total_results: number,    // Total number of matching results
-  total_pages: number,      // Total number of pages available
-  current_page: number      // Current page number (1-indexed)
+  totalResults: number,    // Total number of matching results
+  totalPages: number,      // Total number of pages available
+  currentPage: number      // Current page number (1-indexed)
 }
 ```
 
@@ -677,7 +651,7 @@ async function searchAllPages(
     const response = await searchWithErrorHandling(endpoint, query, { year, page: currentPage }, token);
 
     allResults.push(...response.results);
-    totalPages = Math.min(response.total_pages, maxPages);
+    totalPages = Math.min(response.totalPages, maxPages);
     currentPage++;
 
     // Add delay to respect rate limits
@@ -688,8 +662,8 @@ async function searchAllPages(
 
   return {
     results: allResults,
-    total_results: allResults.length,
-    total_pages: totalPages,
+    totalResults: allResults.length,
+    totalPages: totalPages,
   };
 }
 
@@ -701,9 +675,9 @@ interface SearchOptions {
 
 interface SearchResult {
   results: any[];
-  total_results: number;
-  total_pages: number;
-  current_page: number;
+  totalResults: number;
+  totalPages: number;
+  currentPage: number;
 }
 
 async function typeSafeSearch(

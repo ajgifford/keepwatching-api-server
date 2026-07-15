@@ -30,7 +30,7 @@ Requests without valid authentication will receive a 401 Unauthorized response:
 ### Supported Formats
 
 - **Image Types:** JPEG, PNG, GIF, WebP
-- **Maximum File Size:** 2MB (2,097,152 bytes)
+- **Maximum File Size:** 5MB (5,242,880 bytes)
 - **Field Name:** `file` (multipart form data)
 
 ### File Naming Convention
@@ -102,7 +102,7 @@ Content-Type: image/jpeg
 - 401: Authentication required
 - 403: Access forbidden (user doesn't own this account)
 - 404: Account not found
-- 413: File too large (exceeds 2MB limit)
+- 413: File too large (exceeds 5MB limit)
 - 500: Server error
 
 ---
@@ -166,7 +166,106 @@ Content-Type: image/png
 - 401: Authentication required
 - 403: Access forbidden (user doesn't own this account/profile)
 - 404: Account or profile not found
-- 413: File too large (exceeds 2MB limit)
+- 413: File too large (exceeds 5MB limit)
+- 500: Server error
+
+---
+
+### Delete Account Image
+
+Removes an account's current image from both the database record and the file system, setting the account's image field
+to `null`.
+
+**Endpoint:** `DELETE /api/v1/upload/accounts/{accountId}/image`
+
+#### Parameters
+
+- `accountId` (path parameter, required): Unique identifier of the account
+
+#### Response Format
+
+```typescript
+{
+  message: string,
+  result: {
+    id: number,
+    name: string,
+    email: string,
+    image: string | null,
+    defaultProfileId: number
+  }
+}
+```
+
+#### Example Response
+
+```json
+{
+  "message": "Account image deleted successfully",
+  "result": {
+    "id": 123,
+    "name": "John Doe",
+    "email": "john@example.com",
+    "image": null,
+    "defaultProfileId": 456
+  }
+}
+```
+
+**Status Codes:**
+
+- 200: Image deleted successfully
+- 400: Account not found or update failed
+- 401: Authentication required
+- 403: Access forbidden (user doesn't own this account)
+- 500: Server error
+
+---
+
+### Delete Profile Image
+
+Removes a profile's current image from both the database record and the file system, setting the profile's image field
+to `null`.
+
+**Endpoint:** `DELETE /api/v1/upload/accounts/{accountId}/profiles/{profileId}/image`
+
+#### Parameters
+
+- `accountId` (path parameter, required): Unique identifier of the account
+- `profileId` (path parameter, required): Unique identifier of the profile
+
+#### Response Format
+
+```typescript
+{
+  message: string,
+  profile: {
+    id: number,
+    name: string,
+    image: string | null
+  }
+}
+```
+
+#### Example Response
+
+```json
+{
+  "message": "Profile image deleted successfully",
+  "profile": {
+    "id": 456,
+    "name": "Family Profile",
+    "image": null
+  }
+}
+```
+
+**Status Codes:**
+
+- 200: Image deleted successfully
+- 400: Profile not found or update failed
+- 401: Authentication required
+- 403: Access forbidden (user doesn't own this account/profile)
 - 500: Server error
 
 ## File Storage
@@ -228,7 +327,7 @@ When uploading a new image:
 
 ```json
 {
-  "error": "File too large. Maximum size is 2MB."
+  "error": "File too large. Maximum size is 5MB."
 }
 ```
 
@@ -320,6 +419,36 @@ async function uploadProfileImage(accountId: number, profileId: number, file: Fi
 
   return await response.json();
 }
+
+async function deleteAccountImage(accountId: number, token: string) {
+  const response = await fetch(`/api/v1/upload/accounts/${accountId}/image`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Delete failed: ${response.statusText}`);
+  }
+
+  return await response.json();
+}
+
+async function deleteProfileImage(accountId: number, profileId: number, token: string) {
+  const response = await fetch(`/api/v1/upload/accounts/${accountId}/profiles/${profileId}/image`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Delete failed: ${response.statusText}`);
+  }
+
+  return await response.json();
+}
 ```
 
 ### cURL Example
@@ -336,6 +465,16 @@ curl -X POST \
   -H "Authorization: Bearer your_token_here" \
   -F "file=@/path/to/avatar.png" \
   https://api.example.com/api/v1/upload/accounts/123/profiles/456
+
+# Delete account image
+curl -X DELETE \
+  -H "Authorization: Bearer your_token_here" \
+  https://api.example.com/api/v1/upload/accounts/123/image
+
+# Delete profile image
+curl -X DELETE \
+  -H "Authorization: Bearer your_token_here" \
+  https://api.example.com/api/v1/upload/accounts/123/profiles/456/image
 ```
 
 ## Additional Notes

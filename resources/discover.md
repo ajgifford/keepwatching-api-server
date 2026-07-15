@@ -36,18 +36,16 @@ Requests without valid authentication will receive a 401 Unauthorized response:
   results: Array<{
     id: string,
     title: string,
-    overview?: string,
-    release_date?: string,
-    first_air_date?: string,
-    vote_average?: number,
-    poster_path?: string,
-    backdrop_path?: string,
-    genre_ids?: number[],
-    // ... other TMDB properties
+    genres: string[],
+    premiered: string,     // ISO date (YYYY-MM-DD)
+    summary: string,
+    image: string,
+    rating: number,
+    popularity?: number,   // present for trending results
   }>,
-  total_results: number,
-  total_pages: number,
-  current_page: number
+  totalResults: number,
+  totalPages: number,
+  currentPage: number
 }
 ```
 
@@ -59,19 +57,16 @@ Requests without valid authentication will receive a 401 Unauthorized response:
 ### Supported Streaming Services
 
 - `netflix` - Netflix
-- `amazon_prime` - Amazon Prime Video
-- `disney_plus` - Disney+
-- `hulu` - Hulu
-- `apple_tv` - Apple TV+
-- `hbo_max` - HBO Max
-- `paramount_plus` - Paramount+
-- And other supported streaming services...
+- `disney` - Disney+
+- `hbo` - HBO Max
+- `apple` - Apple TV+
+- `prime` - Amazon Prime Video
 
 ### Supported Change Types
 
 - `new` - Recently added content
+- `upcoming` - Content coming soon
 - `expiring` - Content expiring soon
-- `updated` - Recently updated content
 
 ## Endpoints
 
@@ -100,9 +95,9 @@ GET /api/v1/discover/top?showType=movie&service=netflix
 {
   message: string,
   results: Array<ContentItem>,
-  total_results: number,
-  total_pages: number,
-  current_page: number
+  totalResults: number,
+  totalPages: number,
+  currentPage: number
 }
 ```
 
@@ -115,29 +110,30 @@ GET /api/v1/discover/top?showType=movie&service=netflix
     {
       "id": "550",
       "title": "Fight Club",
-      "overview": "A ticking-time-bomb insomniac and a slippery soap salesman channel primal male aggression into a shocking new form of therapy.",
-      "release_date": "1999-10-15",
-      "vote_average": 8.4,
-      "poster_path": "/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg",
-      "backdrop_path": "/fCayJrkfRaCRCTh8GqN30f8oyQF.jpg",
-      "genre_ids": [18, 53, 35]
+      "genres": ["Drama", "Thriller"],
+      "premiered": "1999-10-15",
+      "summary": "A ticking-time-bomb insomniac and a slippery soap salesman channel primal male aggression into a shocking new form of therapy.",
+      "image": "https://cdn.streaming-availability.example/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg",
+      "rating": 8.4
     },
     {
       "id": "13",
       "title": "Forrest Gump",
-      "overview": "A man with a low IQ has accomplished great things in his life and been present during significant historic events.",
-      "release_date": "1994-06-23",
-      "vote_average": 8.5,
-      "poster_path": "/arw2vcBveWOVZr6pxd9XTd1TdQa.jpg",
-      "backdrop_path": "/suaEOtk1N1sgg2MTM7oZd2cfVp3.jpg",
-      "genre_ids": [35, 18, 10749]
+      "genres": ["Comedy", "Drama", "Romance"],
+      "premiered": "1994-06-23",
+      "summary": "A man with a low IQ has accomplished great things in his life and been present during significant historic events.",
+      "image": "https://cdn.streaming-availability.example/arw2vcBveWOVZr6pxd9XTd1TdQa.jpg",
+      "rating": 8.5
     }
   ],
-  "total_results": 50,
-  "total_pages": 3,
-  "current_page": 1
+  "totalResults": 2,
+  "totalPages": 1,
+  "currentPage": 1
 }
 ```
+
+Note: `discover/top` and `discover/changes` are backed by the Streaming Availability API rather than TMDB pagination, so
+`totalPages` is always `1` and `totalResults` reflects the count of items actually returned.
 
 **Status Codes:**
 
@@ -160,7 +156,7 @@ Retrieves content that has recently been added, updated, or is expiring from a s
 
 - `showType` (required): Type of content (`movie` or `series`)
 - `service` (required): Streaming service identifier
-- `changeType` (required): Type of change (`new`, `expiring`, or `updated`)
+- `changeType` (required): Type of change (`new`, `upcoming`, or `expiring`)
 
 #### Example Request
 
@@ -174,9 +170,9 @@ GET /api/v1/discover/changes?showType=series&service=netflix&changeType=new
 {
   message: string,
   results: Array<ContentItem>,
-  total_results: number,
-  total_pages: number,
-  current_page: number
+  totalResults: number,
+  totalPages: number,
+  currentPage: number
 }
 ```
 
@@ -189,27 +185,25 @@ GET /api/v1/discover/changes?showType=series&service=netflix&changeType=new
     {
       "id": "94605",
       "title": "Arcane",
-      "overview": "Amid the stark discord of twin cities Piltover and Zaun, two sisters fight on rival sides of a war between magic technologies and clashing convictions.",
-      "first_air_date": "2021-11-06",
-      "vote_average": 9.0,
-      "poster_path": "/fqldf2t8ztc9aiwn3k6mlX3tvRT.jpg",
-      "backdrop_path": "/rkB4LyZHo1NHXFEDHl9vSD9r1lI.jpg",
-      "genre_ids": [16, 10765, 10759, 18]
+      "genres": ["Animation", "Sci-Fi & Fantasy", "Action & Adventure", "Drama"],
+      "premiered": "2021-11-06",
+      "summary": "Amid the stark discord of twin cities Piltover and Zaun, two sisters fight on rival sides of a war between magic technologies and clashing convictions.",
+      "image": "https://cdn.streaming-availability.example/fqldf2t8ztc9aiwn3k6mlX3tvRT.jpg",
+      "rating": 9.0
     },
     {
       "id": "85552",
       "title": "Euphoria",
-      "overview": "A group of high school students navigate love and friendships in a world of drugs, sex, trauma and social media.",
-      "first_air_date": "2019-06-16",
-      "vote_average": 8.4,
-      "poster_path": "/jtnfNzqZwN4E32FGGxx1YZaBWWf.jpg",
-      "backdrop_path": "/oKt4J3TFjWirVwBqoHyIvv5IImd.jpg",
-      "genre_ids": [18]
+      "genres": ["Drama"],
+      "premiered": "2019-06-16",
+      "summary": "A group of high school students navigate love and friendships in a world of drugs, sex, trauma and social media.",
+      "image": "https://cdn.streaming-availability.example/jtnfNzqZwN4E32FGGxx1YZaBWWf.jpg",
+      "rating": 8.4
     }
   ],
-  "total_results": 25,
-  "total_pages": 2,
-  "current_page": 1
+  "totalResults": 2,
+  "totalPages": 1,
+  "currentPage": 1
 }
 ```
 
@@ -246,10 +240,10 @@ GET /api/v1/discover/trending?showType=movie&page=2
 ```typescript
 {
   message: string,
-  results: Array<ContentItem>,
-  total_results: number,
-  total_pages: number,
-  current_page: number
+  results: Array<ContentItem>,   // ContentItem includes an optional `popularity` field for trending results
+  totalResults: number,
+  totalPages: number,
+  currentPage: number
 }
 ```
 
@@ -262,27 +256,27 @@ GET /api/v1/discover/trending?showType=movie&page=2
     {
       "id": "872585",
       "title": "Oppenheimer",
-      "overview": "The story of J. Robert Oppenheimer's role in the development of the atomic bomb during World War II.",
-      "release_date": "2023-07-21",
-      "vote_average": 8.1,
-      "poster_path": "/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
-      "backdrop_path": "/fm6KqXpk3M2HVveHwCrBSSBaO0V.jpg",
-      "genre_ids": [18, 36]
+      "genres": ["Drama", "History"],
+      "premiered": "2023-07-21",
+      "summary": "The story of J. Robert Oppenheimer's role in the development of the atomic bomb during World War II.",
+      "image": "https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
+      "rating": 8.1,
+      "popularity": 245.3
     },
     {
       "id": "346698",
       "title": "Barbie",
-      "overview": "Barbie and Ken are having the time of their lives in the colorful and seemingly perfect world of Barbie Land.",
-      "release_date": "2023-07-21",
-      "vote_average": 7.2,
-      "poster_path": "/iuFNMS8U5cb6xfzi51Dbkovj7vM.jpg",
-      "backdrop_path": "/nHf61UzkfFno5X1ofIhugCPus2R.jpg",
-      "genre_ids": [35, 12, 14]
+      "genres": ["Comedy", "Adventure", "Fantasy"],
+      "premiered": "2023-07-21",
+      "summary": "Barbie and Ken are having the time of their lives in the colorful and seemingly perfect world of Barbie Land.",
+      "image": "https://image.tmdb.org/t/p/w500/iuFNMS8U5cb6xfzi51Dbkovj7vM.jpg",
+      "rating": 7.2,
+      "popularity": 198.7
     }
   ],
-  "total_results": 500,
-  "total_pages": 25,
-  "current_page": 2
+  "totalResults": 500,
+  "totalPages": 25,
+  "currentPage": 2
 }
 ```
 
@@ -310,7 +304,7 @@ GET /api/v1/discover/trending?showType=movie&page=2
   "details": [
     {
       "field": "showType",
-      "message": "Show type must be either 'movie' or 'series'"
+      "message": "Show type must be either \"movie\" or \"series\", received \"invalid\""
     }
   ]
 }
@@ -321,13 +315,10 @@ GET /api/v1/discover/trending?showType=movie&page=2
 **Valid Values:**
 
 - `netflix`
-- `amazon_prime`
-- `disney_plus`
-- `hulu`
-- `apple_tv`
-- `hbo_max`
-- `paramount_plus`
-- Additional services as supported by the streaming availability API
+- `disney`
+- `hbo`
+- `apple`
+- `prime`
 
 **Example Error Response for Invalid Service:**
 
@@ -337,7 +328,7 @@ GET /api/v1/discover/trending?showType=movie&page=2
   "details": [
     {
       "field": "service",
-      "message": "Invalid streaming service specified"
+      "message": "Invalid streaming service provided: \"paramount_plus\""
     }
   ]
 }
@@ -348,8 +339,8 @@ GET /api/v1/discover/trending?showType=movie&page=2
 **Valid Values:**
 
 - `new` - Recently added content
+- `upcoming` - Content coming soon
 - `expiring` - Content that will be removed soon
-- `updated` - Recently updated content
 
 **Example Error Response for Invalid Change Type:**
 
@@ -359,7 +350,7 @@ GET /api/v1/discover/trending?showType=movie&page=2
   "details": [
     {
       "field": "changeType",
-      "message": "Change type must be 'new', 'expiring', or 'updated'"
+      "message": "Change type must be either \"new\", \"upcoming\" or \"expiring\", received \"updated\""
     }
   ]
 }
@@ -449,7 +440,7 @@ async function getTopNetflixMovies(token: string) {
 
 // Discover new series on Disney+
 async function getNewDisneyPlusSeries(token: string) {
-  const response = await fetch('/api/v1/discover/changes?showType=series&service=disney_plus&changeType=new', {
+  const response = await fetch('/api/v1/discover/changes?showType=series&service=disney&changeType=new', {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -493,10 +484,10 @@ async function getExpiringContent(services: string[], showType: 'movie' | 'serie
   return results.reduce(
     (combined, result) => {
       combined.results.push(...result.results);
-      combined.total_results += result.total_results;
+      combined.totalResults += result.totalResults;
       return combined;
     },
-    { results: [], total_results: 0 },
+    { results: [], totalResults: 0 },
   );
 }
 
@@ -544,15 +535,15 @@ curl -H "Authorization: Bearer your_token_here" \
 
 # Discover new series on Disney+
 curl -H "Authorization: Bearer your_token_here" \
-  "https://api.example.com/api/v1/discover/changes?showType=series&service=disney_plus&changeType=new"
+  "https://api.example.com/api/v1/discover/changes?showType=series&service=disney&changeType=new"
 
 # Discover trending movies (page 2)
 curl -H "Authorization: Bearer your_token_here" \
   "https://api.example.com/api/v1/discover/trending?showType=movie&page=2"
 
-# Discover expiring content on Hulu
+# Discover expiring content on Amazon Prime Video
 curl -H "Authorization: Bearer your_token_here" \
-  "https://api.example.com/api/v1/discover/changes?showType=movie&service=hulu&changeType=expiring"
+  "https://api.example.com/api/v1/discover/changes?showType=movie&service=prime&changeType=expiring"
 ```
 
 ### React Hook Example
@@ -563,16 +554,16 @@ import { useEffect, useState } from 'react';
 interface DiscoverParams {
   showType: 'movie' | 'series';
   service?: string;
-  changeType?: 'new' | 'expiring' | 'updated';
+  changeType?: 'new' | 'upcoming' | 'expiring';
   page?: number;
 }
 
 interface DiscoverResult {
   message: string;
   results: any[];
-  total_results: number;
-  total_pages: number;
-  current_page: number;
+  totalResults: number;
+  totalPages: number;
+  currentPage: number;
 }
 
 export function useDiscover(endpoint: 'top' | 'changes' | 'trending', params: DiscoverParams, token: string) {

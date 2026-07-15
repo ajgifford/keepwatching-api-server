@@ -7,13 +7,13 @@ user preferences organized by preference types and provides both individual and 
 
 ## Overview
 
-The preferences system allows users to configure account-level settings organized by type, such as:
+The preferences system allows users to configure account-level settings organized into four fixed types (`email`,
+`notification`, `display`, `privacy`):
 
-- Content filtering preferences
-- Notification settings
-- Display preferences
-- Privacy settings
-- Other customizable account settings
+- `email` - Weekly digest and marketing email settings
+- `notification` - New season and new episode alert settings
+- `display` - Theme, date format, relative-date behavior, and time format settings
+- `privacy` - Recommendation personalization and data collection settings
 
 ## Controller Functions
 
@@ -168,17 +168,43 @@ interface AccountIdParam {
 
 interface PreferenceRouteParams {
   accountId: number;
-  preferenceType: string;
+  preferenceType: 'email' | 'notification' | 'display' | 'privacy';
 }
 ```
 
 ### Request/Response Bodies
 
 ```typescript
-// Used in updateMultiplePreferences
+// Defined in @ajgifford/keepwatching-types (preferenceTypes.ts)
+
+interface EmailPreferences {
+  weeklyDigest?: boolean;
+  marketingEmails?: boolean;
+}
+
+interface NotificationPreferences {
+  newSeasonAlerts?: boolean;
+  newEpisodeAlerts?: boolean;
+}
+
+interface DisplayPreferences {
+  theme?: 'light' | 'dark' | 'auto';
+  dateFormat?: 'MM/DD/YYYY' | 'DD/MM/YYYY' | 'YYYY-MM-DD';
+  relativeDate?: 'relative-recent' | 'always-relative' | 'always-absolute';
+  timeFormat?: '12h' | '24h';
+}
+
+interface PrivacyPreferences {
+  allowRecommendations?: boolean;
+  dataCollection?: boolean;
+}
+
+// Used in updateMultiplePreferences (all keys optional/partial)
 interface TypedPreferenceUpdate {
-  // Structure depends on the specific preference types in your system
-  // This would be defined in @ajgifford/keepwatching-types
+  email: Partial<EmailPreferences>;
+  notification: Partial<NotificationPreferences>;
+  display: Partial<DisplayPreferences>;
+  privacy: Partial<PrivacyPreferences>;
 }
 ```
 
@@ -214,18 +240,23 @@ curl -H "Authorization: Bearer token" \
 {
   "message": "Account preferences retrieved successfully",
   "preferences": {
-    "notifications": {
-      "email": true,
-      "push": false,
-      "marketing": false
+    "email": {
+      "weeklyDigest": true,
+      "marketingEmails": false
     },
-    "privacy": {
-      "profileVisibility": "private",
-      "shareWatchHistory": false
+    "notification": {
+      "newSeasonAlerts": true,
+      "newEpisodeAlerts": true
     },
     "display": {
       "theme": "dark",
-      "language": "en-US"
+      "dateFormat": "MM/DD/YYYY",
+      "relativeDate": "relative-recent",
+      "timeFormat": "12h"
+    },
+    "privacy": {
+      "allowRecommendations": true,
+      "dataCollection": false
     }
   }
 }
@@ -235,7 +266,7 @@ curl -H "Authorization: Bearer token" \
 
 ```bash
 curl -H "Authorization: Bearer token" \
-  https://api.example.com/api/v1/accounts/123/preferences/notifications
+  https://api.example.com/api/v1/accounts/123/preferences/notification
 ```
 
 **Response:**
@@ -244,11 +275,8 @@ curl -H "Authorization: Bearer token" \
 {
   "message": "Account preferences retrieved successfully",
   "preferences": {
-    "email": true,
-    "push": false,
-    "marketing": false,
-    "newEpisodes": true,
-    "recommendations": true
+    "newSeasonAlerts": true,
+    "newEpisodeAlerts": true
   }
 }
 ```
@@ -260,11 +288,10 @@ curl -X PUT \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer token" \
   -d '{
-    "email": false,
-    "push": true,
-    "marketing": false
+    "newSeasonAlerts": false,
+    "newEpisodeAlerts": true
   }' \
-  https://api.example.com/api/v1/accounts/123/preferences/notifications
+  https://api.example.com/api/v1/accounts/123/preferences/notification
 ```
 
 **Response:**
@@ -273,11 +300,8 @@ curl -X PUT \
 {
   "message": "Account preferences updated successfully",
   "preferences": {
-    "email": false,
-    "push": true,
-    "marketing": false,
-    "newEpisodes": true,
-    "recommendations": true
+    "newSeasonAlerts": false,
+    "newEpisodeAlerts": true
   }
 }
 ```
@@ -289,9 +313,9 @@ curl -X PUT \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer token" \
   -d '{
-    "notifications": {
-      "email": false,
-      "push": true
+    "notification": {
+      "newSeasonAlerts": false,
+      "newEpisodeAlerts": true
     },
     "display": {
       "theme": "light"
@@ -306,33 +330,32 @@ curl -X PUT \
 {
   "message": "Account preferences updated successfully",
   "preferences": {
-    "notifications": {
-      "email": false,
-      "push": true,
-      "marketing": false,
-      "newEpisodes": true,
-      "recommendations": true
+    "notification": {
+      "newSeasonAlerts": false,
+      "newEpisodeAlerts": true
     },
     "display": {
       "theme": "light",
-      "language": "en-US"
-    },
-    "privacy": {
-      "profileVisibility": "private",
-      "shareWatchHistory": false
+      "dateFormat": "MM/DD/YYYY",
+      "relativeDate": "relative-recent",
+      "timeFormat": "12h"
     }
   }
 }
 ```
+
+Note: `updateMultiplePreferences` only updates the preference types included in the request body — the response
+reflects the categories that were actually updated (via `preferencesService.updateMultiplePreferences`), not the full
+account preference set.
 
 ## Error Handling
 
 The controller follows standard error handling patterns consistent with other controllers in the codebase:
 
 ```typescript
-// Invalid preference type
+// Invalid preference type (rejected by `preferenceRouteParamsSchema` before the controller runs)
 {
-  "error": "Invalid preference type 'invalidType'"
+  "error": "preferenceType: Invalid enum value. Expected 'email' | 'notification' | 'display' | 'privacy', received 'invalidType'"
 }
 
 // Unauthorized access
@@ -340,17 +363,15 @@ The controller follows standard error handling patterns consistent with other co
   "error": "You do not have permission to access this account"
 }
 
-// Validation errors
+// Body validation errors (invalid field for the given preference type)
 {
-  "error": "Validation failed",
-  "details": [
-    {
-      "field": "email",
-      "message": "Email preference must be a boolean"
-    }
-  ]
+  "error": "weeklyDigest: Expected boolean, received string"
 }
 ```
+
+Note: `preferenceType` is restricted to `email`, `notification`, `display`, or `privacy` by `preferenceTypeSchema` — any
+other value fails route parameter validation with a 400 response before `getAccountPreferencesByType`/`updatePreferences`
+ever runs.
 
 ## Service Integration
 
@@ -370,7 +391,7 @@ The controller delegates business logic to the `preferencesService` from the com
 
 ## Architecture Notes
 
-- **Type-based organization:** Preferences are organized by type (notifications, privacy, display, etc.)
+- **Type-based organization:** Preferences are organized by type (`email`, `notification`, `display`, `privacy`)
 - **Dynamic validation:** Schema validation adapts based on preference type using `getPreferenceBodySchema()`
 - **Bulk operations:** Supports both single-type and multi-type preference updates
 - **Consistent patterns:** Follows the same controller patterns as movies and shows controllers

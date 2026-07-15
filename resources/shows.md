@@ -1,4 +1,4 @@
-[TV Series](./tv-series.md) > Shows
+[TV Series](./tvSeries.md) > Shows
 
 # Shows API Documentation
 
@@ -33,7 +33,7 @@ Authorization: Bearer <your_access_token>
   status: 'Returning Series' | 'Ended' | 'Canceled' | 'In Production',
   genres: Array<string>,
   tmdb_id: number,
-  watchStatus: 'WATCHING' | 'COMPLETED' | 'NOT_WATCHING',
+  watchStatus: 'UNAIRED' | 'NOT_WATCHED' | 'WATCHING' | 'WATCHED' | 'UP_TO_DATE',
   totalSeasons: number,
   totalEpisodes: number,
   watchedEpisodes: number,
@@ -53,12 +53,15 @@ Authorization: Bearer <your_access_token>
 }
 ```
 
-### Show Details Object
+### Show Details Object (`showWithSeasons`)
+
+The `GET .../shows/{showId}/details` endpoint returns the show merged with its seasons/episodes, not a single object
+containing `cast`/`crew`/`trailers` — those are returned separately as `showCast` (see below).
 
 ```typescript
 {
   ...Show,
-  seasons: Array<{
+  seasons?: Array<{
     season_id: number,
     season_number: number,
     name: string,
@@ -66,27 +69,41 @@ Authorization: Bearer <your_access_token>
     poster_url: string,
     air_date: string,
     episode_count: number,
-    watchStatus: 'WATCHING' | 'COMPLETED' | 'NOT_WATCHING',
+    watchStatus: 'UNAIRED' | 'NOT_WATCHED' | 'WATCHING' | 'WATCHED' | 'UP_TO_DATE' | 'SKIPPED',
     episodes: Array<Episode>
-  }>,
-  cast: Array<{
-    name: string,
-    character: string,
-    profile_path: string
-  }>,
-  crew: Array<{
-    name: string,
-    job: string,
-    profile_path: string
-  }>,
-  trailers: Array<{
-    key: string,
-    name: string,
-    site: string,
-    type: string
   }>
 }
 ```
+
+### Show Cast Object (`showCast`)
+
+```typescript
+{
+  activeCast: Array<{
+    contentId: number,
+    personId: number,
+    characterName: string,
+    order: number,
+    name: string,
+    profileImage: string,
+    episodeCount: number,
+    active: true
+  }>,
+  priorCast: Array<{
+    contentId: number,
+    personId: number,
+    characterName: string,
+    order: number,
+    name: string,
+    profileImage: string,
+    episodeCount: number,
+    active: false
+  }>
+}
+```
+
+There is no separate `crew` or `trailers` array in the current API — cast members who are no longer part of the show are
+surfaced in `priorCast` rather than a distinct crew list.
 
 ## Endpoints
 
@@ -127,7 +144,7 @@ Retrieves all shows in a profile's favorites list with their current watch statu
       "status": "Ended",
       "genres": ["Drama", "Crime"],
       "tmdb_id": 1396,
-      "watchStatus": "COMPLETED",
+      "watchStatus": "WATCHED",
       "totalSeasons": 5,
       "totalEpisodes": 62,
       "watchedEpisodes": 62,
@@ -177,7 +194,7 @@ Retrieves all shows in a profile's favorites list with their current watch statu
 
 ### Get Show Details
 
-Retrieves comprehensive details for a specific show including seasons, episodes, cast, and crew information.
+Retrieves comprehensive details for a specific show including seasons, episodes, and cast information.
 
 **Endpoint:** `GET /api/v1/accounts/{accountId}/profiles/{profileId}/shows/{showId}/details`
 
@@ -189,10 +206,14 @@ Retrieves comprehensive details for a specific show including seasons, episodes,
 
 #### Response Format
 
+The response has two top-level data fields — `showWithSeasons` (the show plus its season/episode hierarchy) and
+`showCast` (active and prior cast members) — not a single nested `show` object.
+
 ```typescript
 {
   message: string,
-  show: ShowDetails
+  showWithSeasons: ShowDetailsObject, // see "Show Details Object" above
+  showCast: ShowCastObject // see "Show Cast Object" above
 }
 ```
 
@@ -201,7 +222,7 @@ Retrieves comprehensive details for a specific show including seasons, episodes,
 ```json
 {
   "message": "Successfully retrieved a show and its details",
-  "show": {
+  "showWithSeasons": {
     "show_id": 1,
     "title": "Breaking Bad",
     "description": "A high school chemistry teacher diagnosed with inoperable lung cancer...",
@@ -212,7 +233,7 @@ Retrieves comprehensive details for a specific show including seasons, episodes,
     "status": "Ended",
     "genres": ["Drama", "Crime"],
     "tmdb_id": 1396,
-    "watchStatus": "COMPLETED",
+    "watchStatus": "WATCHED",
     "totalSeasons": 5,
     "totalEpisodes": 62,
     "watchedEpisodes": 62,
@@ -226,37 +247,25 @@ Retrieves comprehensive details for a specific show including seasons, episodes,
         "poster_url": "https://image.tmdb.org/t/p/w500/1BP4xYv9ZG4ZVHkL7ocOziBbSYH.jpg",
         "air_date": "2008-01-20",
         "episode_count": 7,
-        "watchStatus": "COMPLETED",
+        "watchStatus": "WATCHED",
         "episodes": []
       }
-    ],
-    "cast": [
-      {
-        "name": "Bryan Cranston",
-        "character": "Walter White",
-        "profile_path": "/7Jahy5LZX2Fo8fGJltMreAI49hC.jpg"
-      },
-      {
-        "name": "Aaron Paul",
-        "character": "Jesse Pinkman",
-        "profile_path": "/lOhDL0E3vsJoKhDN8thLKIDla8O.jpg"
-      }
-    ],
-    "crew": [
-      {
-        "name": "Vince Gilligan",
-        "job": "Creator",
-        "profile_path": "/vZTEKqhcxZEqWjUqKYjAqJHjqyf.jpg"
-      }
-    ],
-    "trailers": [
-      {
-        "key": "HhesaQXLuRY",
-        "name": "Official Trailer",
-        "site": "YouTube",
-        "type": "Trailer"
-      }
     ]
+  },
+  "showCast": {
+    "activeCast": [
+      {
+        "contentId": 1,
+        "personId": 3231,
+        "characterName": "Walter White",
+        "order": 0,
+        "name": "Bryan Cranston",
+        "profileImage": "/7Jahy5LZX2Fo8fGJltMreAI49hC.jpg",
+        "episodeCount": 62,
+        "active": true
+      }
+    ],
+    "priorCast": []
   }
 }
 ```
@@ -287,9 +296,17 @@ created.
 
 ```json
 {
-  "showTMDBId": 1396
+  "showTMDBId": 1396,
+  "restoreFromHistory": false
 }
 ```
+
+#### Request Body Fields
+
+- `showTMDBId` (required): TMDB ID of the show to add
+- `restoreFromHistory` (optional, default: `false`): If `true` and the show has surviving watch history from a previous
+  favorite/unfavorite cycle (see `removeHistory` below), rebuilds the show's watch status from that history instead of
+  starting fresh as `NOT_WATCHED`/`UNAIRED`
 
 #### Response Format
 
@@ -304,9 +321,13 @@ created.
       show_id: number,
       episodes: Array<Episode>
     }>
-  }
+  },
+  hasSurvivingHistory: boolean
 }
 ```
+
+`hasSurvivingHistory` indicates whether the show had prior watch history available to restore (regardless of whether
+`restoreFromHistory` was actually set to `true`).
 
 #### Example Response
 
@@ -318,7 +339,7 @@ created.
     "title": "Breaking Bad",
     "description": "A high school chemistry teacher diagnosed with inoperable lung cancer...",
     "tmdb_id": 1396,
-    "watchStatus": "NOT_WATCHING",
+    "watchStatus": "NOT_WATCHED",
     "totalSeasons": 5,
     "totalEpisodes": 62,
     "watchedEpisodes": 0,
@@ -342,7 +363,8 @@ created.
         ]
       }
     ]
-  }
+  },
+  "hasSurvivingHistory": false
 }
 ```
 
@@ -368,6 +390,11 @@ Removes a TV show from a profile's favorites list.
 - `accountId` (path, required): Unique identifier of the account
 - `profileId` (path, required): Unique identifier of the profile
 - `showId` (path, required): Unique identifier of the show
+
+#### Query Parameters
+
+- `removeHistory` (optional, default: `false`): If `true`, also deletes the profile's watch history for the show instead
+  of preserving it for a future `restoreFromHistory` re-add
 
 #### Response Format
 
@@ -418,7 +445,8 @@ Removes a TV show from a profile's favorites list.
 
 ### Update Show Watch Status
 
-Updates the watch status of a show, with optional recursive updates to all seasons and episodes.
+Updates the watch status of a show. There is no `recursive` flag — the update always cascades to all seasons and
+episodes in the show.
 
 **Endpoint:** `PUT /api/v1/accounts/{accountId}/profiles/{profileId}/shows/watchstatus`
 
@@ -432,26 +460,31 @@ Updates the watch status of a show, with optional recursive updates to all seaso
 ```json
 {
   "showId": 1,
-  "status": "COMPLETED",
-  "recursive": true
+  "status": "WATCHED"
 }
 ```
 
 #### Request Body Fields
 
 - `showId` (required): ID of the show to update
-- `status` (required): New watch status (`WATCHING`, `COMPLETED`, `NOT_WATCHING`)
-- `recursive` (optional, default: false): Whether to update all seasons and episodes
+- `status` (required): New watch status — user-settable values are `NOT_WATCHED` or `WATCHED` only. There is no
+  `recursive` flag; the update always cascades (see "Watch Status Behavior" below).
 
 #### Response Format
 
 ```typescript
 {
   message: string,
-  nextUnwatchedEpisodes: Array<{
-    show_id: number,
-    episodes: Array<Episode>
-  }>
+  statusData: {
+    showWithSeasons: ShowDetailsObject, // the show with its full season/episode hierarchy, post-update
+    nextUnwatchedEpisodes: Array<{
+      showId: number,
+      showTitle: string,
+      posterImage: string,
+      lastWatched: string,
+      episodes: Array<Episode>
+    }>
+  }
 }
 ```
 
@@ -459,23 +492,27 @@ Updates the watch status of a show, with optional recursive updates to all seaso
 
 ```json
 {
-  "message": "Successfully updated the watch status to 'COMPLETED'",
-  "nextUnwatchedEpisodes": [
-    {
-      "show_id": 2,
-      "episodes": [
+  "message": "Successfully updated the watch status to 'WATCHED'",
+  "statusData": {
+    "showWithSeasons": {
+      "show_id": 1,
+      "title": "Breaking Bad",
+      "watchStatus": "WATCHED",
+      "totalSeasons": 5,
+      "totalEpisodes": 62,
+      "watchedEpisodes": 62,
+      "watchProgress": 100,
+      "seasons": [
         {
-          "episode_id": 234,
-          "title": "Chapter Nine: The Gate",
-          "season_number": 3,
-          "episode_number": 1,
-          "air_date": "2025-07-01",
-          "watchStatus": "NOT_WATCHED",
-          "show_title": "Stranger Things"
+          "season_id": 1,
+          "season_number": 1,
+          "watchStatus": "WATCHED",
+          "episodes": []
         }
       ]
-    }
-  ]
+    },
+    "nextUnwatchedEpisodes": []
+  }
 }
 ```
 
@@ -483,6 +520,91 @@ Updates the watch status of a show, with optional recursive updates to all seaso
 
 - 200: Status updated successfully
 - 400: Invalid request body or status
+- 401: Authentication required
+- 403: Access forbidden
+- 404: Show not found
+- 500: Server error
+
+---
+
+### Mark Prior Seasons as Watched
+
+Marks some or all of a show's seasons as previously watched, using each episode's air date as the watched date so that
+viewing statistics remain accurate. Intended for the "I've already seen this" flow when adding an existing show to
+favorites, rather than marking every episode as watched "now."
+
+**Endpoint:** `PUT /api/v1/accounts/{accountId}/profiles/{profileId}/shows/priorWatchStatus`
+
+#### Parameters
+
+- `accountId` (path, required): Unique identifier of the account
+- `profileId` (path, required): Unique identifier of the profile
+
+#### Request Body
+
+```json
+{
+  "showId": 1,
+  "upToSeasonNumber": 3
+}
+```
+
+#### Request Body Fields
+
+- `showId` (required): ID of the show to update
+- `upToSeasonNumber` (optional): If provided, only seasons up to and including this season number are marked as
+  previously watched; if omitted, all currently-aired seasons are marked
+
+#### Response Format
+
+```typescript
+{
+  message: string,
+  statusData: {
+    showWithSeasons: ShowDetailsObject,
+    nextUnwatchedEpisodes: Array<{
+      showId: number,
+      showTitle: string,
+      posterImage: string,
+      lastWatched: string,
+      episodes: Array<Episode>
+    }>
+  }
+}
+```
+
+#### Example Response
+
+```json
+{
+  "message": "Successfully marked prior seasons as previously watched",
+  "statusData": {
+    "showWithSeasons": {
+      "show_id": 1,
+      "title": "Breaking Bad",
+      "watchStatus": "WATCHING",
+      "totalSeasons": 5,
+      "totalEpisodes": 62,
+      "watchedEpisodes": 20,
+      "watchProgress": 32.3,
+      "seasons": [
+        {
+          "season_id": 1,
+          "season_number": 1,
+          "watchStatus": "WATCHED",
+          "episodes": []
+        }
+      ]
+    },
+    "nextUnwatchedEpisodes": []
+  }
+}
+```
+
+**Status Codes:**
+
+- 200: Status updated successfully
+- 400: Invalid request body
 - 401: Authentication required
 - 403: Access forbidden
 - 404: Show not found
@@ -723,21 +845,40 @@ Retrieves shows that are similar to a specific show based on genre, themes, and 
 
 ## Watch Status Behavior
 
-### Recursive Updates
+### Status Values
 
-When `recursive: true` is used in watch status updates:
+The full `WatchStatus` enum used across shows, seasons, and episodes is `UNAIRED | NOT_WATCHED | WATCHING | WATCHED |
+UP_TO_DATE | SKIPPED`. Not every value is settable by a user or applicable to every entity type:
 
-- **COMPLETED**: Marks all seasons and episodes as watched
-- **NOT_WATCHING**: Marks all seasons as not watching, but preserves individual episode watch status
-- **WATCHING**: Marks the show as watching, but doesn't change season/episode status
+- **User-settable show status** (`PUT .../shows/watchstatus`): `NOT_WATCHED` or `WATCHED` only.
+- **Computed/response show status**: any of `UNAIRED`, `NOT_WATCHED`, `WATCHING`, `WATCHED`, `UP_TO_DATE`.
+  - `UNAIRED`: The show hasn't aired yet.
+  - `NOT_WATCHED`: The show has aired but no episodes have been watched.
+  - `WATCHING`: Some but not all currently-aired episodes have been watched.
+  - `UP_TO_DATE`: All currently-aired episodes have been watched, but the show is still airing/in production (more
+    episodes are expected).
+  - `WATCHED`: All episodes have been watched and the show is no longer in production (fully complete).
+  - `SKIPPED` is a season-only status (see [Seasons API](./seasons.md)) and is never returned as a show's own
+    `watchStatus`, though a skipped season counts toward the show being "complete" for `UP_TO_DATE`/`WATCHED`
+    purposes.
 
-### Automatic Status Updates
+### No `recursive` Flag — Updates Always Cascade
 
-The system automatically updates show status based on episode progress:
+There is no `recursive` option on the watch status request body; updating a show's watch status always propagates to
+every season and episode in that show, and the reverse is also true — updating an episode or season recalculates its
+parents. Specifically:
 
-- Show becomes **COMPLETED** when all episodes are watched
-- Show becomes **WATCHING** when any episode is marked as watched
-- Show becomes **NOT_WATCHING** when explicitly set or when removed from favorites
+- **Setting a show to `WATCHED`**: Marks every currently-aired episode across all seasons as `WATCHED`, then
+  recalculates each season's status from its episodes.
+- **Setting a show to `NOT_WATCHED`**: Marks every currently-aired episode as `NOT_WATCHED`, then recalculates each
+  season's status from its episodes.
+- **Setting a season's status**: Cascades to that season's episodes (except `SKIPPED`, which is stored on the season
+  without touching episode-level status) and then recalculates the parent show's status from all of its seasons.
+- **Setting an episode's status**: Recalculates the parent season's status from its episodes, then recalculates the
+  show's status from its seasons.
+
+Show and season status are otherwise never stored as a fixed value that drifts from their children — they're
+recomputed bottom-up any time a child's status changes, using the aired/unaired episode counts described above.
 
 ## Error Responses
 
@@ -804,8 +945,7 @@ async function updateShowWatchStatus(
   accountId: number,
   profileId: number,
   showId: number,
-  status: string,
-  recursive: boolean,
+  status: 'NOT_WATCHED' | 'WATCHED',
   token: string,
 ) {
   const response = await fetch(`/api/v1/accounts/${accountId}/profiles/${profileId}/shows/watchstatus`, {
@@ -814,7 +954,7 @@ async function updateShowWatchStatus(
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ showId, status, recursive }),
+    body: JSON.stringify({ showId, status }),
   });
   return await response.json();
 }
@@ -856,20 +996,16 @@ async function manageShowLifecycle() {
     // 2. Get detailed show information
     console.log('Fetching show details...');
     const showDetails = await getShowDetails(accountId, profileId, showId, token);
-    console.log(`Added: ${showDetails.show.title} (${showDetails.show.totalEpisodes} episodes)`);
+    console.log(`Added: ${showDetails.showWithSeasons.title} (${showDetails.showWithSeasons.totalEpisodes} episodes)`);
 
-    // 3. Mark as currently watching
-    console.log('Setting watch status to WATCHING...');
-    await updateShowWatchStatus(accountId, profileId, showId, 'WATCHING', false, token);
-
-    // 4. Get recommendations based on this show
+    // 3. Get recommendations based on this show
     console.log('Getting recommendations...');
     const recommendations = await getShowRecommendations(accountId, profileId, showId, token);
     console.log(`Found ${recommendations.shows.length} recommended shows`);
 
-    // 5. Eventually mark as completed (with recursive episode updates)
-    console.log('Marking as completed...');
-    await updateShowWatchStatus(accountId, profileId, showId, 'COMPLETED', true, token);
+    // 4. Mark the show as fully watched (cascades to all seasons/episodes automatically)
+    console.log('Marking as watched...');
+    await updateShowWatchStatus(accountId, profileId, showId, 'WATCHED', token);
   } catch (error) {
     console.error('Error managing show:', error);
   }
@@ -894,17 +1030,24 @@ curl -H "Authorization: Bearer your_token_here" \
 curl -H "Authorization: Bearer your_token_here" \
   https://api.example.com/api/v1/accounts/123/profiles/456/shows/1/details
 
-# Update watch status (mark as completed with recursive updates)
+# Update watch status (mark as watched; automatically cascades to all seasons/episodes)
 curl -X PUT \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your_token_here" \
-  -d '{"showId": 1, "status": "COMPLETED", "recursive": true}' \
+  -d '{"showId": 1, "status": "WATCHED"}' \
   https://api.example.com/api/v1/accounts/123/profiles/456/shows/watchstatus
 
-# Remove show from favorites
+# Mark seasons 1-3 as previously watched
+curl -X PUT \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your_token_here" \
+  -d '{"showId": 1, "upToSeasonNumber": 3}' \
+  https://api.example.com/api/v1/accounts/123/profiles/456/shows/priorWatchStatus
+
+# Remove show from favorites (also delete its watch history)
 curl -X DELETE \
   -H "Authorization: Bearer your_token_here" \
-  https://api.example.com/api/v1/accounts/123/profiles/456/shows/favorites/1
+  "https://api.example.com/api/v1/accounts/123/profiles/456/shows/favorites/1?removeHistory=true"
 
 # Get show recommendations
 curl -H "Authorization: Bearer your_token_here" \
@@ -926,8 +1069,9 @@ curl -H "Authorization: Bearer your_token_here" \
 
 ### Batch Operations
 
-- Use recursive updates for bulk episode status changes
-- Minimize individual episode update calls
+- Show and season watch status updates cascade to all children automatically — prefer them over many individual
+  episode update calls for bulk status changes
+- Use the "Mark Prior Seasons as Watched" endpoint for backfilling watch history without touching current timestamps
 - Leverage the episode management endpoints for detailed tracking
 
 ### Data Loading
@@ -943,7 +1087,7 @@ curl -H "Authorization: Bearer your_token_here" \
 - All show metadata is sourced from The Movie Database
 - Images are served via TMDB CDN URLs
 - Show data is automatically updated when TMDB information changes
-- Cast, crew, and trailer information is fetched in real-time
+- Cast information (active and prior) is fetched in real-time
 
 ### Related Endpoints
 
@@ -960,5 +1104,6 @@ curl -H "Authorization: Bearer your_token_here" \
 - Recent and upcoming episodes are calculated relative to current date
 - Profile-specific tracking allows multiple users per account
 - All watch status changes trigger real-time cache updates
-- Show removal only removes from favorites; watch history is preserved
-- Recursive updates are optimized for performance on large shows
+- Show removal only removes from favorites; watch history is preserved by default (pass `removeHistory=true` to also
+  delete it)
+- Watch status cascades are applied in a single transaction for consistency, even on large shows
